@@ -31,64 +31,151 @@ class ServiceExecutor:
         self._timeout_change3d = timeout_change3d
 
     def execute(self, tool_name: str, args: Dict[str, Any]) -> str:
+        """Execute a tool and return the legacy human-readable summary."""
+        result = self.execute_structured(tool_name, args)
+        return str(result.get("message") or result.get("error") or result)
+
+    def execute_structured(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute a tool without discarding its structured response or artifacts.
+
+        ``execute`` is kept for existing callers. New harness integrations should use
+        this method so masks and other machine-readable outputs remain available.
+        """
         service = TOOL_TO_SERVICE.get(tool_name)
         if not service:
-            return f"Error: Unknown tool {tool_name}"
+            return {
+                "status": "error",
+                "tool_name": tool_name,
+                "service": None,
+                "message": f"Error: Unknown tool {tool_name}",
+                "data": {},
+            }
 
         url = self._api_urls.get(service)
         if not url:
-            return (
-                f"Error: Service URL for {service} is not configured. "
-                f"Cannot execute {tool_name}."
-            )
+            return {
+                "status": "error",
+                "tool_name": tool_name,
+                "service": service,
+                "message": (
+                    f"Error: Service URL for {service} is not configured. "
+                    f"Cannot execute {tool_name}."
+                ),
+                "data": {},
+            }
 
         if service == "remotesam":
-            return self._call_remote_sam(tool_name, args, url)
+            return self._call_remote_sam_structured(tool_name, args, url)
         if service == "change3d":
-            return self._call_change3d(tool_name, args, url)
+            message = self._call_change3d(tool_name, args, url)
+            return self._legacy_result(tool_name, service, message)
         if service == "sm3det":
-            return self._call_sm3det(tool_name, args, url)
+            message = self._call_sm3det(tool_name, args, url)
+            return self._legacy_result(tool_name, service, message)
         if service == "crossearth":
-            return self._call_crossearth(tool_name, args, url)
+            message = self._call_crossearth(tool_name, args, url)
+            return self._legacy_result(tool_name, service, message)
         if service == "skysense_det":
-            return self._call_skysense_det(args, url)
+            message = self._call_skysense_det(args, url)
+            return self._legacy_result(tool_name, service, message)
         if service == "directsam":
-            return self._call_directsam(tool_name, args, url)
+            message = self._call_directsam(tool_name, args, url)
+            return self._legacy_result(tool_name, service, message)
 
-        return f"Error: Unimplemented execution logic for service {service}"
+        return {
+            "status": "error",
+            "tool_name": tool_name,
+            "service": service,
+            "message": f"Error: Unimplemented execution logic for service {service}",
+            "data": {},
+        }
 
-    def _call_remote_sam(self, tool_name: str, args: Dict[str, Any], api_url: str) -> str:
+    @staticmethod
+    def _legacy_result(tool_name: str, service: str, message: str) -> Dict[str, Any]:
+        failed = message.startswith("Error:") or " call failed:" in message
+        return {
+            "status": "error" if failed else "success",
+            "tool_name": tool_name,
+            "service": service,
+            "message": message,
+            "data": {},
+        }
+
+    def _call_remote_sam_structured(
+        self, tool_name: str, args: Dict[str, Any], api_url: str
+    ) -> Dict[str, Any]:
         task = REMOTE_SAM_TOOL_TO_TASK.get(tool_name)
         if not task:
-            return "Error: Unknown RemoteSAM task."
+            return {
+                "status": "error",
+                "tool_name": tool_name,
+                "service": "remotesam",
+                "message": "Error: Unknown RemoteSAM task.",
+                "data": {},
+            }
 
         image_path = args.get("image_path") or ""
         if not image_path:
-            return "Error: Missing image_path."
-
-        try:
-            payload = {
-                "task": task,
-                "image": encode_image(image_path),
-                "text": args.get("prompt", args.get("text", "")),
-                "classes": args.get("classes") or [],
-                "box_threshold": 0.3,
-                "text_threshold": 0.25,
+            return {
+                "status": "error",
+                "tool_name": tool_name,
+                "service": "remotesam",
+                "message": "Error: Missing image_path.",
+                "data": {},
             }
+
+        request_metadata = {
+            "task": task,
+            "text": args.get("prompt", args.get("text", "")),
+            "classes": args.get("classes") or [],
+            "box_threshold": 0.3,
+            "text_threshold": 0.25,
+        }
+        try:
+            payload = dict(request_metadata)
+            payload["image"] = encode_image(image_path)
             data = http_post_json(api_url, payload, timeout=self._timeout_default)
-            if data.get("status") == "success":
-                msg = data.get("message", "Success")
-                if "counts" in data:
-                    msg += "\nCounts: " + json.dumps(data["counts"], ensure_ascii=False)
-                if "detections" in data:
-                    total = sum(len(v) for v in (data["detections"] or {}).values())
-                    msg += f"\nDetected {total} objects."
-                if "caption" in data:
-                    msg += "\nCaption: " + str(data["caption"])
-                return msg
-            return "API Response: " + data.get("message", str(data))
+            if data.get("status") != "success":
+                return {
+                    "status": "error",
+                    "tool_name": tool_name,
+                    "service": "remotesam",
+                    "message": "API Response: " + str(data.get("message", data)),
+                    "request": request_metadata,
+                    "data": data,
+                }
+
+            msg = str(data.get("message", "Success"))
+            if "counts" in data:
+                msg += "\nCounts: " + json.dumps(data["counts"], ensure_ascii=False)
+            if "detections" in data:
+                total = sum(len(v) for v in (data["detections"] or {}).values())
+                msg += f"\nDetected {total} objects."
+            if "caption" in data:
+                msg += "\nCaption: " + str(data["caption"])
+            if data.get("mask"):
+                msg += "\nMask artifact returned by RemoteSAM."
+            return {
+                "status": "success",
+                "tool_name": tool_name,
+                "service": "remotesam",
+                "message": msg,
+                "request": request_metadata,
+                "data": data,
+            }
         except Exception as e:
-            return f"RemoteSAM call failed: {e}"
+            return {
+                "status": "error",
+                "tool_name": tool_name,
+                "service": "remotesam",
+                "message": f"RemoteSAM call failed: {e}",
+                "request": request_metadata,
+                "data": {},
+            }
+
+    def _call_remote_sam(self, tool_name: str, args: Dict[str, Any], api_url: str) -> str:
+        """Compatibility wrapper for callers that still expect plain text."""
+        return str(self._call_remote_sam_structured(tool_name, args, api_url)["message"])
 
     def _call_change3d(self, tool_name: str, args: Dict[str, Any], api_url: str) -> str:
         task = CHANGE3D_TOOL_TO_TASK.get(tool_name, "bcd")

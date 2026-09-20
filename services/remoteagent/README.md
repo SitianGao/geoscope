@@ -12,7 +12,7 @@
 - `upstream/remoteagent/parsing/`：官方工具调用解析。
 - `upstream/remoteagent/services/executor.py`：工具执行与结果返回。
 
-本目录没有权重，也没有已验证的推理环境。第一天确认部署条件和与队长的接口；第二天交真实看图推理和工具调用记录；第三天协助端到端联调。
+本目录不提交权重。实验室主机上的 Python 3.10、PyTorch CUDA 环境和 RemoteSAM 真图调用已验证；官方 RemoteAgent 权重与 vLLM 服务仍按部署文档中的阻塞项推进。
 
 在 `feature/remoteagent` 分支工作。负责本目录及相关测试、说明；根目录工作台与 Harness 的修改交由队长整合。保留上游来源，不把官方算法作为团队自研成果。
 
@@ -26,7 +26,7 @@
 - `ServiceExecutor.execute_structured(...)` 保留 RemoteSAM 的完整结构化结果与 mask，便于工作台继续统计、版本管理和导出。
 - 独立 `run(...)` 验证路径继续可用，并已改为真正发送影像内容，而不是只发送本地路径字符串。
 
-详细接口、部署命令和联调约定见 [DEPLOYMENT.md](DEPLOYMENT.md)。配置模板见 [.env.example](.env.example)。
+详细接口、部署命令和联调约定见 [DEPLOYMENT.md](DEPLOYMENT.md)，真实 RemoteSAM 验收数据见 [INTEGRATION_REPORT.md](INTEGRATION_REPORT.md)。配置模板见 [.env.example](.env.example)。
 
 本仓库不提交模型权重、虚拟环境、密钥或缓存。官方 `AIMGroup/RemoteAgent` 权重启用了申请制下载，部署机目录固定为 `/home/gst/projects/geoscope-remoteagent/RemoteAgent`，运行时固定使用 GPU0。
 

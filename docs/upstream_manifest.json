@@ -1,0 +1,550 @@
+{
+  "note": "Local upstream source snapshots, copied without code modifications. Original commit IDs were not available in the extracted source folders.",
+  "files": [
+    {
+      "path": "services/remoteagent/upstream/README.md",
+      "source": "代码/RemoteAgent-main/README.md",
+      "sha256": "96684677fb56a058971e05f8400a84f64c2a8c30e6535e541ee4edfabaca2a78"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/cli.py",
+      "source": "代码/RemoteAgent-main/remoteagent/cli.py",
+      "sha256": "836bdbf4279d148dcfbfac1506070c958f4b87197fceb632c0b754ed01cee568"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/eval_common.py",
+      "source": "代码/RemoteAgent-main/remoteagent/eval_common.py",
+      "sha256": "f59893b4fc2736f4e6c6c65d329211a8ed9a96ffb9ddb93e07a5ad97ddfcfeb8"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/run_remoteagent_vllm.sh",
+      "source": "代码/RemoteAgent-main/remoteagent/run_remoteagent_vllm.sh",
+      "sha256": "5feff6917761c3056dbf2d88e968654bfbfcde478074805a94c1031e4b928d05"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/__init__.py",
+      "sha256": "7f414816fcf5ba5a3801d266c354f2572680f30887a4a5c9610dbb34d36a7799"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/config/defaults.py",
+      "source": "代码/RemoteAgent-main/remoteagent/config/defaults.py",
+      "sha256": "d6421e3bb04f1f63ca931bb1dc791e21533ea3283021245a5967e6aa1079283e"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/config/tools_schema.py",
+      "source": "代码/RemoteAgent-main/remoteagent/config/tools_schema.py",
+      "sha256": "41f71db8d6692debaa3335e5c93d9a70381a34918268466bd60dcc8016696031"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/config/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/config/__init__.py",
+      "sha256": "72941038e8b2905667665250b54166c2b36c3bf0dfa483271d436fc335bd4c09"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/core/inference.py",
+      "source": "代码/RemoteAgent-main/remoteagent/core/inference.py",
+      "sha256": "c1af923a72974f6982b3925222217feb582318c45930bccb1ad1b2ee1ee98a3e"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/core/types.py",
+      "source": "代码/RemoteAgent-main/remoteagent/core/types.py",
+      "sha256": "b44dbf347908d1d35dc3e001fcbf148b55030c84d62c8812ebaa9c631055dd44"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/core/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/core/__init__.py",
+      "sha256": "5a691976f256a46827064cb61c7e35a25f4a140f63512dc7294ec7e0f34e077e"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/llm/vllm.py",
+      "source": "代码/RemoteAgent-main/remoteagent/llm/vllm.py",
+      "sha256": "ce4d1ed725c2b04fe6fbfcceef9adae42ffb63d1f4078b3208aeaf288b0638ef"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/llm/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/llm/__init__.py",
+      "sha256": "e18adf2805e617f9415f767140a6e3cfc6d5cc8190145a021f029f280971d4d6"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/parsing/tool_call.py",
+      "source": "代码/RemoteAgent-main/remoteagent/parsing/tool_call.py",
+      "sha256": "922103cfb07ca08415daced05bfe919cfacffbddf2a4f889fe46276aab486b6c"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/parsing/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/parsing/__init__.py",
+      "sha256": "49811542aec4696301a578810aa9ddb606ea70fd7a40dca54425bd69981f357e"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/prompts/prompt.txt",
+      "source": "代码/RemoteAgent-main/remoteagent/prompts/prompt.txt",
+      "sha256": "4b1122d69dd2c51de5c8ba6d4bc1a97146fe6e19c68ddb53cbe58d4bb3a3c4c3"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/services/executor.py",
+      "source": "代码/RemoteAgent-main/remoteagent/services/executor.py",
+      "sha256": "cc82163effe651be95527308c51907f698ae97d93281a9fa91df74b30c99f3a1"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/services/mappings.py",
+      "source": "代码/RemoteAgent-main/remoteagent/services/mappings.py",
+      "sha256": "6bc1a3b30fbadd71aec246724db2bbbdd0a75e5212cfd17796e6c243a14eae96"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/services/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/services/__init__.py",
+      "sha256": "e72f05243dbf33f444031c390fd3cd29810ff5dfa3c3904a752fe5478c689fa0"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/utils/http.py",
+      "source": "代码/RemoteAgent-main/remoteagent/utils/http.py",
+      "sha256": "41614e0afd21694e7c23e3b2bf36338d7ff7aceb63018f3f4133eae4f3dc1e38"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/utils/image.py",
+      "source": "代码/RemoteAgent-main/remoteagent/utils/image.py",
+      "sha256": "53d47b64fd884262c123d927ce7a8e4e79482d5c16a1d06c4c28e7f68b31e5bd"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/utils/text.py",
+      "source": "代码/RemoteAgent-main/remoteagent/utils/text.py",
+      "sha256": "5aeca3f5c4ce09487082cb01b30af07f32c4bdefa33428e57adf3cf99678229e"
+    },
+    {
+      "path": "services/remoteagent/upstream/remoteagent/utils/__init__.py",
+      "source": "代码/RemoteAgent-main/remoteagent/utils/__init__.py",
+      "sha256": "667404de6565d0e8d984171937355b73f9bef27dd139d9441c5970a85392baea"
+    },
+    {
+      "path": "services/remotesam/upstream/args.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/args.py",
+      "sha256": "456ca878c9b5fe1b82949d548a71008a3482272e070aed9569c2836f1c5e8cc2"
+    },
+    {
+      "path": "services/remotesam/upstream/README.md",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/README.md",
+      "sha256": "b50b49534dcfa3f9691e6ac4fd68ebe9ec8986b94ccda118213a431614ce0170"
+    },
+    {
+      "path": "services/remotesam/upstream/remotesam.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/remotesam.py",
+      "sha256": "13af3c3b3063294f3a10854935a83ab13b2ef887e49f85206f236f75737cea59"
+    },
+    {
+      "path": "services/remotesam/upstream/requirements.txt",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/requirements.txt",
+      "sha256": "cfad3627a6c84ec0be6761e271490829df33ae61b4499a7da39b309e2f5f914c"
+    },
+    {
+      "path": "services/remotesam/upstream/train.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/train.py",
+      "sha256": "69edf57d38ea19c4e023432bad8e95deda9883f3dca12d58b84ed67d4c51b32d"
+    },
+    {
+      "path": "services/remotesam/upstream/transforms.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/transforms.py",
+      "sha256": "c1c2b4b6854209847e0e29791c71fe5627014124d6d860efb6b896b3464cf2e3"
+    },
+    {
+      "path": "services/remotesam/upstream/utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/utils.py",
+      "sha256": "1ea410672afe8bfc747f98a54d9fc1cdd1c58506602ca8168d521a8cf72ef1ac"
+    },
+    {
+      "path": "services/remotesam/upstream/arc/adaptive_rotated_conv.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/arc/adaptive_rotated_conv.py",
+      "sha256": "5ba6f038a6b854c583738c49ec38f50061839fb597df12b02bf01586f54ac5a4"
+    },
+    {
+      "path": "services/remotesam/upstream/arc/routing_function.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/arc/routing_function.py",
+      "sha256": "acd1f4909cc3d9f28c02026f2750bb5085ee80c255bffcc16da3ae6f69591ab9"
+    },
+    {
+      "path": "services/remotesam/upstream/arc/weight_init.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/arc/weight_init.py",
+      "sha256": "ddd3f041fc9e58d278ac411392823aeb5a249b4e54cbb73154bc45b1bfe99bf2"
+    },
+    {
+      "path": "services/remotesam/upstream/arc/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/arc/__init__.py",
+      "sha256": "201d8bd4cfcb6a2c03f8e9450caeff9556afdfbd0131d8dd7b4135ffe2e8c8db"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/activations.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/activations.py",
+      "sha256": "3c4793c066c5b124fa3bd00e0e84187883107f8574dd8db51ad5a192afe6f82c"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/configuration_bert.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/configuration_bert.py",
+      "sha256": "f65ebce175a19aa9312797099927afe52253bf1d362ca01dffb6f2bec9b9e289"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/configuration_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/configuration_utils.py",
+      "sha256": "70667ed134390d78bbb887364a8c982ae83669a3533d3604c77c9a378b46a8ea"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/file_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/file_utils.py",
+      "sha256": "e22ae0f4ad3fbea6ae5bfa97be849f84d4dcee6e8b5a0b979cdb1b393093adc1"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/generation_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/generation_utils.py",
+      "sha256": "95c07f31bd55f724e3eb574a9e87847ebac68a1648a9926b8f90d3621f09e1e9"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/modeling_bert.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/modeling_bert.py",
+      "sha256": "895ccb713ecf460d2b6a422873fc134ee9858abbb9f4b9bf7f08149403ed24ea"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/modeling_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/modeling_utils.py",
+      "sha256": "f66686ffa3a8c4bd7f016ac6c99455c07ff60c37a289b5247cbe1dcd0227f5fb"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/tokenization_bert.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/tokenization_bert.py",
+      "sha256": "934bd4dbbc6daff56d49759fd656c20ea4093e6fef2f712a322eba6f1f975c5d"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/tokenization_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/tokenization_utils.py",
+      "sha256": "6fa5b5f0f1828697ff4e3afa747cda1a1a90f1da9e6e8d83674fdd56915380b1"
+    },
+    {
+      "path": "services/remotesam/upstream/bert/tokenization_utils_base.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/bert/tokenization_utils_base.py",
+      "sha256": "32aa7b2bc6f75ab839125537fe7068ce25dd4d58af9f72566c8a9ba47d8f01b1"
+    },
+    {
+      "path": "services/remotesam/upstream/data/all_dataset.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/all_dataset.py",
+      "sha256": "2b6e8e6527135782a3218ffdf8247a08658d93036e41176c402a6f5fa78fe8f3"
+    },
+    {
+      "path": "services/remotesam/upstream/data/dataset_refer_bert.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/dataset_refer_bert.py",
+      "sha256": "b3655272b90c1533d3fd315984eee748ddcbea22e79298d1934b1b80bee45789"
+    },
+    {
+      "path": "services/remotesam/upstream/data/DiverseDataset.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/DiverseDataset.py",
+      "sha256": "1645386fdd92046737d65363349dec552b218c4d4672a9ad68d381463eebb68d"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/backbone.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/backbone.py",
+      "sha256": "fbfcc673f6e35c636062cbb1debeedd39d2af0429e2e31be04f98b8d174f3204"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/cross_scale_interaction.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/cross_scale_interaction.py",
+      "sha256": "bed62a544d55b64e56f55ed3c289d0f6f1f1235bbe0a233900a8a47b4cb86e2c"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/logger.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/logger.py",
+      "sha256": "32b072effb2d7d286b6cfd4787dee44d2ca97c09bae0ae3d0fa2b12bca7122b1"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/mask_predictor.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/mask_predictor.py",
+      "sha256": "43785f50722b90f8f06b6717660c322a1847ed1c904c0a08fc5482e3ee2714bb"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/segmentation.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/segmentation.py",
+      "sha256": "cad4ef7e2e6363acf06986b08f2c1e439102936d1dd32236b29622df4dee4e97"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/transformer.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/transformer.py",
+      "sha256": "51d633b41e44d9ed2707de6ffde3b3ca2bda4f5d857274de8267218575b3eede"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/various_receptive.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/various_receptive.py",
+      "sha256": "506c5881bd448a50a1fae937c2e5818e33e9e3d4863a2d6946442d5809f57ecb"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/_utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/_utils.py",
+      "sha256": "712c9ae922d523fbd45c70469290a942db530ee6f5294f0e024514145492e0ab"
+    },
+    {
+      "path": "services/remotesam/upstream/loss/loss.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/loss/loss.py",
+      "sha256": "584eac67bd7d4e2ee2780a6db5c283ec86672dac69acbda04773da760eaeee80"
+    },
+    {
+      "path": "services/remotesam/upstream/refer/refer.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/refer/refer.py",
+      "sha256": "1f908dcae05bb4ef1ba67a91387475a40a760e768f6b11ba8f88e72d37a4206c"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/CAP.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/CAP.sh",
+      "sha256": "0a07c42ea9c166bda7c7cb0e6adde123220d9b2ef8469f9dab41470424140561"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/CNT.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/CNT.sh",
+      "sha256": "d424bdc952405ed3b6caf30c8b09f654eec9b408df80c3d9944a923ecae8d67f"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/DET.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/DET.sh",
+      "sha256": "8e7ff9827086a34961ad0f1d0fa0a24fd64911ae344b182ad28b551007d5ce3f"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/DET_DOTA.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/DET_DOTA.sh",
+      "sha256": "cf77dc2400eacfc0050996dac48ecc06be95e357e9bc2f4dcf05c8c739079132"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/MCC.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/MCC.sh",
+      "sha256": "8e6663cfaf95dfbcf850856ee4fdda9588bb9a9b2cbacec2ee3cbc786f210372"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/MLC.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/MLC.sh",
+      "sha256": "18b728d0c496a1011890a23964da2bb897518a629c6127befae4c9eb560bc871"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/REF.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/REF.sh",
+      "sha256": "7b283d1e07f057c58f5a02d5cafe52597ada2ae24c177e38c99e311b95faeb3b"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/SEG.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/SEG.sh",
+      "sha256": "bfd02d141817abe7ae5345d2b637d25e1823627446b539b4161d4b54f6935553"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/VG.sh",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/VG.sh",
+      "sha256": "b8156d2536d448c501709113b558aa99d9d348b3f7130a9996be98ee503dd4a0"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/model.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/model.py",
+      "sha256": "9fe7a130e12e96cd3e4b2f9f79830be513332eaa6bb5e50dc4d49e142bd9f054"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/RuleBasedCaptioning.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/RuleBasedCaptioning.py",
+      "sha256": "23b7c8e553b99403eeae4effee7efbf10e974f1060f87e21a296b1727951ddc1"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/CAP.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/CAP.py",
+      "sha256": "4b8d6a340b0d0f182c19424dfb0777594bd70674a491d8c076c502e61d3158d7"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/CNT.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/CNT.py",
+      "sha256": "7159906d6f5d941b4b2e245b4f2ee842b93197b4e93e7db4c746eaee18a64c52"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/DET.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/DET.py",
+      "sha256": "a1be5afb21394099b3959ca7eab1d9a4001bb6ade15885e7e832171828e17888"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/DET_DOTA.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/DET_DOTA.py",
+      "sha256": "b2d72695ac26bbab3b3b32764d36ccca46705ab13bb01b4d3a5f1f93b1f099b2"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/MCC.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/MCC.py",
+      "sha256": "05975c5022c70fc229c9c661c7daecdf7c3ee6aaf84a437741394b2b60a14567"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/MLC.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/MLC.py",
+      "sha256": "bd5af7a9de6507f12497b718ccf1b19c7c16d54762f1bce640091b724ce70774"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/REF.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/REF.py",
+      "sha256": "b5e71aafeedafbc744f32c980cd2bd96f464cd266d84bce005cabf2d3abf0258"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/SEG.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/SEG.py",
+      "sha256": "e309faac40150f8426480939ebbaa2419057347c3d886bf53012533343a1ca43"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/eval/VG.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/eval/VG.py",
+      "sha256": "30a6ec3665a600d89e01cc237392d80c18ad58ba28016c6730300d7ac1e47226"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/RunningScore.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/RunningScore.py",
+      "sha256": "61c56cd2a79611d1c458fb93e1fb62923feee03b38a5af9863ef8ae964994b6e"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/eval.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/eval.py",
+      "sha256": "2058475e474350b91a959d4a7713475bebe8830c38f7398907fd6f5e8311cc8c"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/scorers.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/scorers.py",
+      "sha256": "c8b277c634062e5903079bcf88e537a11b020211d9aaf3724c9174f09a6c27a9"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/cider/cider.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/cider/cider.py",
+      "sha256": "543c4b4f45d50cd706050a941a3cc3d799f10b18374523af87e3094d634009c1"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/cider/cider_scorer.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/cider/cider_scorer.py",
+      "sha256": "22e2bfa2b9b5f7d4eca295a3caedae5e854f4524edb5b358f02dc1d5f2e1e1ac"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/cider/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/cider/__init__.py",
+      "sha256": "d02e91fe125b82e6e5f0642b897f7439094506d06f32771b40d00170deb8eae1"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/tokenizer/ptbtokenizer.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/tokenizer/ptbtokenizer.py",
+      "sha256": "3794bf1bf2022fdb6595adea85d0f04dc7df8fdf55aba8b6a5fcf4eff51c1885"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/tokenizer/simpletokenizer.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/tokenizer/simpletokenizer.py",
+      "sha256": "5ed2623a1b48417508493c4ea0ebe4859e90f177a70e688ed32721b190675a32"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/tokenizer/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/tokenizer/__init__.py",
+      "sha256": "9b6cdf3fd9c1cc87e57227fdf1653d5a6890922e9e8595dd13474cbc674b286e"
+    },
+    {
+      "path": "services/remotesam/upstream/tasks/code/metric/cidereval/cider/data/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/tasks/code/metric/cidereval/cider/data/__init__.py",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/mmcv_custom/checkpoint.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/mmcv_custom/checkpoint.py",
+      "sha256": "644333b69e063abaffecdf8db6be1d57b120349cd0a85f75cb8eabe50e319c99"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/mmcv_custom/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/mmcv_custom/__init__.py",
+      "sha256": "9237ce78ee99ba95cfabac5e8dc170d66510ebd0f24e0c8338241af1cb11591d"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functional.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functional.py",
+      "sha256": "11d01d92d9df6acffdda7e11796abb79b238f1e5064a395e3a6ed5a004ae7ce8"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/aggregation_refpad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/aggregation_refpad.py",
+      "sha256": "8bb82322b94bd2d741ff9f8b238f26f1fd537c0f3a37b2082055543a42943306"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/aggregation_zeropad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/aggregation_zeropad.py",
+      "sha256": "b2201fa6a9fa14d31e2a33e77b3158e100de06f221169e9b9263e8dd73b5a769"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/subtraction2_refpad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/subtraction2_refpad.py",
+      "sha256": "34046123384a50d58da75e24cf309a54b2a6c84d9307e289a37e348eb053322d"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/subtraction2_zeropad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/subtraction2_zeropad.py",
+      "sha256": "356786bda2a224cbb5a9f5bcd76eb14e12d98d922ad7007dc9d07f8745e62f9e"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/subtraction_refpad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/subtraction_refpad.py",
+      "sha256": "79df881cdd84835f658977bd9007bd203d6fb0fa6cd5b660a8459483531403d2"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/subtraction_zeropad.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/subtraction_zeropad.py",
+      "sha256": "ee03835c61818669120214c0b6e05e9df41cf6638bd155bf56f22663935b92fd"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/utils.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/utils.py",
+      "sha256": "2dbd651a67c9fd03270c45b188302b2324af5ad7d5558e5073456fab2a9b84b1"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/functions/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/functions/__init__.py",
+      "sha256": "04002578767ad422047939af8c872ee2414068e20ac6f9fc2d304027628e7992"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/modules/aggregation.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/modules/aggregation.py",
+      "sha256": "fa77a29c40e81792420e6ab482e5742685276489bd88ba377ec1dec2ec7f83a4"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/modules/subtraction.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/modules/subtraction.py",
+      "sha256": "545d2539f929acb7b6e76a0822c6e3d1ca62ce4c4f75b14c9ad7ed4ab82200fc"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/modules/subtraction2.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/modules/subtraction2.py",
+      "sha256": "3e1f429394233b66e425fd1f271a3c062d0ad5058f0e9fe0d9b36bb35e76fb17"
+    },
+    {
+      "path": "services/remotesam/upstream/lib/sa/modules/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/lib/sa/modules/__init__.py",
+      "sha256": "f593e186978a6c3c4d072d901ca1e8507128bd90d710c3cc2206de8002172a5b"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/CAP.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/CAP.py",
+      "sha256": "6902791bb1e562c3dc99f8d68fdfaf8fe9ee7be4ad987354c9799217073aa59e"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/CNT.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/CNT.py",
+      "sha256": "3fb993b3e6b1671855294ab7d8e3384b2fc908b17ffed89917feabac49231a19"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/DET.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/DET.py",
+      "sha256": "9d68bcf04cd62b612d441db4db8fb59fc301ce8437b27401cedc2fd9b66c484b"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/MCC.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/MCC.py",
+      "sha256": "30fdff67c62ea16467c5f840220f3ec4e593e04620ced4964066a978341e7214"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/MLC.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/MLC.py",
+      "sha256": "82f6be8eafa9712f505562642fb96f6169cc5545ccff615a61308a36f3bf97e4"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/VG.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/VG.py",
+      "sha256": "969c19bd33560d5cedf42d6567cfbde1fb437748b4df823c82300c6498802037"
+    },
+    {
+      "path": "services/remotesam/upstream/data/datasets/__init__.py",
+      "source": "代码/RemoteAgent-main/servers/RemoteSAM/data/datasets/__init__.py",
+      "sha256": "3c054e259b7343658a5b9a36ed6b30482aa5d4754f548e5aa21ec883f2c64bec"
+    }
+  ]
+}

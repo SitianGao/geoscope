@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 from pathlib import Path
 
@@ -59,6 +60,23 @@ class RemoteAgentCLI:
         )
         p.add_argument("--image_path", type=str, required=True)
         p.add_argument("--max_rounds", type=int, default=3)
+        p.add_argument(
+            "--plan_only",
+            action="store_true",
+            help="Return one official RemoteAgent decision without executing a tool.",
+        )
+        p.add_argument(
+            "--context_json",
+            type=str,
+            default="{}",
+            help="Current Harness context as a JSON object (used with --plan_only).",
+        )
+        p.add_argument(
+            "--allowed_tools",
+            type=str,
+            default=None,
+            help="Comma-separated deployed tool names; unavailable calls are rejected.",
+        )
         p.add_argument("query", type=str, nargs="*", help="User query")
         return p
 
@@ -76,12 +94,16 @@ class RemoteAgentCLI:
             "skysense_det": args.skysense_det_url,
             "directsam": args.directsam_url,
         }
+        allowed_tools = None
+        if args.allowed_tools is not None:
+            allowed_tools = {name.strip() for name in args.allowed_tools.split(",") if name.strip()}
 
         agent = RemoteAgent(
             vllm_url=args.vllm_url,
             model_name=args.vllm_model,
             system_prompt_path=prompt_path,
             api_urls=api_urls,
+            allowed_tools=allowed_tools,
             max_rounds=args.max_rounds,
         )
 
@@ -96,8 +118,31 @@ class RemoteAgentCLI:
         print(f"  query: {query[:100]}{'...' if len(query) > 100 else ''}")
         print("-" * 60)
 
-        result = agent.run(query=query, image_path=args.image_path)
-        print("\n[Final response]\n", result.text, sep="")
+        if args.plan_only:
+            try:
+                context = json.loads(args.context_json)
+            except json.JSONDecodeError as exc:
+                raise SystemExit(f"Invalid --context_json: {exc}") from exc
+            if not isinstance(context, dict):
+                raise SystemExit("--context_json must decode to a JSON object")
+            result = agent.plan(query=query, image_path=args.image_path, context=context)
+            output = {
+                "status": result.status,
+                "text": result.text,
+                "raw_response": result.raw_response,
+                "tool_call": (
+                    {
+                        "name": result.tool_call.name,
+                        "arguments": result.tool_call.arguments,
+                    }
+                    if result.tool_call
+                    else None
+                ),
+            }
+            print("\n[Decision]\n", json.dumps(output, ensure_ascii=False, indent=2), sep="")
+        else:
+            result = agent.run(query=query, image_path=args.image_path)
+            print("\n[Final response]\n", result.text, sep="")
         print("=" * 60)
         return 0
 

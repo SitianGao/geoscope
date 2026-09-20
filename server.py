@@ -15,6 +15,10 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
+from runtime_config import load_settings, settings_status
+from service_transport import request_json, inspect_services
+
+load_settings()
 
 ROOT = Path(__file__).resolve().parent
 WEB = ROOT / 'web'
@@ -25,6 +29,7 @@ LOCK = threading.RLock()
 SID_RE = re.compile(r'^[a-f0-9]{12}$')
 SIDES = {'all': '全图', 'left': '左半幅', 'right': '右半幅', 'top': '上半幅', 'bottom': '下半幅'}
 TARGETS = {'building': '建筑', 'aircraft': '飞机', 'road': '道路', 'water': '水体', 'tree': '植被', 'ship': '船舶'}
+DESCRIPTIONS = {'building':'all buildings','aircraft':'all aircraft','road':'all roads','water':'water bodies','tree':'trees and vegetation','ship':'all ships'}
 SAMPLES = {
  'urban': {'name': '街区建筑研究样区', 'file': 'urban.png', 'target': 'building', 'size': [800,600],
   'source': '本地 RemoteAgent / SM3Det 仓库 tools/cam/5428.tif；原始影像来源与发布许可需在正式参赛前进一步核对。',
@@ -36,7 +41,10 @@ SAMPLES = {
 
 def uid(): return uuid.uuid4().hex[:12]
 def now(): return datetime.now(timezone.utc).isoformat()
-def save_json(path, value): path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding='utf-8')
+def save_json(path, value):
+    temporary=path.with_name(path.name+'.'+uid()+'.tmp')
+    temporary.write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf-8')
+    os.replace(temporary,path)
 def image_b64(image):
     b=io.BytesIO(); image.save(b,format='PNG'); return base64.b64encode(b.getvalue()).decode()
 
@@ -96,8 +104,7 @@ def parse_task(query,context):
             'reuse':bool(re.search(r'统计|占比|面积',q) and not re.search(r'提取|分割|改|换',q) and side is None and context.get('target')==target)}
 
 def post_json(url,payload,timeout=120,headers=None):
-    req=urllib.request.Request(url,json.dumps(payload).encode(),headers={'Content-Type':'application/json',**(headers or {})})
-    with urllib.request.urlopen(req,timeout=timeout) as r: return json.load(r)
+    return request_json(url,payload,timeout,headers)
 
 def live_plan(query,context,image):
     base=os.environ.get('GEO_AGENT_BASE_URL','').rstrip('/')
@@ -118,6 +125,46 @@ def live_plan(query,context,image):
 def public_session(s):
     return {k:v for k,v in s.items() if k not in ('lock',)}
 
+def get_session(sid):
+    if not isinstance(sid,str) or not SID_RE.fullmatch(sid): return None
+    with LOCK:
+        if sid in SESSIONS: return SESSIONS[sid]
+        folder=DATA/sid
+        try:
+            s=json.loads((folder/'session.json').read_text(encoding='utf-8'))
+            if s.get('id')!=sid or not (folder/'original.png').is_file(): return None
+            if not isinstance(s.get('runs'),list) or not isinstance(s.get('context'),dict): return None
+            if any(not isinstance(s.get(k),str) for k in ('name','created_at','image_url','source')): return None
+            if any(type(s.get(k)) is not int or s[k]<=0 for k in ('width','height')): return None
+            for r in s['runs']:
+                if not SID_RE.fullmatch(r.get('id','')) or r.get('session_id')!=sid: return None
+            s['lock']=threading.Lock(); SESSIONS[sid]=s; return s
+        except (OSError,ValueError,TypeError,AttributeError): return None
+
+def session_index():
+    items=[]
+    for folder in DATA.iterdir():
+        if not folder.is_dir() or not SID_RE.fullmatch(folder.name): continue
+        s=get_session(folder.name)
+        if s:
+            items.append({k:s[k] for k in ('id','name','created_at','width','height')})
+            items[-1]['run_count']=len(s['runs'])
+    return sorted(items,key=lambda item:item['created_at'],reverse=True)[:100]
+
+def binary_mask(mask):
+    mask=mask.convert('L'); values={i for i,count in enumerate(mask.histogram()) if count}
+    if values.issubset({0,1}): return mask.point(lambda value:255 if value else 0)
+    if values.issubset({0,255}): return mask
+    raise ValueError('RemoteSAM须返回0/1或0/255二值蒙版，不能把概率图或多类标签直接计算为目标面积')
+
+def mask_cache_key(s,mode,target):
+    revision='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','')
+    if not revision: return None  # Unknown live model revision cannot be safely reused.
+    value={'image':hashlib.sha256((DATA/s['id']/'original.png').read_bytes()).hexdigest(),
+           'mode':mode,'target':target,'prompt':DESCRIPTIONS[target],'revision':revision,
+           'endpoint':os.environ.get('GEO_REMOTESAM_URL','') if mode=='live' else ''}
+    return hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()
+
 def new_session(sample='urban',uploaded=None,name=None):
     sid=uid(); folder=DATA/sid; folder.mkdir()
     if uploaded is None:
@@ -130,7 +177,7 @@ def new_session(sample='urban',uploaded=None,name=None):
         if image.width*image.height>16_000_000: raise ValueError('首版支持不超过1600万像素的影像')
         image=ImageOps.exif_transpose(image).convert('RGB'); sample=None
     image.save(folder/'original.png')
-    s={'id':sid,'sample':sample,'name':(name or SAMPLES[sample]['name'])[:120], 'width':image.width,'height':image.height,
+    s={'id':sid,'sample':sample,'name':(name or (SAMPLES[sample]['name'] if sample else '上传影像'))[:120], 'width':image.width,'height':image.height,
        'image_url':f'/experiments/{sid}/original.png','created_at':now(),'runs':[], 'context':{},
        'source':SAMPLES[sample]['source'] if sample else '用户上传影像', 'lock':threading.Lock()}
     with LOCK: SESSIONS[sid]=s
@@ -178,9 +225,16 @@ def _run_task(s,p):
             event('准备实验包','引用所选或最近有效结果；不重新推理')
         else:
             target,side=plan['target'],plan['side']; t=time.perf_counter()
-            if plan.get('reuse') and previous and previous.get('mask_url') and previous['mode']==mode:
-                mask=Image.open(DATA/s['id']/previous['id']/'mask.png').convert('L'); event('复用当前结果','仅重新计算统计；未调用感知工具')
+            cache_key=mask_cache_key(s,mode,target)
+            cached=DATA/s['id']/previous['id']/'full_mask.png' if previous else None
+            reusable=bool(cache_key and previous and previous.get('mask_cache_key')==cache_key and cached.is_file()
+                          and not p.get('force_perception') and not re.search(r'重新|重跑|不要复用',query))
+            if reusable and hashlib.sha256(cached.read_bytes()).hexdigest()!=previous.get('full_mask_sha256'):
+                reusable=False
+            if reusable:
+                mask=Image.open(cached).convert('L'); event('复用完整目标蒙版','复用同影像、目标、提示与模型版本的全图结果，再按当前范围筛选')
                 result['provenance']['perception']=previous['provenance']['perception']
+                result['reused_from_run_id']=previous['id']
             elif mode=='demo':
                 if not s['sample']: raise ValueError('上传影像没有预置标注。请选择模型模式，或返回内置样例体验流程。')
                 if target!=SAMPLES[s['sample']]['target']: raise ValueError(f'这个样例只提供{TARGETS[SAMPLES[s["sample"]]["target"]]}的演示标注，不能据此判断其他类别。')
@@ -188,13 +242,18 @@ def _run_task(s,p):
             else:
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
-                descriptions={'building':'all buildings','aircraft':'all aircraft','road':'all roads','water':'water bodies','tree':'trees and vegetation','ship':'all ships'}
-                data=post_json(url,{'task':'referring_seg','image':image_b64(image),'text':descriptions[target]})
+                data=post_json(url,{'task':'referring_seg','image':image_b64(image),'text':DESCRIPTIONS[target]})
                 if data.get('status')!='success' or not data.get('mask'): raise ValueError('RemoteSAM未返回有效蒙版')
-                mask=Image.open(io.BytesIO(base64.b64decode(data['mask']))).convert('L')
+                mask=Image.open(io.BytesIO(base64.b64decode(data['mask'],validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
                 event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
-            mask=mask.point(lambda x:255 if x>127 else 0); mask=constrain(mask,side)
+            mask=binary_mask(mask)
+            if mask.size!=image.size: raise ValueError('完整蒙版尺寸与原图不一致')
+            mask.save(folder/'full_mask.png')
+            result['mask_cache_key']=cache_key
+            result['full_mask_sha256']=hashlib.sha256((folder/'full_mask.png').read_bytes()).hexdigest()
+            result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','未记录')
+            mask=constrain(mask,side)
             metrics=statistics(mask,side); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
             mask.save(folder/'mask.png'); overlay.save(folder/'overlay.png')
@@ -217,10 +276,11 @@ class Handler(SimpleHTTPRequestHandler):
         raw=json.dumps(value,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(raw))); self.end_headers(); self.wfile.write(raw)
     def do_GET(self):
         path=self.path.split('?')[0]
-        if path=='/api/status': return self.json({'agent_configured':bool(os.environ.get('GEO_AGENT_BASE_URL') and os.environ.get('GEO_AGENT_MODEL')),'sam_configured':bool(os.environ.get('GEO_REMOTESAM_URL')),'samples':SAMPLES,'version':'0.1.0','note':'配置状态不代表服务已通过连通测试'})
+        if path=='/api/status': return self.json({**settings_status(),'samples':SAMPLES,'version':'0.2.0'})
+        if path=='/api/sessions': return self.json({'sessions':session_index()})
         if path.startswith('/api/session/'):
-            sid=path.rsplit('/',1)[-1]; s=SESSIONS.get(sid)
-            return self.json(public_session(s)) if s else self.json({'error':'实验不存在或服务已重启'},404)
+            sid=path.rsplit('/',1)[-1]; s=get_session(sid)
+            return self.json(public_session(s)) if s else self.json({'error':'实验不存在或存储文件不完整'},404)
         if path.startswith('/api/export/'):
             parts=path.split('/'); sid,rid=parts[-2:]
             if len(parts)!=5 or not SID_RE.fullmatch(sid) or not SID_RE.fullmatch(rid): return self.send_error(404)
@@ -243,9 +303,10 @@ class Handler(SimpleHTTPRequestHandler):
             length=int(self.headers.get('Content-Length','0'))
             if length<=0 or length>18*1024*1024: raise ValueError('请求大小不支持')
             p=json.loads(self.rfile.read(length))
+            if self.path=='/api/check-services': return self.json(inspect_services())
             if self.path=='/api/session': return self.json(new_session(p.get('sample','urban'),p.get('image'),p.get('name')))
             if self.path=='/api/run':
-                s=SESSIONS.get(p.get('session_id'))
+                s=get_session(p.get('session_id'))
                 if not s: raise ValueError('实验不存在，请重新选择影像')
                 return self.json(run_task(s,p))
             return self.json({'error':'接口不存在'},404)

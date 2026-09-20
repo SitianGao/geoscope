@@ -18,8 +18,14 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal')){const r=$('mod
 
 async function newExperiment(sample='urban',image=null,name=null){
  if(state.busy)return toast('请等待当前任务完成');
+ state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;
  try{
   const session=await api('/api/session',{sample,image,name});
+  await showSession(session);
+ }catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;}
+}
+
+async function showSession(session){
   const original=await loadImage(session.image_url);
   state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1});
   clearTimeout(toastTimer);$('toast').hidden=true;
@@ -35,7 +41,20 @@ async function newExperiment(sample='urban',image=null,name=null){
   $('trace').innerHTML='<div class="trace-placeholder">'+icon('target')+'<span>每一步操作，都有可追溯的依据。</span><small>任务理解 → 专业感知 → 几何统计 → 结果检查</small></div>';
   $('runLabel').textContent='等待实验开始';$('query').value='';updateMode();resetMetrics();draw();syncView();closeModal();
   localStorage.setItem('geoscope-session',session.id);
- }catch(e){toast(e.message);}
+  if(session.runs.length){
+   $('chat').innerHTML='';
+   for(const r of session.runs){addMessage('user',r.query);addMessage('assistant',r.message,r.status==='failed'?'warning':'',r);}
+   state.last=session.runs.at(-1);
+   const remembered=localStorage.getItem('geoscope-selected-'+session.id);
+   const selected=session.runs.find(r=>r.id===remembered&&r.mask_url)||[...session.runs].reverse().find(r=>r.mask_url);
+   renderVersions();if(selected)await selectRun(selected);else renderTrace(state.last);
+  }
+}
+async function openExperiment(id){
+ if(state.busy)return toast('请等待当前任务完成');
+ state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;
+ try{await showSession(await api('/api/session/'+encodeURIComponent(id)));}
+ catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;}
 }
 
 function updateMode(){
@@ -113,6 +132,7 @@ async function selectRun(run){
  const token=++state.loadToken;
  try{const mask=await loadImage(run.mask_url);if(token!==state.loadToken)return;
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
+  localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('resultTitle').textContent=sideNames[run.task.side]+targetNames[run.task.target];$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');
@@ -141,7 +161,7 @@ async function run(query,simulateFailure=false){
 }
 $('taskForm').onsubmit=e=>{e.preventDefault();run($('query').value);};
 $('query').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();run($('query').value);}};
-document.addEventListener('click',e=>{const prompt=e.target.closest('[data-prompt]');if(prompt)run(prompt.dataset.prompt);const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}});
+document.addEventListener('click',e=>{const experiment=e.target.closest('[data-session]');if(experiment)openExperiment(experiment.dataset.session);const prompt=e.target.closest('[data-prompt]');if(prompt)run(prompt.dataset.prompt);const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}});
 function download(url){const a=document.createElement('a');a.href=url;a.download='';document.body.append(a);a.click();a.remove();}
 $('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('实验包已开始下载，包含6个真实生成的文件');}};
 function gallery(){
@@ -151,9 +171,13 @@ function gallery(){
 }
 $('galleryBtn').onclick=gallery;$('newBtn').onclick=gallery;$('uploadBtn').onclick=gallery;$('workspaceBtn').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 $('fileInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(file.size>12*1024*1024){toast('请上传12MB以内的影像');e.target.value='';return;}const reader=new FileReader();reader.onload=()=>newExperiment(null,reader.result,file.name);reader.onerror=()=>toast('无法读取影像');reader.readAsDataURL(file);e.target.value='';};
-function history(){
+async function history(){
  const runs=state.session?.runs||[];
  modal('实验记录',runs.length?`<p>同一影像的结果分别保存。点击有效结果恢复查看，并以该版本为后续任务上下文。</p>${[...runs].reverse().map(r=>`<button class="history-row" ${r.mask_url?`data-run="${r.id}"`:''} ${!r.mask_url?'disabled':''}><span>V${r.version}</span><div><strong>${escape(r.query)}</strong><small>${statusNames[r.status]} · ${r.mode==='demo'?'演示':'模型'}</small></div><time>${r.duration_ms} ms</time></button>`).join('')}`:'<p>尚未运行实验。从提取右侧建筑开始，你的任务和结果会记录在这里。</p>','EXPERIMENT HISTORY');
+ try{
+  const data=await api('/api/sessions');if(!$('modal').open||$('modalTitle').textContent!=='实验记录')return;
+  $('modalBody').insertAdjacentHTML('beforeend','<h3>已保存的影像实验</h3>'+data.sessions.map(s=>`<button class="history-row" data-session="${escape(s.id)}"><span>↗</span><div><strong>${escape(s.name)}</strong><small>${s.width} × ${s.height} px · ${s.run_count} 次运行</small></div></button>`).join(''));
+ }catch(e){toast('历史实验列表读取失败');}
 }
 $('historyBtn').onclick=history;
 function details(log=false){
@@ -169,12 +193,22 @@ async function connections(){
  modal('实验运行方式',`<div class="mode-options"><button id="demoMode" class="${state.mode==='demo'?'selected':''}">样例演示<small>预置标注 · 真实几何计算</small></button><button id="liveMode" class="${state.mode==='live'?'selected':''}" ${!canLive?'disabled':''}>模型服务<small>${canLive?'已配置，执行时验证连通':'等待配置认知与感知服务'}</small></button></div><div class="connection-list"><div><span>认知核心</span><b>${state.status.agent_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>RemoteSAM</span><b>${state.status.sam_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>几何计算与实验存储</span><b style="color:#5d8850">本地服务可用</b></div></div><p>真实模型模式将影像发送至本地服务端配置的模型地址。API密钥不进入网页。</p><h3>连接方法</h3><p>按项目README配置GEO_AGENT_BASE_URL、GEO_AGENT_MODEL和GEO_REMOTESAM_URL，然后重启服务。配置状态不等于已通过模型测试。</p><button class="secondary" id="failureDemo">体验工具失败反馈</button>`,'RUNTIME SETTINGS');
  $('demoMode').onclick=()=>{state.mode='demo';updateMode();closeModal();toast('已切换到样例演示');};$('liveMode').onclick=()=>{state.mode='live';updateMode();closeModal();toast('已切换到模型服务');};
  $('failureDemo').onclick=()=>{closeModal();run('检查工具失败时能否保留已有实验结果',true);};
+ $('modalBody').insertAdjacentHTML('beforeend','<h3>服务连接检查</h3><p>只检查服务与就绪声明，不发送影像，不证明模型已完成真实推理。当前仍为旧 JSON 适配，官方 Agent 待联调。</p><button class="secondary" id="checkServices">检查服务连接</button><pre id="serviceReport" hidden></pre><p>可在项目根目录 .env 中填写配置后重启。本机访问实验室服务需具备对应网络通路。</p>');
+ $('checkServices').onclick=async()=>{
+  const button=$('checkServices'),box=$('serviceReport');button.disabled=true;box.hidden=false;box.textContent='正在检查，最多约十秒…';
+  try{const report=await api('/api/check-services',{});box.textContent=`认知核心：${report.agent.message}\nRemoteSAM：${report.sam.message}\n\n${report.note}`;}
+  catch(e){box.textContent=e.message;}finally{button.disabled=false;}
+ };
 }
 $('connectionBtn').onclick=connections;
-$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope 是按你的v3技术方案制作的第一版工作台。</p><h3>建议体验顺序</h3><p>了解场景 → 提取右侧建筑 → 改成左侧 → 对比原图与结果 → 导出实验包。</p><h3>目前已经能做什么</h3><p>真实影像上传、演示任务解析、上下文继承、版本切换、像素范围检查、面积统计、文件导出、异常反馈；已提供真实模型服务接口。</p><h3>当前边界</h3><p>内置样例来自本地科研仓库，蒙版为近似人工演示标注。当前未运行RemoteAgent或RemoteSAM权重，不提供模型精度结论。任意新影像需要接通模型服务。支持全图及上下左右半幅；复杂关系和地理面积暂未开放。</p><p>实验文件保存在本机experiments目录。当前界面会话在服务重启后需新建，旧实验文件仍保留。</p>`,'ABOUT THE PROTOTYPE');
+$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope 是按你的v3技术方案制作的第一版工作台。</p><h3>建议体验顺序</h3><p>了解场景 → 提取右侧建筑 → 改成左侧 → 对比原图与结果 → 导出实验包。</p><h3>目前已经能做什么</h3><p>真实影像上传、演示任务解析、上下文继承、版本切换、像素范围检查、面积统计、文件导出、异常反馈；已提供真实模型服务接口。</p><h3>当前边界</h3><p>内置样例来自本地科研仓库，蒙版为近似人工演示标注。当前未运行RemoteAgent或RemoteSAM权重，不提供模型精度结论。任意新影像需要接通模型服务。支持全图及上下左右半幅；复杂关系和地理面积暂未开放。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
 
 async function init(){
- try{state.status=await api('/api/status');await newExperiment('urban');}
+ try{
+  state.status=await api('/api/status');const saved=localStorage.getItem('geoscope-session');
+  if(saved){try{await showSession(await api('/api/session/'+encodeURIComponent(saved)));return;}catch(e){localStorage.removeItem('geoscope-session');}}
+  await newExperiment('urban');
+ }
  catch(e){modal('本地服务尚未启动','<p>请双击项目目录中的“启动Demo.bat”，再打开 http://127.0.0.1:4180。</p>');}
 }
 init();

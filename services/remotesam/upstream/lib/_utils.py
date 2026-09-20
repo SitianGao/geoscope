@@ -3,7 +3,7 @@ import sys
 import torch
 from torch import nn
 from torch.nn import functional as F
-from transformers import BertModel
+from transformers import BertConfig, BertModel
 
 
 def load_weights(model, load_path):
@@ -49,7 +49,10 @@ class _LAVTOneSimpleDecode(nn.Module):
         super(_LAVTOneSimpleDecode, self).__init__()
         self.backbone = backbone
         self.classifier = classifier
-        self.text_encoder = BertModel.from_pretrained(args.ck_bert)
+        # The released RemoteSAM checkpoint contains all BERT parameters. Build
+        # the standard bert-base-uncased architecture locally, then let the
+        # checkpoint loader restore the trained tensors.
+        self.text_encoder = BertModel(BertConfig())
         self.text_encoder.pooler = None
 
     def forward(self, x, text, l_mask):

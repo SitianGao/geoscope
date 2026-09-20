@@ -6,12 +6,15 @@
 
 - [项目进度、七天分工与可直接复制给 AI 的任务说明](docs/三人团队七天开发交接与AI任务说明.md)
 - [当前仓库目录及交付流程](docs/团队协作.md)
+- [队长执行与验收：当前进度、待协调事项与操作顺序](docs/队长执行与验收.md)
+- [接口与联调约定](docs/接口与联调约定.md)
+- [RemoteAgent 交付审查](docs/RemoteAgent交付审查.md)
 - [v3 技术方案](docs/技术方案_v3.md)
 - [队员 A：RemoteAgent 开发入口](services/remoteagent/README.md)
 - [队员 B：RemoteSAM 开发入口](services/remotesam/README.md)
 - [上游代码来源及裁剪范围](docs/上游代码来源.md)
 
-**状态：交互原型已完成；真实 RemoteAgent / RemoteSAM 部署和联调尚未完成。** 本次建仓只整理代码和开发资料，没有新增模型推理成果。服务目录是未修改的上游源码快照，需要按交接文档修复并部署。
+**状态：工作台与模拟服务集成已验证；真实 RemoteAgent / RemoteSAM 部署和联调尚未完成。** 本分支增加实验恢复、完整蒙版复用、配置加载及连接检查。服务目录仍是上游源码快照；A 的新增接口尚未合入，需先补齐交付并通过独立验收。
 
 依据用户提供的《技术方案调整稿_v3_需求驱动版.md》制作。方案副本见本目录“方案依据_v3.md”。
 
@@ -46,7 +49,7 @@
 
 ## 接入真实模型服务
 
-启动前设置环境变量，网页中点击“演示模式”切换。环境变量不自动从.env加载；不要把密钥写入前端或提交到仓库。
+将 `.env.example` 复制为根目录 `.env`，填写真实服务配置后启动，网页中点击“演示模式”切换。启动时自动加载 `.env`；已设置的进程环境变量优先。不要把密钥写入前端或提交到仓库。
 
 | 变量 | 含义 |
 |---|---|
@@ -54,13 +57,15 @@
 | GEO_AGENT_MODEL | 服务实际模型名称；如使用替代模型须注明，不能冒充官方RemoteAgent |
 | GEO_AGENT_API_KEY | 服务密钥；本地无需鉴权时可省略 |
 | GEO_REMOTESAM_URL | RemoteSAM推理端点，例如 http://127.0.0.1:6657/predict |
+| GEO_REMOTESAM_REVISION | 实际权重/服务版本标识；未知时留空，禁用真实蒙版复用 |
+| GEO_SERVICE_PROXY_MODE | 默认 direct，模型服务请求不使用下载代理；确需环境代理时设 environment |
 | GEO_PORT | 工作台端口，默认4180 |
 
 认知核心调用请求含真实图像base64和所选结果的目标/范围上下文，要求返回scene、segment、clarify或export。非法动作会被拒绝。真实模式会向配置的模型地址发送影像与任务。
 
 RemoteSAM适配本地上游服务格式：请求为task=referring_seg、image=base64 PNG、text=英文类别提示；响应需包含status=success及mask=base64 PNG。蒙版尺寸必须与原图完全一致，不静默拉伸。当前先提取整图类别再按像素半幅裁切，因此这是明确的空间约束实现，不宣称复现论文的指代表达推理精度。
 
-顶部只报告是否配置，真实运行才验证连通。默认没有调用远端模型，也没有任何费用产生。
+顶部配置状态不代表服务可用。可在“运行方式 → 检查服务连接”或运行 `python scripts/check_services.py` 查询模型列表和 RemoteSAM 就绪声明；检查不上传影像、不运行推理。真实推理仍需单独验收。当前认知接口要求自定义 JSON 动作，尚未连接 A 的官方 Agent 规划/工具反馈流程。
 
 ## 结果与统计约定
 
@@ -70,7 +75,8 @@ RemoteSAM适配本地上游服务格式：请求为task=referring_seg、image=ba
 - 半幅筛选是像素范围裁切，跨中线的建筑会被截取；不把它描述为完整实例选择。
 - “检查通过”只涉及尺寸、范围、文件及计算，不等于语义正确或边界精准。
 - ZIP包含 original.png、mask.png、overlay.png、result.json、statistics.json、run_log.json。模式、数据来源、影像SHA256、任务与版本关系一并记录。
-- 文件保存在experiments目录。会话索引暂存内存，重启后网页新建会话；旧文件保留，可直接检查，不会被覆盖。
+- 文件保存在experiments目录。会话可从磁盘恢复；刷新网页恢复最近实验，历史列表支持重新打开其他实验。
+- 完整蒙版独立保存，修改左右范围时可复用；复用需影像、目标、服务版本与文件哈希一致。版本未知的真实服务每次重新分割；复用来源写入运行记录。
 
 ## 样例来源
 
@@ -82,7 +88,7 @@ SM3Det仓库附CC BY-NC 4.0许可证，但具体影像原始来源与许可未�
 
 ## 核查
 
-`python -m unittest discover -s tests -v` 验证上下文、半幅统计、失败不产出、版本隔离和模型适配错误。
+`python -m unittest discover -s tests -v` 运行 22 项检查，覆盖上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。集成测试使用模拟服务，不能证明真实模型可用。
 
 `tests/browser.cjs` 为开发用浏览器检查，依赖本机Codex配套Playwright（运行时路径可用PLAYWRIGHT_PATH覆盖）。它检查主任务、条件修改、版本、下载、澄清、故障及移动端页面，截图位于test-results。
 

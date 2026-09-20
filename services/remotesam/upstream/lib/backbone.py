@@ -5,7 +5,6 @@ import torch.utils.checkpoint as checkpoint
 import numpy as np
 from .cross_scale_interaction import CIM
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
-from .mmcv_custom import load_checkpoint
 # from mmseg.utils import get_root_logger
 from typing import Optional
 from torch import Tensor
@@ -554,6 +553,8 @@ class MultiModalSwinTransformer(nn.Module):
                 nn.init.constant_(m.weight, 1.0)
 
         if isinstance(pretrained, str):
+            from .mmcv_custom import load_checkpoint
+
             self.apply(_init_weights)
             # logger = get_root_logger()
             logger = create_logger(output_dir='logs', name=f"swin")

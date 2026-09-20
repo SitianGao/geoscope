@@ -15,6 +15,12 @@ from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
+from agent_bridge import (
+    decision_to_plan,
+    finish_with_agent,
+    plan_with_agent,
+    public_decision,
+)
 from runtime_config import load_settings, settings_status
 from service_transport import request_json, inspect_services
 
@@ -106,21 +112,12 @@ def parse_task(query,context):
 def post_json(url,payload,timeout=120,headers=None):
     return request_json(url,payload,timeout,headers)
 
-def live_plan(query,context,image):
-    base=os.environ.get('GEO_AGENT_BASE_URL','').rstrip('/')
-    model=os.environ.get('GEO_AGENT_MODEL','')
-    if not base or not model: raise ValueError('RemoteAgent 服务未配置。请配置认知核心后使用模型模式。')
-    schema='仅输出JSON。action为scene/segment/clarify/export。segment含target(building/aircraft/road/water/tree/ship)、side(all/left/right/top/bottom)。scene含answer；clarify含question。不得估算面积。需求含糊或超出基础半幅空间范围时clarify。'
-    response=post_json(base+'/chat/completions',{'model':model,'temperature':0,'max_tokens':650,'messages':[
-      {'role':'system','content':'你是遥感实验任务规划器。'+schema},
-      {'role':'user','content':[{'type':'text','text':json.dumps({'query':query,'context':context},ensure_ascii=False)},
-                               {'type':'image_url','image_url':{'url':'data:image/png;base64,'+image_b64(image)}}]}]},headers={'Authorization':'Bearer '+os.environ.get('GEO_AGENT_API_KEY','EMPTY')})
-    raw=response['choices'][0]['message']['content']; match=re.search(r'\{.*\}',raw,re.S)
-    plan=json.loads(match.group() if match else raw)
-    if plan.get('action') not in ('scene','segment','clarify','export'): raise ValueError('认知核心返回未知动作')
-    if plan['action']=='segment' and (plan.get('target') not in TARGETS or plan.get('side') not in SIDES): raise ValueError('认知核心返回不支持的目标或范围')
-    if plan['action'] in ('scene','clarify') and not isinstance(plan.get('answer' if plan['action']=='scene' else 'question'),str): raise ValueError('认知核心未返回有效说明')
-    return plan
+def live_plan(query,context,image_path):
+    """Official one-step RemoteAgent planner; kept as a patch point for tests."""
+    agent,decision=plan_with_agent(query,Path(image_path),context)
+    plan=decision_to_plan(query,context,decision)
+    if plan.get('legacy_compat'): agent=None
+    return plan,agent,decision
 
 def public_session(s):
     return {k:v for k,v in s.items() if k not in ('lock',)}
@@ -157,11 +154,11 @@ def binary_mask(mask):
     if values.issubset({0,255}): return mask
     raise ValueError('RemoteSAM须返回0/1或0/255二值蒙版，不能把概率图或多类标签直接计算为目标面积')
 
-def mask_cache_key(s,mode,target):
+def mask_cache_key(s,mode,target,prompt=None):
     revision='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','')
     if not revision: return None  # Unknown live model revision cannot be safely reused.
     value={'image':hashlib.sha256((DATA/s['id']/'original.png').read_bytes()).hexdigest(),
-           'mode':mode,'target':target,'prompt':DESCRIPTIONS[target],'revision':revision,
+           'mode':mode,'target':target,'prompt':prompt or DESCRIPTIONS[target],'revision':revision,
            'endpoint':os.environ.get('GEO_REMOTESAM_URL','') if mode=='live' else ''}
     return hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()
 
@@ -203,13 +200,24 @@ def _run_task(s,p):
             'provenance':{'planner':'演示规则解析器' if mode=='demo' else os.environ.get('GEO_AGENT_MODEL','未配置'),
                           'perception':'手工绘制的近似样例蒙版，非模型预测、非评测真值' if mode=='demo' else 'RemoteSAM服务',
                           'source':s['source'],'image_sha256':hashlib.sha256((DATA/s['id']/'original.png').read_bytes()).hexdigest()}}
-    image=Image.open(DATA/s['id']/'original.png').convert('RGB')
+    image_path=DATA/s['id']/'original.png'
+    image=Image.open(image_path).convert('RGB')
+    agent=None; agent_decision=None; remote_data=None
     try:
         event('读取实验上下文',f'影像 {s["width"]} × {s["height"]}；'+('继承所选结果条件' if context else '新建任务'))
         if p.get('simulate_failure'):
             event('注入演示故障','用户主动触发的工具不可用测试','failed')
             raise ValueError('故障演示：工具未返回结果。已有版本保留，本次不生成蒙版或统计。')
-        t=time.perf_counter(); plan=live_plan(query,context,image) if mode=='live' else parse_task(query,context)
+        t=time.perf_counter()
+        if mode=='live':
+            planned=live_plan(query,context,image_path)
+            if isinstance(planned,tuple):
+                plan,agent,agent_decision=planned
+                result['agent']={'decision':public_decision(agent_decision)}
+            else:
+                plan=planned
+        else:
+            plan=parse_task(query,context)
         event('理解任务与选择路径',f'{result["provenance"]["planner"]} · {plan["action"]}',elapsed=(time.perf_counter()-t)*1000)
         result['task']=plan
         if plan['action']=='clarify':
@@ -225,7 +233,7 @@ def _run_task(s,p):
             event('准备实验包','引用所选或最近有效结果；不重新推理')
         else:
             target,side=plan['target'],plan['side']; t=time.perf_counter()
-            cache_key=mask_cache_key(s,mode,target)
+            cache_key=mask_cache_key(s,mode,target,plan.get('prompt'))
             cached=DATA/s['id']/previous['id']/'full_mask.png' if previous else None
             reusable=bool(cache_key and previous and previous.get('mask_cache_key')==cache_key and cached.is_file()
                           and not p.get('force_perception') and not re.search(r'重新|重跑|不要复用',query))
@@ -242,9 +250,9 @@ def _run_task(s,p):
             else:
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
-                data=post_json(url,{'task':'referring_seg','image':image_b64(image),'text':DESCRIPTIONS[target]})
-                if data.get('status')!='success' or not data.get('mask'): raise ValueError('RemoteSAM未返回有效蒙版')
-                mask=Image.open(io.BytesIO(base64.b64decode(data['mask'],validate=True))).convert('L')
+                remote_data=post_json(url,{'task':'referring_seg','image':image_b64(image),'text':plan.get('prompt',DESCRIPTIONS[target])})
+                if remote_data.get('status')!='success' or not remote_data.get('mask'): raise ValueError('RemoteSAM未返回有效蒙版')
+                mask=Image.open(io.BytesIO(base64.b64decode(remote_data['mask'],validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
                 event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
             mask=binary_mask(mask)
@@ -258,10 +266,29 @@ def _run_task(s,p):
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
             mask.save(folder/'mask.png'); overlay.save(folder/'overlay.png')
             status='completed' if metrics['pixel_area'] else 'needs_review'
+            agent_message=''
+            if mode=='live' and agent is not None and agent_decision is not None:
+                safe_remote={key:remote_data.get(key) for key in (
+                    'message','task','original_size','output_size','timing_ms','peak_vram_mb','checkpoint_sha256'
+                ) if remote_data and key in remote_data}
+                tool_result={'status':'success','tool_name':plan['tool'],'service':'remotesam',
+                             'request':{'task':'referring_seg','text':plan.get('prompt',DESCRIPTIONS[target])},
+                             'data':safe_remote,'measurements':metrics,
+                             'artifacts':{'full_mask_sha256':result['full_mask_sha256'],
+                                          'mask':'saved by Harness','overlay':'saved by Harness'},
+                             'reused_from_run_id':result.get('reused_from_run_id')}
+                final=finish_with_agent(agent,query,image_path,context,agent_decision,tool_result)
+                result['agent']['completion']=public_decision(final)
+                if final.status=='completed':
+                    agent_message=final.text.strip()
+                    event('RemoteAgent接收工具结果','已回传去除Base64的结构化统计与产物摘要')
+                else:
+                    status='needs_review'
+                    event('RemoteAgent接收工具结果',f'二次响应状态为 {final.status}；确定性结果仍保留','waiting')
             event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
             base=f'/experiments/{s["id"]}/{runid}'
             result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
-              message=f'已生成{SIDES[side]}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
+              message=(f'已生成{SIDES[side]}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。')+((' RemoteAgent：'+agent_message) if agent_message else '')) if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
             s['context']={'target':target,'side':side}; save_json(folder/'statistics.json',metrics)
     except Exception as exc:
         result.update(status='failed',message=str(exc) if isinstance(exc,ValueError) else f'服务调用失败（{type(exc).__name__}），请检查模型服务。')

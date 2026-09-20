@@ -29,7 +29,7 @@ def settings_status():
         'agent_configured': bool(os.environ.get('GEO_AGENT_BASE_URL') and os.environ.get('GEO_AGENT_MODEL')),
         'sam_configured': bool(os.environ.get('GEO_REMOTESAM_URL')),
         'agent_model': os.environ.get('GEO_AGENT_MODEL', ''),
-        'agent_protocol': 'legacy_json',
+        'agent_protocol': 'official_remoteagent_plan_v1',
         'service_proxy_mode': os.environ.get('GEO_SERVICE_PROXY_MODE', 'direct'),
-        'note': '配置不等于可用；当前工作台仍使用旧 JSON 适配，官方 RemoteAgent 接入待联调。',
+        'note': '配置不等于可用；工作台已接入官方 RemoteAgent plan/工具结果回传协议，真实推理仍需服务验收。',
     }

@@ -1,0 +1,14 @@
+# RemoteSAM inference-service dependencies. Install CUDA-enabled torch and
+# torchvision separately from the official PyTorch wheel index first.
+numpy<2
+opencv-python>=4.8,<5
+Pillow>=9,<12
+timm==0.6.11
+transformers==4.30.2
+tokenizers==0.13.3
+cupy-cuda12x>=13,<14
+einops>=0.6,<1
+termcolor>=2,<3
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+pydantic>=2.6,<3

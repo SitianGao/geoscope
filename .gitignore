@@ -19,5 +19,8 @@ pretrained_weights/
 checkpoints/
 weights/
 .pytest_cache/
+outputs/
+.cache/
+cupy-cache/
 .DS_Store
 Thumbs.db

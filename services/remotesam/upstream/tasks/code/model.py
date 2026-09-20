@@ -1,3 +1,5 @@
+import argparse
+import inspect
 import sys
 import os
 # set working directory to root
@@ -8,12 +10,13 @@ import torchvision
 import numpy as np
 import utils
 import transformers
+from functools import lru_cache
 from lib import segmentation
 import transforms as T
 from PIL import Image
-from .RuleBasedCaptioning import single_captioning
 
 
+@lru_cache(maxsize=1)
 def get_transform():
     transforms = [
                   T.Resize(896, 896),
@@ -23,9 +26,36 @@ def get_transform():
     return T.Compose(transforms)
 
 
+@lru_cache(maxsize=1)
+def get_tokenizer():
+    source = os.environ.get("GEO_REMOTESAM_TOKENIZER", "bert-base-uncased")
+    return transformers.BertTokenizer.from_pretrained(
+        source,
+        local_files_only=os.path.isdir(source),
+    )
+
+
+def load_checkpoint_safely(checkpoint):
+    """Load a trusted tensor checkpoint without enabling arbitrary pickle globals."""
+    parameters = inspect.signature(torch.load).parameters
+    if "weights_only" not in parameters:
+        raise RuntimeError(
+            "RemoteSAM service deployment requires PyTorch with weights_only support "
+            "(PyTorch 2.0 or newer)"
+        )
+    torch.serialization.add_safe_globals([argparse.Namespace])
+    kwargs = {
+        "map_location": "cpu",
+        "weights_only": True,
+    }
+    if "mmap" in parameters:
+        kwargs["mmap"] = True
+    return torch.load(checkpoint, **kwargs)
+
+
 def embed_sentences(sentences, max_tokens=20):
     # init
-    bert_model = transformers.BertTokenizer.from_pretrained('bert-base-uncased')
+    bert_model = get_tokenizer()
     inputs = []
     attentions = []
 
@@ -51,7 +81,16 @@ def init_demo_model(checkpoint, device):
     args.window12 = True
 
     model = segmentation.__dict__["lavt_one"](pretrained='', args=args)
-    model.load_state_dict(torch.load(checkpoint, map_location='cpu')['model'], strict=False)
+    checkpoint_data = load_checkpoint_safely(checkpoint)
+    if not isinstance(checkpoint_data, dict) or 'model' not in checkpoint_data:
+        raise ValueError("RemoteSAM checkpoint must contain a 'model' state dictionary")
+    incompatible = model.load_state_dict(checkpoint_data['model'], strict=False)
+    model.checkpoint_diagnostics = {
+        'missing_keys': list(incompatible.missing_keys),
+        'unexpected_keys': list(incompatible.unexpected_keys),
+        'checkpoint_tensor_count': len(checkpoint_data['model']),
+    }
+    del checkpoint_data
     model = model.to(device)
     return model
 
@@ -286,6 +325,8 @@ class RemoteSAM():
 
 
     def captioning(self, *, image, classnames, region_split=4):
+        from .RuleBasedCaptioning import single_captioning
+
         temp = self.detection(image=image, classnames=classnames)
 
         # filter out empty boxes
@@ -305,4 +346,3 @@ class RemoteSAM():
 
 
     
-

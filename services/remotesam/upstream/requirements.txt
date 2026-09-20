@@ -24,3 +24,6 @@ accelerate
 shapely
 torchmetrics
 spacy
+fastapi>=0.110,<1
+uvicorn>=0.29,<1
+pydantic>=2.6,<3

@@ -14,7 +14,7 @@
 - [队员 B：RemoteSAM 开发入口](services/remotesam/README.md)
 - [上游代码来源及裁剪范围](docs/上游代码来源.md)
 
-**状态：工作台与模拟服务集成已验证；真实 RemoteAgent / RemoteSAM 部署和联调尚未完成。** 本分支增加实验恢复、完整蒙版复用、配置加载及连接检查。服务目录仍是上游源码快照；A 的新增接口尚未合入，需先补齐交付并通过独立验收。
+**状态：A、B 和工作台代码已合并，正式编排接口已接通；官方 RemoteAgent 权重推理与完整现场验收仍待完成。** 工作台现在调用 A 交付的 `plan()`，校验允许的工具后调用 B 的 RemoteSAM 接口，并通过 `continue_with_tool_result()` 回传确定性统计。RemoteSAM 已有跨机器真图联调记录；这些记录不等于官方 RemoteAgent 已推理。
 
 依据用户提供的《技术方案调整稿_v3_需求驱动版.md》制作。方案副本见本目录“方案依据_v3.md”。
 
@@ -65,7 +65,7 @@
 
 RemoteSAM适配本地上游服务格式：请求为task=referring_seg、image=base64 PNG、text=英文类别提示；响应需包含status=success及mask=base64 PNG。蒙版尺寸必须与原图完全一致，不静默拉伸。当前先提取整图类别再按像素半幅裁切，因此这是明确的空间约束实现，不宣称复现论文的指代表达推理精度。
 
-顶部配置状态不代表服务可用。可在“运行方式 → 检查服务连接”或运行 `python scripts/check_services.py` 查询模型列表和 RemoteSAM 就绪声明；检查不上传影像、不运行推理。真实推理仍需单独验收。当前认知接口要求自定义 JSON 动作，尚未连接 A 的官方 Agent 规划/工具反馈流程。
+顶部配置状态不代表服务可用。可在“运行方式 → 检查服务连接”或运行 `python scripts/check_services.py` 查询模型列表和 RemoteSAM 就绪声明；检查不上传影像、不运行推理。模型模式采用 RemoteAgent 官方 `<answer>` / `T_call(...)` 协议：工作台只允许指代分割和语义分割，绑定当前影像，执行 RemoteSAM 后回传实际统计。模型的文字不能覆盖工作台计算值，也不能在反馈阶段继续自行调用工具。
 
 ## 结果与统计约定
 
@@ -88,7 +88,7 @@ SM3Det仓库附CC BY-NC 4.0许可证，但具体影像原始来源与许可未�
 
 ## 核查
 
-`python -m unittest discover -s tests -v` 运行 22 项检查，覆盖上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。集成测试使用模拟服务，不能证明真实模型可用。
+`python -m unittest discover -s tests -v` 当前运行 41 项检查，覆盖 RemoteAgent 决策、工具白名单、当前影像绑定、RemoteSAM 两种分割合同、工具结果反馈、复杂范围拒绝、文字回答不得冒充分割、推理文本脱敏、上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。HTTP 集成测试使用明确标注的模拟服务，不能证明真实模型可用。
 
 `tests/browser.cjs` 为开发用浏览器检查，依赖本机Codex配套Playwright（运行时路径可用PLAYWRIGHT_PATH覆盖）。它检查主任务、条件修改、版本、下载、澄清、故障及移动端页面，截图位于test-results。
 

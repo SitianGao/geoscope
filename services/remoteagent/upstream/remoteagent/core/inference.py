@@ -175,11 +175,15 @@ class RemoteAgent:
         context: Optional[Dict[str, Any]] = None,
         conversation: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, Any]]:
-        context_text = json.dumps(context or {}, ensure_ascii=False, default=str)
-        user_text = (
-            f"Image asset path (for tool arguments): {image_path}\n"
-            f"Current experiment context: {context_text}\n\n"
-            f"User request: {user_query}"
+        user_text = json.dumps(
+            {
+                "query": user_query,
+                "context": context or {},
+                "image_path": image_path,
+                "instruction": "Choose an allowed tool or return an <answer> response.",
+            },
+            ensure_ascii=False,
+            default=str,
         )
         messages: List[Dict[str, Any]] = [
             {"role": "system", "content": self._runtime_system_prompt()},

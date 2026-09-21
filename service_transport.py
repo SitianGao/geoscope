@@ -27,7 +27,9 @@ def request_json(url, payload=None, timeout=120, headers=None):
             raise ValueError('模型接口应返回 JSON 对象')
         return result
     except urllib.error.HTTPError as exc:
-        raise ValueError(f'模型接口返回 HTTP {exc.code}，请核对地址、权限和服务日志') from None
+        code = exc.code
+        exc.close()
+        raise ValueError(f'模型接口返回 HTTP {code}，请核对地址、权限和服务日志') from None
     except (urllib.error.URLError, TimeoutError, OSError):
         raise ValueError('模型服务连接失败或超时，请检查服务、端口及代理配置') from None
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -40,7 +42,7 @@ def inspect_services():
     model = os.environ.get('GEO_AGENT_MODEL', '')
     sam = os.environ.get('GEO_REMOTESAM_URL', '')
     report = {'inference_verified': False,
-              'note': '仅检查服务与就绪声明，不代表真实推理、语义精度或官方 Agent 已接入。'}
+              'note': '仅检查服务与就绪声明，不代表真实推理或语义精度通过验收。'}
     if not base or not model:
         report['agent'] = {'status': 'not_configured', 'message': '请填写认知服务地址和实际模型名称'}
     else:

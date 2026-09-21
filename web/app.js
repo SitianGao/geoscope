@@ -193,7 +193,7 @@ async function connections(){
  modal('实验运行方式',`<div class="mode-options"><button id="demoMode" class="${state.mode==='demo'?'selected':''}">样例演示<small>预置标注 · 真实几何计算</small></button><button id="liveMode" class="${state.mode==='live'?'selected':''}" ${!canLive?'disabled':''}>模型服务<small>${canLive?'已配置，执行时验证连通':'等待配置认知与感知服务'}</small></button></div><div class="connection-list"><div><span>认知核心</span><b>${state.status.agent_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>RemoteSAM</span><b>${state.status.sam_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>几何计算与实验存储</span><b style="color:#5d8850">本地服务可用</b></div></div><p>真实模型模式将影像发送至本地服务端配置的模型地址。API密钥不进入网页。</p><h3>连接方法</h3><p>按项目README配置GEO_AGENT_BASE_URL、GEO_AGENT_MODEL和GEO_REMOTESAM_URL，然后重启服务。配置状态不等于已通过模型测试。</p><button class="secondary" id="failureDemo">体验工具失败反馈</button>`,'RUNTIME SETTINGS');
  $('demoMode').onclick=()=>{state.mode='demo';updateMode();closeModal();toast('已切换到样例演示');};$('liveMode').onclick=()=>{state.mode='live';updateMode();closeModal();toast('已切换到模型服务');};
  $('failureDemo').onclick=()=>{closeModal();run('检查工具失败时能否保留已有实验结果',true);};
- $('modalBody').insertAdjacentHTML('beforeend','<h3>服务连接检查</h3><p>只检查服务与就绪声明，不发送影像，不证明模型已完成真实推理。当前仍为旧 JSON 适配，官方 Agent 待联调。</p><button class="secondary" id="checkServices">检查服务连接</button><pre id="serviceReport" hidden></pre><p>可在项目根目录 .env 中填写配置后重启。本机访问实验室服务需具备对应网络通路。</p>');
+ $('modalBody').insertAdjacentHTML('beforeend','<h3>服务连接检查</h3><p>工作台已接入 RemoteAgent 的规划与工具结果反馈接口，并由 Harness 校验后调用 RemoteSAM。这里只检查服务与就绪声明，不发送影像，也不证明真实推理质量。</p><button class="secondary" id="checkServices">检查服务连接</button><pre id="serviceReport" hidden></pre><p>可在项目根目录 .env 中填写配置后重启。本机访问实验室服务需具备对应网络通路。</p>');
  $('checkServices').onclick=async()=>{
   const button=$('checkServices'),box=$('serviceReport');button.disabled=true;box.hidden=false;box.textContent='正在检查，最多约十秒…';
   try{const report=await api('/api/check-services',{});box.textContent=`认知核心：${report.agent.message}\nRemoteSAM：${report.sam.message}\n\n${report.note}`;}
@@ -201,7 +201,7 @@ async function connections(){
  };
 }
 $('connectionBtn').onclick=connections;
-$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope 是按你的v3技术方案制作的第一版工作台。</p><h3>建议体验顺序</h3><p>了解场景 → 提取右侧建筑 → 改成左侧 → 对比原图与结果 → 导出实验包。</p><h3>目前已经能做什么</h3><p>真实影像上传、演示任务解析、上下文继承、版本切换、像素范围检查、面积统计、文件导出、异常反馈；已提供真实模型服务接口。</p><h3>当前边界</h3><p>内置样例来自本地科研仓库，蒙版为近似人工演示标注。当前未运行RemoteAgent或RemoteSAM权重，不提供模型精度结论。任意新影像需要接通模型服务。支持全图及上下左右半幅；复杂关系和地理面积暂未开放。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
+$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope 是按你的v3技术方案制作的第一版工作台。</p><h3>建议体验顺序</h3><p>了解场景 → 提取右侧建筑 → 改成左侧 → 对比原图与结果 → 导出实验包。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、受限工具调用、RemoteSAM分割、确定性几何统计、工具结果反馈、上下文继承、版本恢复和实验包导出。</p><h3>当前边界</h3><p>内置样例来自本地科研仓库，蒙版为近似人工演示标注。模型模式只有在服务实际启动后才会推理；接口测试不代表模型精度。支持全图及上下左右半幅，复杂关系和地理面积暂未开放。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
 
 async function init(){
  try{

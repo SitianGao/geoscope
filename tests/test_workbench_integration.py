@@ -34,10 +34,13 @@ class FakeModels(BaseHTTPRequestHandler):
         data = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
         if self.path == '/v1/chat/completions':
             content = data['messages'][-1]['content']
-            image = content[1]['image_url']['url']; assert image.startswith('data:image/png;base64,')
-            query = json.loads(content[0]['text'])['query']
-            plan = {'action': 'segment', 'target': 'building', 'side': 'left' if '左' in query else 'right'}
-            return self.reply({'choices': [{'message': {'content': json.dumps(plan)}}]})
+            if isinstance(content,list):
+                image = content[1]['image_url']['url']; assert image.startswith('data:image/png;base64,')
+                answer = 'T_call(referring_expression_segmentation, "ignored.png", "all buildings")'
+            else:
+                assert '[Execution Result]' in content
+                answer = '<answer>已收到工作台的分割结果和确定性统计。</answer>'
+            return self.reply({'choices': [{'message': {'content': answer}}]})
         if self.path == '/predict':
             type(self).calls += 1
             image = Image.open(io.BytesIO(base64.b64decode(data['image'])))
@@ -97,7 +100,7 @@ class IntegrationTests(unittest.TestCase):
         second = self.run_task('改成左侧', parent_run_id=first['id'])
         self.assertEqual(second['status'], 'completed'); self.assertEqual(FakeModels.calls, 2)
     def test_probability_maps_are_rejected(self):
-        with patch.object(server, 'post_json', return_value={'status': 'success', 'mask': server.image_b64(Image.new('L', (11, 7), 128))}), patch.object(server, 'live_plan', return_value={'action': 'segment', 'target': 'building', 'side': 'right'}):
+        with patch.object(server, 'post_json', return_value={'status': 'success', 'mask': server.image_b64(Image.new('L', (11, 7), 128))}):
             result = self.run_task('提取右侧建筑')
         self.assertEqual(result['status'], 'failed'); self.assertNotIn('metrics', result)
         self.assertFalse((server.DATA/self.session['id']/result['id']/'mask.png').exists())

@@ -210,14 +210,10 @@ class RemoteAgent:
 
     def _interpret_response(self, response: str, image_path: str) -> AgentResult:
         answer_content = extract_answer_tag(response)
-        if answer_content is not None:
-            return AgentResult(
-                text=answer_content,
-                status="completed",
-                raw_response=response,
-            )
-
-        parsed = self._parser.parse_tool_call_with_image_fallback(response, Path(image_path))
+        # Some official checkpoints wrap an otherwise valid T_call in <answer>.
+        # Keep accepting ordinary answers, but route a validated wrapped call.
+        tool_source = answer_content if answer_content is not None else response
+        parsed = self._parser.parse_tool_call_with_image_fallback(tool_source, Path(image_path))
         if parsed:
             tool_name, raw_args = parsed
             args = dict(raw_args)
@@ -237,6 +233,13 @@ class RemoteAgent:
                 status="tool_call",
                 raw_response=response,
                 tool_call=tool_call,
+            )
+
+        if answer_content is not None:
+            return AgentResult(
+                text=answer_content,
+                status="completed",
+                raw_response=response,
             )
 
         return AgentResult(

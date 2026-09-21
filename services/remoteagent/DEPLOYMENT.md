@@ -1,12 +1,39 @@
 # GeoScope RemoteAgent handoff
 
-Updated: 2026-09-20
+Updated: 2026-09-22
 
 This file records verified source, deployment and integration work. It does
-not claim that the gated official RemoteAgent model has run until its
-ModelScope download is approved and the vLLM endpoint is exercised.
+not treat a reachable endpoint as acceptance without exercising the official
+model on a real image.
 
 ## Current outcome
+
+The gated `AIMGroup/RemoteAgent` snapshot is downloaded at
+`E:\models\RemoteAgent` and copied to the assigned laboratory host at
+`/home/gst/projects/geoscope-remoteagent/RemoteAgent`. Its four BF16
+Safetensors shards contain 729 indexed tensors with no missing or extra shard.
+The index reports 8,292,166,656 parameters and 16,584,333,312 bytes of tensor
+data.
+
+The official model is live on laboratory GPU 0 through vLLM 0.15.1:
+
+- laboratory endpoint: `http://127.0.0.1:8000`;
+- workstation SSH-forwarded endpoint: `http://127.0.0.1:18000`;
+- served model: `RemoteAgent` (`Qwen2_5_VLForConditionalGeneration`);
+- context length: 4096;
+- GPU: RTX 3090 index 0, 23,407 MiB used after startup;
+- model loading: 15.63 GiB, with 5.18 GiB available for the KV cache;
+- launch log: `experiments/remoteagent-live/remoteagent-vllm.log` locally.
+
+The real-image acceptance probe used `web/assets/urban.png` (SHA-256
+`f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3`).
+`Describe this remote sensing image.` returned an image-grounded description
+of an urban area with mixed buildings, green spaces and streets in 2,732.34
+ms. `Extract all buildings in this image using RemoteSAM.` returned a validated
+`semantic_segmentation` call with class `building` in 3,360.87 ms. The complete
+raw replies and `/v1/models` payload are retained under
+`experiments/remoteagent-live/`; these runtime artifacts are intentionally
+ignored by Git.
 
 The RemoteAgent side now supports both workflows without giving two programs
 control of the same execution loop:
@@ -98,7 +125,7 @@ must come from the Harness, not from the model.
 | Active Python | 3.13.9 (`E:\\anaconda3\\python.exe`) |
 | Conda | 26.1.1 |
 | Existing RemoteAgent environment | Local archive only; runtime is deployed on the laboratory host |
-| Supplied model/checkpoint files | None found (`.safetensors/.bin/.pt/.pth/.ckpt`) |
+| Official model/checkpoint files | `E:\models\RemoteAgent`, four complete Safetensors shards |
 | Supplied source Git metadata | None; archive is not a Git checkout |
 
 ## Assigned remote deployment host
@@ -111,8 +138,8 @@ outside this deployment.
 
 Remote storage observed: about 121 GiB free on `/` and 315 GiB free on
 `/home`. The deployment working directory is
-`/home/gst/projects/geoscope-remoteagent`. No RemoteAgent checkpoint was found
-under the readable `/home`, `/data`, or `/mnt` paths during the audit.
+`/home/gst/projects/geoscope-remoteagent`; the official checkpoint is now in
+its `RemoteAgent/` subdirectory.
 
 The RemoteSAM contract supplied by teammate B is:
 
@@ -145,20 +172,18 @@ disabling TLS verification. The isolated Conda environment now exists at
 `/home/gst/miniconda3/envs/remoteagent` with Python 3.10.21 and ModelScope
 1.40.1. PyTorch 2.9.1+cu128, torchvision 0.24.1+cu128 and torchaudio
 2.9.1+cu128 are installed only in that environment. CUDA discovery was
-verified with `CUDA_VISIBLE_DEVICES=0` on an RTX 3090. The remaining vLLM
-installation requires the workstation proxy to be online again; direct PyPI
-TLS is intercepted by the campus gateway and is not bypassed.
+verified with `CUDA_VISIBLE_DEVICES=0` on an RTX 3090. vLLM 0.15.1,
+Transformers 4.57.6 and OpenCV 5.0.0 are installed, import successfully, and
+`pip check` reports no broken requirements.
 
 The designated private repository is `SitianGao/geoscope`, and all RemoteAgent
 changes belong on `feature/remoteagent` before a pull request to `main`. Model
 weights, credentials, caches and Conda environments must never be committed.
 
-The ModelScope repository `AIMGroup/RemoteAgent` is visible and reports a
-16.60 GB snapshot updated on 2026-07-07, but it uses application-gated download.
-Anonymous metadata access works while the file-tree API returns 404 until an
-approved account token is supplied. The download target remains
-`/home/gst/projects/geoscope-remoteagent/RemoteAgent`; no model bytes are routed
-through or stored on the local workstation.
+The ModelScope repository `AIMGroup/RemoteAgent` reports a 16.60 GB snapshot
+updated on 2026-07-07. Access was approved and the snapshot was downloaded to
+the E drive before transfer to the laboratory host. Credentials are not stored
+in this repository.
 
 The official README currently asks for a separate Python 3.10 environment,
 PyTorch 2.9.1 CUDA 12.8, vLLM 0.15.1, OpenAI client dependencies, and the
@@ -166,9 +191,9 @@ PyTorch 2.9.1 CUDA 12.8, vLLM 0.15.1, OpenAI client dependencies, and the
 Python 3.13 base environment. The provided start script is Bash-based, so a
 Linux/WSL2 or separate Linux GPU host is the lowest-risk deployment target.
 
-After download approval, record the exact model revision/checksum and verify
-that the checkpoint fits GPU0. A reachable `/v1/models` endpoint does not by
-itself satisfy the image/task acceptance criteria.
+The checkpoint fits GPU 0 and both image/task acceptance cases pass. A
+reachable `/v1/models` endpoint alone is still not considered acceptance; the
+saved real-image probe is the authoritative run record.
 
 ## Verified checks
 
@@ -192,27 +217,25 @@ The offline tests verify:
 - the complete RemoteSAM mask response is retained;
 - mask bytes are omitted from the language-model feedback prompt.
 
-The repository currently passes 18 tests: 13 Harness tests and 5 RemoteAgent
-workflow tests. The latter use controlled fake responses; they are not official
-model inference. Separately, the live RemoteSAM probe and the real
-`ServiceExecutor` -> RemoteSAM call described above both pass.
+The repository currently passes 32 tests, including a regression test for a
+valid `T_call(...)` wrapped by the checkpoint in an `<answer>` tag. Unit tests
+use controlled responses; the separate live probe described above records the
+official model inference. The live RemoteSAM probe and the real
+`ServiceExecutor` -> RemoteSAM call also pass.
 
-## Remaining acceptance work
+## Operational follow-up
 
-- Complete the ModelScope gated-download approval, download the official
-  checkpoint, and record its revision/source/checksums.
-- Start vLLM and save `/v1/models`, launch command, GPU memory, latency, and the
-  raw response for a new non-demo image.
-- Verify “describe this image” returns an image-grounded direct answer.
-- Verify “extract buildings” returns the official RemoteSAM `T_call` format.
 - Feed the verified RemoteSAM mask/statistics metadata into the full Harness
-  session after the official RemoteAgent model is online.
+  session when the UI workflow is enabled.
 - Keep at least one success and one failure case; never replace missing results
   with the Demo's hand-authored polygon.
+- Revoke the ModelScope token exposed during setup and create a replacement for
+  future downloads.
 
 ## Modified files
 
 - `remoteagent/core/inference.py`
+- `remoteagent/run_remoteagent_vllm.sh`
 - `remoteagent/core/types.py`
 - `remoteagent/core/__init__.py`
 - `remoteagent/services/executor.py`
@@ -220,5 +243,7 @@ model inference. Separately, the live RemoteSAM probe and the real
 - `remoteagent/cli.py`
 - `remoteagent/__init__.py`
 - `tests/test_geoscope_workflow.py`
+- `tests/test_remoteagent_workflow.py`
+- `tests/live_remoteagent_probe.py`
 - `README.md`
 - `GEOSCOPE_REMOTEAGENT_HANDOFF.md`

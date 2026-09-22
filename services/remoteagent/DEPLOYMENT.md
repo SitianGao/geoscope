@@ -35,6 +35,34 @@ raw replies and `/v1/models` payload are retained under
 `experiments/remoteagent-live/`; these runtime artifacts are intentionally
 ignored by Git.
 
+The subsequent full live Harness round trip completed on 2026-09-22 with the
+same 800 x 600 source image. The official model selected
+`semantic_segmentation(["building"])`; the Harness accepted one supported
+class, rebound the image to its current session, called the real RemoteSAM
+`semantic_seg` service, checked a 0/255 mask of the original dimensions, saved
+the mask/overlay, and measured 134,003 foreground pixels out of 480,000
+(ratio 0.2791729167). Its structured feedback omitted the base64 image and
+included those deterministic measurements. RemoteAgent then returned
+`<answer>The pixel count of buildings in the image is 134,003, and the area
+ratio is approximately 0.2792.</answer>`. Total run time was 4,734.34 ms.
+The source PNG is re-encoded on upload, so the session file has a different
+byte hash; a pixel-by-pixel comparison confirmed the image content is identical.
+The local ignored directory `experiments/remoteagent-harness-live-final/`
+contains the full live JSON trace, mask, overlay, statistics, and run log.
+
+An earlier live attempt produced a malformed tool syntax and was correctly
+rejected without execution. Another attempt returned accurate measurements
+without the mandatory `<answer>` tag and was marked `needs_review`; the mask
+and deterministic statistics remained available. These are protocol failures,
+not evidence of missing inference. The final successful run followed a
+feedback prompt that explicitly requires `<answer>` and exact measurements.
+
+`docs/model_manifest.json` records source/model metadata, size and SHA-256 for
+the index and all four shards. The hashes were independently verified against
+the copies on the laboratory host. ModelScope's exact repository commit was
+not retained by the download client and is recorded as unknown rather than
+guessed; the hashes identify the downloaded bytes.
+
 The RemoteAgent side now supports both workflows without giving two programs
 control of the same execution loop:
 
@@ -217,7 +245,7 @@ The offline tests verify:
 - the complete RemoteSAM mask response is retained;
 - mask bytes are omitted from the language-model feedback prompt.
 
-The repository currently passes 32 tests, including a regression test for a
+The repository currently passes 34 tests, including regression tests for a
 valid `T_call(...)` wrapped by the checkpoint in an `<answer>` tag. Unit tests
 use controlled responses; the separate live probe described above records the
 official model inference. The live RemoteSAM probe and the real
@@ -225,8 +253,6 @@ official model inference. The live RemoteSAM probe and the real
 
 ## Operational follow-up
 
-- Feed the verified RemoteSAM mask/statistics metadata into the full Harness
-  session when the UI workflow is enabled.
 - Keep at least one success and one failure case; never replace missing results
   with the Demo's hand-authored polygon.
 - Revoke the ModelScope token exposed during setup and create a replacement for

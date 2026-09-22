@@ -22,7 +22,7 @@ if str(UPSTREAM) not in sys.path:
 from remoteagent import RemoteAgent  # noqa: E402
 
 
-ALLOWED_TOOLS = {"referring_expression_segmentation"}
+ALLOWED_TOOLS = {"referring_expression_segmentation", "semantic_segmentation"}
 TARGET_PATTERNS = (
     ("building", r"建筑|房屋|楼|building"),
     ("aircraft", r"飞机|aircraft|airplane"),
@@ -78,7 +78,7 @@ def plan_with_agent(
         image_path,
         context={
             "previous_result": context,
-            "supported_tool": "referring_expression_segmentation",
+            "supported_tools": sorted(ALLOWED_TOOLS),
             "supported_targets": ["building", "aircraft", "road", "water", "tree", "ship"],
             "supported_scopes": ["all", "left", "right", "top", "bottom"],
             "harness_policy": "Choose the tool only. The Harness executes it and computes measurements.",
@@ -87,9 +87,15 @@ def plan_with_agent(
     return agent, decision
 
 
-def resolve_scope(query: str, context: Dict[str, Any], tool_arguments: Dict[str, Any]) -> Dict[str, Any]:
+def resolve_scope(query: str, context: Dict[str, Any], tool_arguments: Dict[str, Any], tool_name: str = "referring_expression_segmentation") -> Dict[str, Any]:
     """Normalize target/scope deterministically after Agent selected the tool."""
-    prompt = str(tool_arguments.get("prompt") or "").strip()
+    classes = tool_arguments.get("classes") if tool_name == "semantic_segmentation" else None
+    if tool_name == "semantic_segmentation":
+        if not isinstance(classes, list) or len(classes) != 1 or not isinstance(classes[0], str):
+            raise ValueError("RemoteAgent 的语义分割调用必须指定一个支持的类别。")
+        prompt = classes[0].strip()
+    else:
+        prompt = str(tool_arguments.get("prompt") or "").strip()
     combined = f"{query}\n{prompt}".lower()
     target = next((name for name, pattern in TARGET_PATTERNS if re.search(pattern, combined)), None)
     side = next((name for name, pattern in SIDE_PATTERNS if re.search(pattern, query.lower())), None)
@@ -101,12 +107,17 @@ def resolve_scope(query: str, context: Dict[str, Any], tool_arguments: Dict[str,
         raise ValueError("RemoteAgent 返回了工作台不支持的空间范围。")
     if not prompt:
         raise ValueError("RemoteAgent 的分割工具调用缺少文本提示。")
+    if tool_name == "semantic_segmentation" and not re.fullmatch(
+        dict(TARGET_PATTERNS)[target], prompt.lower()
+    ):
+        raise ValueError("RemoteAgent 的语义分割类别不受工作台支持。")
     return {
         "action": "segment",
         "target": target,
         "side": side,
-        "tool": "referring_expression_segmentation",
+        "tool": tool_name,
         "prompt": prompt,
+        "classes": [prompt] if tool_name == "semantic_segmentation" else None,
         "inherited_target": target == context.get("target"),
         "reuse": False,
     }
@@ -118,7 +129,7 @@ def decision_to_plan(query: str, context: Dict[str, Any], decision: Any) -> Dict
     if decision.status == "tool_call" and decision.tool_call is not None:
         if decision.tool_call.name not in ALLOWED_TOOLS:
             raise ValueError(f"RemoteAgent 请求了未部署工具：{decision.tool_call.name}")
-        plan = resolve_scope(query, context, decision.tool_call.arguments)
+        plan = resolve_scope(query, context, decision.tool_call.arguments, decision.tool_call.name)
         plan["agent_status"] = decision.status
         return plan
     if decision.status == "rejected_tool":

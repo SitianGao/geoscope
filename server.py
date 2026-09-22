@@ -250,7 +250,8 @@ def _run_task(s,p):
             else:
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
-                remote_data=post_json(url,{'task':'referring_seg','image':image_b64(image),'text':plan.get('prompt',DESCRIPTIONS[target])})
+                sam_request={'task':'semantic_seg','image':image_b64(image),'classes':plan['classes']} if plan.get('tool')=='semantic_segmentation' else {'task':'referring_seg','image':image_b64(image),'text':plan.get('prompt',DESCRIPTIONS[target])}
+                remote_data=post_json(url,sam_request)
                 if remote_data.get('status')!='success' or not remote_data.get('mask'): raise ValueError('RemoteSAM未返回有效蒙版')
                 mask=Image.open(io.BytesIO(base64.b64decode(remote_data['mask'],validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
@@ -272,7 +273,7 @@ def _run_task(s,p):
                     'message','task','original_size','output_size','timing_ms','peak_vram_mb','checkpoint_sha256'
                 ) if remote_data and key in remote_data}
                 tool_result={'status':'success','tool_name':plan['tool'],'service':'remotesam',
-                             'request':{'task':'referring_seg','text':plan.get('prompt',DESCRIPTIONS[target])},
+                             'request':{key:value for key,value in sam_request.items() if key!='image'} if remote_data is not None else {'task':'cached'},
                              'data':safe_remote,'measurements':metrics,
                              'artifacts':{'full_mask_sha256':result['full_mask_sha256'],
                                           'mask':'saved by Harness','overlay':'saved by Harness'},

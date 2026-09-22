@@ -122,6 +122,8 @@ class RemoteAgentWorkflowTests(unittest.TestCase):
         feedback = agent.seen_messages[1][-1]["content"]
         self.assertNotIn("very-large-mask-data", feedback)
         self.assertIn("artifact omitted", feedback)
+        self.assertIn("<answer>...</answer>", feedback)
+        self.assertIn("pixel_area and area_ratio", feedback)
 
     @patch("remoteagent.services.executor.http_post_json")
     def test_remote_sam_structured_execution_retains_mask(self, post_json):

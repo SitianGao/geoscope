@@ -21,6 +21,25 @@ def decision(status="tool_call", text="", tool_name="referring_expression_segmen
 
 
 class AgentBridgeTests(unittest.TestCase):
+    def test_semantic_building_decision_is_bounded_to_one_supported_class(self):
+        plan = agent_bridge.decision_to_plan(
+            "Extract all buildings using RemoteSAM", {},
+            decision(tool_name="semantic_segmentation", arguments={"image_path": "ignored.png", "classes": ["building"]}),
+        )
+        self.assertEqual(plan["tool"], "semantic_segmentation")
+        self.assertEqual(plan["classes"], ["building"])
+        self.assertEqual(plan["side"], "all")
+        with self.assertRaises(ValueError):
+            agent_bridge.decision_to_plan(
+                "Extract buildings", {},
+                decision(tool_name="semantic_segmentation", arguments={"classes": ["building", "road"]}),
+            )
+        with self.assertRaises(ValueError):
+            agent_bridge.decision_to_plan(
+                "Extract buildings", {},
+                decision(tool_name="semantic_segmentation", arguments={"classes": ["unknown"]}),
+            )
+
     def test_scope_uses_agent_prompt_and_user_geometry(self):
         plan = agent_bridge.resolve_scope(
             "提取右侧目标并计算占比",
@@ -92,6 +111,28 @@ class OfficialAgentHarnessFlowTests(unittest.TestCase):
         self.assertIn("measurements", finish.call_args.args[-1])
         self.assertEqual(post.call_args.args[1]["text"], "all buildings")
         self.assertIn("RemoteAgent", result["message"])
+
+    def test_semantic_segmentation_uses_model_selected_class(self):
+        first = decision(tool_name="semantic_segmentation", arguments={"classes": ["building"]})
+        final = decision(status="completed", text="Measured 240000 pixels.", tool_name=None)
+        fake_agent = object()
+        mask = Image.new("L", (800, 600), 0)
+        mask.paste(255, (0, 0, 400, 600))
+        response = {"status": "success", "task": "semantic_seg", "mask": server.image_b64(mask)}
+        with (
+            patch.object(server, "live_plan", return_value=(
+                agent_bridge.decision_to_plan("Extract all buildings", {}, first), fake_agent, first,
+            )),
+            patch.object(server, "post_json", return_value=response) as post,
+            patch.object(server, "finish_with_agent", return_value=final) as finish,
+            patch.dict(server.os.environ, {"GEO_REMOTESAM_URL": "http://example.invalid/predict"}),
+        ):
+            result = server.run_task(self.session, {"query": "Extract all buildings", "mode": "live"})
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["metrics"]["pixel_area"], 240000)
+        self.assertEqual(post.call_args.args[1]["task"], "semantic_seg")
+        self.assertEqual(post.call_args.args[1]["classes"], ["building"])
+        self.assertEqual(finish.call_args.args[-1]["request"], {"task": "semantic_seg", "classes": ["building"]})
 
     def test_direct_agent_answer_does_not_call_remotesam(self):
         direct = decision(status="completed", text="这是城市遥感影像。", tool_name=None)

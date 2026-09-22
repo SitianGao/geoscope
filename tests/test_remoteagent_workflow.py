@@ -86,6 +86,50 @@ class RemoteAgentWorkflowTests(unittest.TestCase):
         self.assertEqual(result.tool_call.arguments["classes"], ["building"])
         self.assertEqual(result.tool_call.arguments["image_path"], str(self.image_path.resolve()))
 
+    def test_plan_accepts_single_xml_style_tool_call_from_checkpoint(self):
+        agent = FakeRemoteAgent(
+            [
+                '<think>Use one segmentation tool.</think>\n'
+                '<T_call semantic_segmentation("/C:/untrusted.png", ["aircraft"])></T_call>'
+            ],
+            allowed_tools={"semantic_segmentation"},
+        )
+
+        result = agent.plan("改成左侧的飞机", self.image_path)
+
+        self.assertEqual(result.status, "tool_call")
+        self.assertEqual(result.tool_call.name, "semantic_segmentation")
+        self.assertEqual(result.tool_call.arguments["classes"], ["aircraft"])
+        self.assertEqual(result.tool_call.arguments["image_path"], str(self.image_path.resolve()))
+
+    def test_plan_rejects_angle_wrapped_unavailable_tool(self):
+        agent = FakeRemoteAgent(
+            [
+                '<T_call(oriented_object_detection, "C:/untrusted.png", '
+                '["aircraft"], modality="rgb")>'
+            ],
+            allowed_tools={"semantic_segmentation"},
+        )
+
+        result = agent.plan("提取右侧飞机", self.image_path)
+
+        self.assertEqual(result.status, "rejected_tool")
+        self.assertEqual(result.tool_call.name, "sm3det_oriented_detection")
+
+    def test_plan_does_not_salvage_multiple_xml_tool_calls(self):
+        agent = FakeRemoteAgent(
+            [
+                '<T_call>(semantic_segmentation, ["building"]), '
+                'T_call(region_contour_extraction, [420, 0, 812, 588])</T_call>'
+            ],
+            allowed_tools={"semantic_segmentation"},
+        )
+
+        result = agent.plan("提取右侧建筑", self.image_path)
+
+        self.assertEqual(result.status, "unparsed")
+        self.assertIsNone(result.tool_call)
+
     def test_plan_rejects_tool_that_is_not_deployed(self):
         agent = FakeRemoteAgent(
             ['T_call(object_detection, "C:/untrusted.png", ["ship"])'],

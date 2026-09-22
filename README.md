@@ -89,7 +89,7 @@ SM3Det仓库附CC BY-NC 4.0许可证，但具体影像原始来源与许可未�
 
 ## 核查
 
-`python -m unittest discover -s tests -v` 当前运行 44 项检查，覆盖 RemoteAgent 决策、官方模型实际出现的 `<answer>T_call(...)</answer>` 包装、工具白名单、当前影像绑定、RemoteSAM 两种分割合同、工具结果反馈、复杂范围拒绝、文字回答不得冒充分割、推理文本脱敏、上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。HTTP 集成测试使用明确标注的模拟服务；真实模型证据另见两项服务的部署和联调报告。
+`python -m unittest discover -s tests -v` 当前运行 47 项检查，覆盖 RemoteAgent 决策、官方模型实际出现的 `<answer>T_call(...)</answer>` 与单调用 XML 风格、多个工具调用拒绝、工具白名单、当前影像绑定、RemoteSAM 两种分割合同、工具结果反馈、复杂范围拒绝、文字回答不得冒充分割、推理文本脱敏、上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。HTTP 集成测试使用明确标注的模拟服务；真实模型证据另见两项服务的部署和联调报告。
 
 `tests/browser.cjs` 为开发用浏览器检查，依赖本机Codex配套Playwright（运行时路径可用PLAYWRIGHT_PATH覆盖）。它检查主任务、条件修改、版本、下载、澄清、故障及移动端页面，截图位于test-results。
 

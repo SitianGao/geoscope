@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import re
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from remoteagent.config.defaults import DEFAULT_VLLM_URL, ENV_URL_KEYS
@@ -12,7 +13,7 @@ from remoteagent.llm.vllm import VLLMChatClient
 from remoteagent.parsing import ToolCallParser
 from remoteagent.services import ServiceExecutor
 from remoteagent.utils.image import image_data_url
-from remoteagent.utils.text import extract_answer_tag, load_system_prompt
+from remoteagent.utils.text import extract_answer_tag, load_system_prompt, strip_leading_think_block
 
 
 class RemoteAgent:
@@ -213,6 +214,7 @@ class RemoteAgent:
         # Some official checkpoints wrap an otherwise valid T_call in <answer>.
         # Keep accepting ordinary answers, but route a validated wrapped call.
         tool_source = answer_content if answer_content is not None else response
+        tool_source = self._normalize_single_tool_call_markup(tool_source)
         parsed = self._parser.parse_tool_call_with_image_fallback(tool_source, Path(image_path))
         if parsed:
             tool_name, raw_args = parsed
@@ -247,6 +249,34 @@ class RemoteAgent:
             status="unparsed",
             raw_response=response,
         )
+
+    @staticmethod
+    def _normalize_single_tool_call_markup(response: str) -> str:
+        """Normalize observed single-call wrappers without accepting call chains.
+
+        The official checkpoint sometimes emits an HTML/XML-like envelope around
+        one otherwise valid call. Multiple calls remain untouched so the normal
+        parser fails closed instead of silently choosing one action.
+        """
+        body = strip_leading_think_block(response).strip()
+
+        spaced = re.fullmatch(
+            r"<T_call\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(([\s\S]*)\)>\s*</T_call>",
+            body,
+            flags=re.IGNORECASE,
+        )
+        if spaced and "T_call" not in spaced.group(2):
+            return f"T_call({spaced.group(1)}, {spaced.group(2)})"
+
+        angled = re.fullmatch(r"<(T_call\([\s\S]*\))>", body, flags=re.IGNORECASE)
+        if angled and len(re.findall(r"\bT_call\s*\(", angled.group(1), flags=re.IGNORECASE)) == 1:
+            return angled.group(1)
+
+        tagged = re.fullmatch(r"<T_call>\s*(\([\s\S]*\))\s*</T_call>", body, flags=re.IGNORECASE)
+        if tagged and "T_call" not in tagged.group(1):
+            return "T_call" + tagged.group(1)
+
+        return response
 
     @staticmethod
     def _redact_large_artifacts(value: Any) -> Any:

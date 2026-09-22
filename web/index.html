@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>观域 GeoScope · 遥感实验工作台</title><link rel="stylesheet" href="styles.css"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>观域 GeoScope · 遥感实验工作台</title><link rel="stylesheet" href="styles.css?v=0.4.0"></head>
 <body>
 <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg"><defs>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
@@ -48,11 +48,12 @@
       </section>
       <section class="panel results-panel" aria-label="实验结果">
         <div class="panel-heading"><div><span class="section-marker"></span><h2>实验结果</h2></div><span class="result-badge" id="resultStatus">准备就绪</span></div>
-        <div class="results-body"><div class="result-title"><span class="eyebrow">COVERAGE ANALYSIS</span><h3 id="resultTitle">等待目标提取</h3><p id="resultSubtitle">运行一条任务，结果将在这里呈现</p></div>
-        <div class="coverage-card"><span>占整幅影像比例</span><div class="coverage-number"><strong id="ratioValue">—</strong><b>%</b><svg viewBox="0 0 64 64" class="coverage-ring"><circle cx="32" cy="32" r="26"/><circle id="ringValue" cx="32" cy="32" r="26" stroke-dasharray="0 164"/></svg></div><div class="coverage-track"><i id="coverageBar"></i></div><small>像素级统计 · 整图作为分母</small></div>
-        <dl class="metrics"><div><dt>目标像素面积</dt><dd id="areaValue">— <small>px</small></dd></div><div><dt>分析范围</dt><dd id="scopeValue">—</dd></div><div><dt>影像总像素</dt><dd id="totalValue">480,000</dd></div><div><dt>执行耗时</dt><dd id="timeValue">—</dd></div></dl>
-        <div class="checks"><h4>完成检查 <span id="checkCount">0 / 3</span></h4><div id="checksList"><p class="pending"><span>○</span> 结果与原始影像对齐</p><p class="pending"><span>○</span> 空间条件完成检查</p><p class="pending"><span>○</span> 统计与产物已生成</p></div><small>检查通过不代表语义或边界完全正确</small></div>
-        <div class="artifact-box"><div><svg><use href="#i-layers"/></svg><strong>可复查的实验产物</strong></div><p>原图 · 蒙版 · 叠加图 · 统计 · 日志</p><button id="detailBtn" class="text-button">查看运行详情 <span>↗</span></button></div></div>
+        <div class="results-body"><div class="result-title"><span class="eyebrow" id="resultEyebrow">COVERAGE ANALYSIS</span><h3 id="resultTitle">等待目标提取</h3><p id="resultSubtitle">运行一条任务，结果将在这里呈现</p></div>
+        <div class="answer-card" id="answerCard" hidden><p id="answerText"></p><small>RemoteAgent 直接理解影像 · 未调用 RemoteSAM</small></div>
+        <div class="coverage-card" id="coverageCard"><span>占整幅影像比例</span><div class="coverage-number"><strong id="ratioValue">—</strong><b>%</b><svg viewBox="0 0 64 64" class="coverage-ring"><circle cx="32" cy="32" r="26"/><circle id="ringValue" cx="32" cy="32" r="26" stroke-dasharray="0 164"/></svg></div><div class="coverage-track"><i id="coverageBar"></i></div><small>像素级统计 · 整图作为分母</small></div>
+        <dl class="metrics" id="metricsPanel"><div><dt>目标像素面积</dt><dd id="areaValue">— <small>px</small></dd></div><div><dt>分析范围</dt><dd id="scopeValue">—</dd></div><div><dt>影像总像素</dt><dd id="totalValue">480,000</dd></div><div><dt>执行耗时</dt><dd id="timeValue">—</dd></div></dl>
+        <div class="checks" id="checksPanel"><h4>完成检查 <span id="checkCount">0 / 3</span></h4><div id="checksList"><p class="pending"><span>○</span> 结果与原始影像对齐</p><p class="pending"><span>○</span> 空间条件完成检查</p><p class="pending"><span>○</span> 统计与产物已生成</p></div><small>检查通过不代表语义或边界完全正确</small></div>
+        <div class="artifact-box" id="artifactBox"><div><svg><use href="#i-layers"/></svg><strong>可复查的实验产物</strong></div><p id="artifactText">原图 · 蒙版 · 叠加图 · 统计 · 日志</p><button id="detailBtn" class="text-button">查看运行详情 <span>↗</span></button></div></div>
       </section>
     </div>
     <section class="execution-panel"><div class="execution-top"><div><span class="status-dot" id="executionDot"></span><h2>执行记录</h2><span id="runLabel">等待实验开始</span></div><button class="text-button" id="logBtn">查看完整日志 <span>↗</span></button></div><div id="trace" class="trace-steps"><div class="trace-placeholder"><svg><use href="#i-target"/></svg><span>每一步操作，都有可追溯的依据。</span><small>任务理解 → 专业感知 → 几何统计 → 结果检查</small></div></div></section>
@@ -61,5 +62,5 @@
 </div>
 <dialog id="modal"><div class="modal-header"><div><span class="eyebrow" id="modalEyebrow">GEOSCOPE LAB</span><h2 id="modalTitle"></h2></div><button id="closeModal" class="icon-button" aria-label="关闭"><svg><use href="#i-x"/></svg></button></div><div id="modalBody"></div></dialog>
 <div id="toast" role="status" hidden></div>
-<script src="app.js"></script>
+<script src="app.js?v=0.4.0"></script>
 </body></html>

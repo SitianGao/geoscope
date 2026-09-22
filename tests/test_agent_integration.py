@@ -100,6 +100,27 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         result = self.run_task('描述影像')
         self.assertEqual(result['status'],'answered'); self.assertEqual(len(FakeAgentAndSAM.requests),1)
         self.assertNotIn('metrics',result)
+        request = FakeAgentAndSAM.requests[0][1]
+        self.assertIn('INTERNAL VISUAL UNDERSTANDING ONLY', request['messages'][0]['content'])
+        self.assertIn('only these deployed tools are available: none', request['messages'][0]['content'])
+        self.assertEqual(json.loads(request['messages'][-1]['content'][0]['text'])['context']['task_route'], 'internal')
+
+    def test_visual_question_cannot_accidentally_run_segmentation(self):
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "wrong.png", ["building", "road"])'
+        result = self.run_task('这张影像主要是什么场景？')
+        self.assertEqual(result['status'], 'failed')
+        self.assertNotIn('metrics', result)
+        self.assertEqual([r[0] for r in FakeAgentAndSAM.requests], ['/v1/chat/completions'])
+
+    def test_annotation_and_complement_route_to_mask_then_invert(self):
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "wrong.png", ["aircraft"])'
+        result = self.run_task('把非飞机的部分标注出来')
+        self.assertEqual(result['task']['action'], 'segment')
+        self.assertTrue(result['task']['invert'])
+        self.assertEqual(result['metrics']['pixel_area'], 0)
+        self.assertEqual([r[0] for r in FakeAgentAndSAM.requests],
+                         ['/v1/chat/completions', '/predict', '/v1/chat/completions'])
+        self.assertEqual(FakeAgentAndSAM.requests[1][1]['classes'], ['aircraft'])
 
     def test_direct_answer_cannot_pretend_dense_task_completed(self):
         FakeAgentAndSAM.decision = '<answer>已经提取完成。</answer>'

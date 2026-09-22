@@ -14,6 +14,7 @@
 .metrics>div,.checks p {font-size:11px}
 .metrics dd {font-size:12px}
 .result-title p {font-size:11px;line-height:1.7}
+.answer-card{margin:18px 0;padding:16px;border:1px solid #dce9d5;border-radius:9px;background:#f4f8ef;color:#4f6958}.answer-card p{font-size:12px;line-height:1.9;white-space:pre-wrap}.answer-card small{display:block;margin-top:12px;color:#8da083;font-size:9px}
 .file-summary strong {font-size:13px}
 .starter-list button span {font-size:12px}
 .starter-list button small,.composer-note {font-size:10px}

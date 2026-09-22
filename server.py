@@ -100,11 +100,30 @@ def parse_task(query,context):
     target=target or context.get('target')
     if not target or not re.search(r'提取|分割|建筑|飞机|改|换|占比|面积|统计|左|右|上半|下半|全部|全图|segment|building|aircraft',q):
         return {'action':'clarify','question':'请说明想提取什么目标，以及要分析全图还是某一侧。例如：提取右侧建筑并计算面积占比。'}
-    return {'action':'segment','target':target,'side':side or context.get('side','all'), 'inherited_target':inherited,
+    return {'action':'segment','target':target,'side':side or context.get('side','all'),
+            'invert':resolve_invert(query,context),'inherited_target':inherited,
             'reuse':bool(re.search(r'统计|占比|面积',q) and not re.search(r'提取|分割|改|换',q) and side is None and context.get('target')==target)}
 
-def requires_dense_result(query):
-    return bool(re.search(r'提取|分割|蒙版|掩膜|面积|占比|像素|\b(segment|segmentation|mask|extract)\b',query.lower()))
+def requires_dense_result(query, context=None):
+    q=query.lower()
+    if re.search(r'提取|分割|标注|标记|圈出|勾勒|蒙版|掩膜|面积|占比|像素|\b(segment|segmentation|mask|extract|annotate)\b',q):
+        return True
+    # A short follow-up such as "改成左侧" inherits the selected segmentation
+    # result. Without a selected target the same wording remains ordinary VQA.
+    return bool((context or {}).get('target') and
+                re.search(r'改|换|左|右|上半|下半|全部|全图|重新|重跑|统计',q))
+
+def resolve_invert(query, context=None):
+    q=query.lower()
+    explicit=bool(re.search(
+        r'非\s*(?:建筑|房屋|楼|飞机|道路|公路|水体|河流|植被|树木|船舶?|building|aircraft|airplane|road|water|tree|ship)'
+        r'|(?:建筑|房屋|楼|飞机|道路|公路|水体|河流|植被|树木|船舶?|building|aircraft|airplane|road|water|tree|ship)\s*(?:之外|以外)',q))
+    positive=bool(re.search(r'只要|仅要|仅标注|只标注|只提取',q))
+    if explicit:
+        return True
+    if positive:
+        return False
+    return bool((context or {}).get('invert'))
 
 def post_json(url,payload,timeout=120,headers=None):
     return request_json(url,payload,timeout,headers)
@@ -220,19 +239,24 @@ def _run_task(s,p):
         elif re.fullmatch(r'(?:请)?(?:导出|下载)(?:刚才的|当前|这个|所选)?(?:实验包|结果)?[。！! ]*',query):
             plan={'action':'export','planner_protocol':'harness_export_command'}
         else:
+            dense_task=requires_dense_result(query,context)
+            invert=resolve_invert(query,context) if dense_task else False
             side,scope_source=resolve_scope(query,context,p.get('scope'))
             if re.search(r'那个|那片|那块|这块',query):
                 raise Clarification('请明确目标类别与像素范围，或从已有结果版本继续；本次没有执行分割。')
-            agent_turn=AgentTurn(query,image_path,context,side,scope_source)
+            agent_turn=AgentTurn(query,image_path,context,side,scope_source,
+                                 task_route='dense' if dense_task else 'internal',invert=invert)
             decision=agent_turn.decision
             result['agent_decision']=decision_record(decision)
             result['provenance']['planner_protocol']='remoteagent'
             if decision.status=='completed':
-                if requires_dense_result(query):
+                if dense_task:
                     raise ValueError('这是需要生成像素结果的任务，但 RemoteAgent 只返回了文字回答；未调用工具，也未生成统计。')
                 plan={'action':'scene','answer':decision.text,'planner_protocol':'remoteagent'}
             elif decision.status=='tool_call':
-                plan=segmentation_plan(decision,image_path,side,scope_source)
+                if not dense_task:
+                    raise ValueError('这是看图问答任务，RemoteAgent 不应调用像素分割工具；系统已阻止错误执行。')
+                plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert)
                 event('确认执行边界',f'目标由 Agent 工具参数提供；范围 {SIDES[side]}，来源 {scope_source}；先全图分割再裁切')
             else:
                 raise ValueError(f'RemoteAgent 决策未通过校验（{decision.status}），未执行工具。')
@@ -282,6 +306,8 @@ def _run_task(s,p):
             result['mask_cache_key']=cache_key
             result['full_mask_sha256']=hashlib.sha256((folder/'full_mask.png').read_bytes()).hexdigest()
             result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','未记录')
+            if plan.get('invert'):
+                mask=ImageOps.invert(mask)
             mask=constrain(mask,side)
             metrics=statistics(mask,side); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
@@ -290,8 +316,8 @@ def _run_task(s,p):
             event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
             base=f'/experiments/{s["id"]}/{runid}'
             result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
-              message=f'已生成{SIDES[side]}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
-            s['context']={'target':target,'side':side}; save_json(folder/'statistics.json',metrics)
+              message=f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
+            s['context']={'target':target,'side':side,'invert':bool(plan.get('invert'))}; save_json(folder/'statistics.json',metrics)
             if mode=='live':
                 feedback({'status':'success','tool_name':plan['tool_name'],'metrics':metrics,
                           'scope_rule':plan['scope_rule'],'actual_service_request':plan['service_request'],

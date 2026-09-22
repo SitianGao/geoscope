@@ -11,6 +11,7 @@ const path = require('node:path');
  await page.screenshot({path:path.join(out,'01-workspace.png'),fullPage:true});
  async function task(query){await page.locator('#query').fill(query);const response=page.waitForResponse(r=>r.url().endsWith('/api/run'));await page.locator('#sendBtn').click();const run=await(await response).json();await page.waitForFunction(()=>!document.getElementById('sendBtn').disabled);return run;}
  const scene=await task('这张影像主要是什么场景？');assert.equal(scene.status,'answered');assert.equal(scene.trace.length,3);
+ assert.equal(await page.locator('#resultTitle').textContent(),'影像理解已完成');assert.ok((await page.locator('#answerText').textContent()).length>0);
  const right=await task('提取右侧建筑并计算面积占比');assert.equal(right.status,'completed');assert.ok(right.metrics.pixel_area>0);
  assert.equal(await page.locator('#ratioValue').textContent(),(right.metrics.area_ratio*100).toFixed(2));
  await page.screenshot({path:path.join(out,'02-result-desktop.png'),fullPage:true});
@@ -21,7 +22,7 @@ const path = require('node:path');
  await page.reload();await page.waitForFunction(()=>document.getElementById('scopeValue').textContent==='右半幅');
  assert.equal(await page.locator('.version-pill').count(),3);
  await page.locator('#connectionBtn').click();await page.locator('#checkServices').click();
- await page.waitForFunction(()=>document.getElementById('serviceReport').textContent.includes('请填写'));
+ await page.waitForFunction(()=>document.getElementById('serviceReport').textContent.includes('认知核心：')&&!document.getElementById('checkServices').disabled);
  assert.ok((await page.locator('#serviceReport').textContent()).includes('不代表真实推理'));
  await page.locator('#closeModal').click();
  await page.locator('[data-view="compare"]').click();assert.equal(await page.locator('#compareControl').isVisible(),true);

@@ -2,6 +2,7 @@ const $ = id => document.getElementById(id);
 const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0 };
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
+const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
 const statusNames = {completed:'待语义复核',answered:'已回答',needs_clarification:'待确认',failed:'未完成',needs_review:'待复核',export_ready:'可导出'};
 const number = n => Number(n).toLocaleString('en-US');
 const escape = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -28,6 +29,9 @@ async function newExperiment(sample='urban',image=null,name=null){
 async function showSession(session){
   const original=await loadImage(session.image_url);
   state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1});
+  // Restore the mode that actually produced this experiment when the user has
+  // not explicitly saved a different preference.
+  if(session.runs.length&&!localStorage.getItem('geoscope-mode'))state.mode=session.runs.at(-1).mode;
   clearTimeout(toastTimer);$('toast').hidden=true;
   $('chat').innerHTML=intro;
   if(session.sample==='airport'){
@@ -47,7 +51,7 @@ async function showSession(session){
    state.last=session.runs.at(-1);
    const remembered=localStorage.getItem('geoscope-selected-'+session.id);
    const selected=session.runs.find(r=>r.id===remembered&&r.mask_url)||[...session.runs].reverse().find(r=>r.mask_url);
-   renderVersions();if(selected)await selectRun(selected);else renderTrace(state.last);
+   renderVersions();if(selected)await selectRun(selected);else{if(state.last.status==='answered')renderAnswer(state.last);renderTrace(state.last);}
   }
 }
 async function openExperiment(id){
@@ -63,10 +67,19 @@ function updateMode(){
  $('composerNote').textContent=state.mode==='demo'?'当前为流程演示，未调用模型':'上传影像将发送至你配置的模型服务';
 }
 function resetMetrics(){
+ $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
+ $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
  $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';
  $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';
  $('resultStatus').textContent='准备就绪';$('resultStatus').className='result-badge';$('coverageBar').style.width='0%';$('ringValue').setAttribute('stroke-dasharray','0 164');
  $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;
+}
+function renderAnswer(run){
+ $('answerCard').hidden=false;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
+ $('resultEyebrow').textContent='IMAGE UNDERSTANDING';$('resultTitle').textContent='影像理解已完成';
+ $('resultSubtitle').textContent='RemoteAgent 直接看图回答';$('answerText').textContent=run.message;
+ $('resultStatus').textContent='已回答';$('resultStatus').className='result-badge success';
+ $('artifactText').textContent='原图 · 模型回答 · 决策记录 · 运行日志';$('exportBtn').disabled=true;
 }
 
 function draw(){
@@ -108,7 +121,7 @@ function addMessage(role,text,kind='',run=null){
  d.innerHTML=`<div class="message-label"><span>${role==='user'?'YOU':'GEOSCOPE'}</span><span>${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="bubble"></div>`;
  d.querySelector('.bubble').textContent=text;
  if(run?.mask_url){
-  const target=targetNames[run.task.target],next=run.task.side==='left'?'右':'左';
+  const target=targetLabel(run),next=run.task.side==='left'?'右':'左';
   const chips=document.createElement('div');chips.className='followup-chips';
   for(const q of [`改成${next}侧的${target}`,'提取全图'+target,'导出刚才的结果']){const btn=document.createElement('button');btn.textContent=q;btn.dataset.prompt=q;chips.append(btn);}d.append(chips);
   const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`V${run.version} · ${run.mode==='demo'?'预置标注演示':'真实服务返回'} · ${run.duration_ms} ms`;d.append(meta);
@@ -126,19 +139,21 @@ function renderTrace(run){
 }
 function renderVersions(){
  const versions=state.session.runs.filter(r=>r.mask_url);
- $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(sideNames[r.task.side])}${escape(targetNames[r.task.target])}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
+ $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(sideNames[r.task.side])}${escape(targetLabel(r))}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
 }
 async function selectRun(run){
  const token=++state.loadToken;
  try{const mask=await loadImage(run.mask_url);if(token!==state.loadToken)return;
+  $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
+  $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
-  $('resultTitle').textContent=sideNames[run.task.side]+targetNames[run.task.target];$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
+  $('resultTitle').textContent=sideNames[run.task.side]+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
   $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
-  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetNames[run.task.target]} · ${sideNames[run.task.side]}`;
+  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${sideNames[run.task.side]}`;
   $('exportBtn').disabled=false;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){toast(e.message);}
 }
@@ -153,7 +168,7 @@ async function run(query,simulateFailure=false){
   const result=await api('/api/run',{session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,simulate_failure:simulateFailure});
   state.session.runs.push(result);state.last=result;
   addMessage('assistant',result.message,['failed','needs_clarification','needs_review'].includes(result.status)?'warning':'',result);
-  if(result.mask_url)await selectRun(result);else renderTrace(result);
+  if(result.mask_url)await selectRun(result);else{if(result.status==='answered')renderAnswer(result);renderTrace(result);}
   if(result.status==='export_ready')download(result.export_url);
   if(result.status==='failed'&&state.selected)toast('本次未完成，画布保留上一次有效结果');
  }catch(e){addMessage('assistant',e.message,'warning');toast('请求未完成，未生成结果');}
@@ -191,7 +206,7 @@ async function connections(){
  try{state.status=await api('/api/status');}catch(e){return toast('本地服务不可用');}
  const canLive=state.status.agent_configured&&state.status.sam_configured;
  modal('实验运行方式',`<div class="mode-options"><button id="demoMode" class="${state.mode==='demo'?'selected':''}">样例演示<small>预置标注 · 真实几何计算</small></button><button id="liveMode" class="${state.mode==='live'?'selected':''}" ${!canLive?'disabled':''}>模型服务<small>${canLive?'已配置，执行时验证连通':'等待配置认知与感知服务'}</small></button></div><div class="connection-list"><div><span>认知核心</span><b>${state.status.agent_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>RemoteSAM</span><b>${state.status.sam_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>几何计算与实验存储</span><b style="color:#5d8850">本地服务可用</b></div></div><p>真实模型模式将影像发送至本地服务端配置的模型地址。API密钥不进入网页。</p><h3>连接方法</h3><p>按项目README配置GEO_AGENT_BASE_URL、GEO_AGENT_MODEL和GEO_REMOTESAM_URL，然后重启服务。配置状态不等于已通过模型测试。</p><button class="secondary" id="failureDemo">体验工具失败反馈</button>`,'RUNTIME SETTINGS');
- $('demoMode').onclick=()=>{state.mode='demo';updateMode();closeModal();toast('已切换到样例演示');};$('liveMode').onclick=()=>{state.mode='live';updateMode();closeModal();toast('已切换到模型服务');};
+ $('demoMode').onclick=()=>{state.mode='demo';localStorage.setItem('geoscope-mode','demo');updateMode();closeModal();toast('已切换到样例演示');};$('liveMode').onclick=()=>{state.mode='live';localStorage.setItem('geoscope-mode','live');updateMode();closeModal();toast('已切换到模型服务');};
  $('failureDemo').onclick=()=>{closeModal();run('检查工具失败时能否保留已有实验结果',true);};
  $('modalBody').insertAdjacentHTML('beforeend','<h3>服务连接检查</h3><p>工作台已接入 RemoteAgent 的规划与工具结果反馈接口，并由 Harness 校验后调用 RemoteSAM。这里只检查服务与就绪声明，不发送影像，也不证明真实推理质量。</p><button class="secondary" id="checkServices">检查服务连接</button><pre id="serviceReport" hidden></pre><p>可在项目根目录 .env 中填写配置后重启。本机访问实验室服务需具备对应网络通路。</p>');
  $('checkServices').onclick=async()=>{

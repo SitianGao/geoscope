@@ -60,16 +60,31 @@ def resolve_scope(query, context, selected=None):
 
 class WorkbenchAgent(RemoteAgent):
     """Keep upstream planning/parsing/feedback; use our authenticated HTTP transport."""
-    def __init__(self):
+    def __init__(self, task_route='dense'):
         self.base = os.environ.get('GEO_AGENT_BASE_URL', '').rstrip('/')
         model = os.environ.get('GEO_AGENT_MODEL', '')
         if not self.base or not model:
             raise ValueError('RemoteAgent 服务未配置，请填写实际服务地址和模型名称。')
-        super().__init__(vllm_url=self.base, model_name=model, allowed_tools=ALLOWED_TOOLS,
+        if task_route not in ('dense', 'internal'):
+            raise ValueError('未知的 RemoteAgent 任务路由')
+        self.task_route = task_route
+        allowed_tools = ALLOWED_TOOLS if task_route == 'dense' else set()
+        super().__init__(vllm_url=self.base, model_name=model, allowed_tools=allowed_tools,
                          api_urls={}, max_tokens=1024)
 
     def _runtime_system_prompt(self):
-        return super()._runtime_system_prompt() + (
+        base = super()._runtime_system_prompt()
+        if self.task_route == 'internal':
+            return base + (
+                '\nGeoScope turn route: INTERNAL VISUAL UNDERSTANDING ONLY. No external tool is available '
+                'or needed for this turn. Inspect the supplied image yourself and answer the user directly '
+                'inside exactly one <answer>...</answer> block. Scene description, image captioning, visual '
+                'question answering, classification, counting, comparison, and asking what the image shows '
+                'are internal tasks even when the image contains several object categories. Do not output '
+                'T_call, do not request segmentation, and do not ask the user to choose one target category. '
+                'Answer in concise Chinese unless the user requested another language.'
+            )
+        return base + (
             '\nGeoScope workbench contract: preserve <answer> and T_call syntax. '
             'For extraction, request exactly one supported category: building, aircraft, road, water, tree, ship. '
             'Use a whole-image category prompt (e.g. all buildings), or semantic_segmentation with one class. '
@@ -77,6 +92,8 @@ class WorkbenchAgent(RemoteAgent):
             'Mandatory extraction output rule: emit exactly one allowed T_call and no second tool call. '
             'Never call contour_extraction, region_contour_extraction, or any other spatial tool, even when '
             'the user asks for left, right, top, bottom, area, or ratio; those operations belong to the Harness. '
+            'If context.invert is true because the user asks for non-X or everything except X, call segmentation '
+            'for the positive base category X only; the Harness deterministically inverts the returned mask. '
             'Do not use an XML <T_call> wrapper. A plain T_call(...) or <answer>T_call(...)</answer> is accepted. '
             'Never invent new spatial conditions. For unsupported targets or ambiguous requests, '
             'ask for clarification inside <answer>. The selected version supplies previous target and scope. '
@@ -133,7 +150,7 @@ def target_from_label(label, side):
     raise Clarification('本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。')
 
 
-def segmentation_plan(decision, image_path, side, scope_source):
+def segmentation_plan(decision, image_path, side, scope_source, invert=False):
     call = decision.tool_call
     if decision.status != 'tool_call' or call is None or call.name not in ALLOWED_TOOLS:
         raise ValueError('认知核心没有返回允许执行的分割工具')
@@ -153,17 +170,18 @@ def segmentation_plan(decision, image_path, side, scope_source):
         target = target_from_label(classes[0], side)
         request = {'task': 'semantic_seg', 'classes': [CLASSES[target]]}
         mask_field = CLASSES[target]
-    return {'action': 'segment', 'target': target, 'side': side, 'scope_source': scope_source,
+    return {'action': 'segment', 'target': target, 'side': side, 'invert': bool(invert), 'scope_source': scope_source,
             'tool_name': call.name, 'service_request': request, 'mask_field': mask_field,
             'planner_protocol': 'remoteagent', 'scope_rule': '整图目标分割后按像素半幅裁切；由 Harness 执行'}
 
 
 class AgentTurn:
-    def __init__(self, query, image_path, context, side, scope_source):
-        self.agent = WorkbenchAgent()
+    def __init__(self, query, image_path, context, side, scope_source, task_route='dense', invert=False):
+        self.agent = WorkbenchAgent(task_route=task_route)
         self.query, self.image_path = query, image_path
         self.context = {**context, 'side': side, 'scope_source': scope_source,
-                        'scope_rule': 'whole-image segmentation then deterministic pixel-half clipping'}
+                        'scope_rule': 'whole-image segmentation then deterministic pixel-half clipping',
+                        'task_route': task_route, 'invert': bool(invert)}
         self.decision = self.agent.plan(query, image_path, context=self.context)
 
     def feedback(self, result):

@@ -37,6 +37,12 @@ class HarnessTests(unittest.TestCase):
         self.assertTrue(second['task']['inherited_target'])
         self.assertEqual(old,(server.DATA/self.s['id']/first['id']/'mask.png').read_bytes())
         self.assertNotEqual(old,(server.DATA/self.s['id']/second['id']/'mask.png').read_bytes())
+    def test_non_target_annotation_inverts_the_base_mask(self):
+        positive=self.run_task('提取全图建筑')
+        inverse=self.run_task('把非建筑的部分标注出来')
+        self.assertTrue(inverse['task']['invert'])
+        self.assertEqual(positive['metrics']['pixel_area']+inverse['metrics']['pixel_area'],480000)
+        self.assertIn('非建筑区域',inverse['message'])
     def test_branch_from_old_result(self):
         r=self.run_task('提取右侧建筑')
         self.run_task('改成左侧的',parent_run_id=r['id'])

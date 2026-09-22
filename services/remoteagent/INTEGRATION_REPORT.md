@@ -4,7 +4,7 @@ Date: 2026-09-20
 
 Source host: `10.199.139.30` (RemoteAgent, GPU 0 reserved)
 
-Target service: `http://10.199.156.100:6657`
+Target service: `http://10.113.228.79:6657` (updated after the RemoteSAM host restarted)
 
 ## Readiness
 

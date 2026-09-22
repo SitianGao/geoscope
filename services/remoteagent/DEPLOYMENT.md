@@ -143,9 +143,9 @@ its `RemoteAgent/` subdirectory.
 
 The RemoteSAM contract supplied by teammate B is:
 
-- prediction: `POST http://10.199.156.100:6657/predict`;
-- health: `GET http://10.199.156.100:6657/health`;
-- readiness: `GET http://10.199.156.100:6657/ready`;
+- prediction: `POST http://10.113.228.79:6657/predict`;
+- health: `GET http://10.113.228.79:6657/health`;
+- readiness: `GET http://10.113.228.79:6657/ready`;
 - request: `{"task":"referring_seg","image":"<base64>","text":"building"}`.
 
 The RemoteAgent host can reach this service. On 2026-09-20, `/ready` returned
@@ -153,6 +153,13 @@ HTTP 200 with service version 1.1.0, CUDA device 0, FP16 enabled and checkpoint
 SHA-256 `f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7`.
 No additional Windows firewall rule was needed. `.env.geoscope.example`
 records the base URL without credentials.
+
+After the RemoteSAM computer restarted on 2026-09-22, its campus-network IP
+changed from `10.199.156.100` to `10.113.228.79`. The new `/ready` endpoint
+returned the same service version, CUDA device, FP16 flag and checkpoint hash.
+A fresh `referring_seg` request using the 800×600 urban image also passed:
+HTTP 200, 800×600 binary 0/255 mask, 52,637 foreground pixels, 1,621.79 ms
+reported service time and 1,918.60 ms client round trip.
 
 A live `referring_seg` request was then executed from the assigned RemoteAgent
 host using the repository's `web/assets/urban.png` and prompt `buildings`.
@@ -217,7 +224,7 @@ The offline tests verify:
 - the complete RemoteSAM mask response is retained;
 - mask bytes are omitted from the language-model feedback prompt.
 
-The integrated repository currently passes 47 tests, including regression tests for a
+The integrated repository currently passes 50 tests, including regression tests for a
 valid `T_call(...)` wrapped by the checkpoint in an `<answer>` tag and the
 single-call XML-like variants observed during live follow-up. Multi-call output
 still fails closed. Unit tests
@@ -234,8 +241,8 @@ official model inference. The live RemoteSAM probe and the real
   with the Demo's hand-authored polygon.
 - Revoke the ModelScope token exposed during setup and create a replacement for
   future downloads.
-- Record the immutable ModelScope revision and SHA-256 values for the index and
-  four Safetensors shards in a compact manifest; do not commit the shards.
+- `docs/model_manifest.json` records the available ModelScope metadata plus the
+  SHA-256 values for the index and four Safetensors shards; the shards remain outside Git.
 
 ## Modified files
 

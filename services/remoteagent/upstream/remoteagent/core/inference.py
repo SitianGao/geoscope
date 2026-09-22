@@ -301,7 +301,8 @@ class RemoteAgent:
             f"[Tool Call] {tool_call.name}"
             f"({json.dumps(tool_call.arguments, ensure_ascii=False, default=str)})\n"
             f"[Execution Result]\n{json.dumps(safe_result, ensure_ascii=False, default=str)}\n\n"
-            "Provide a concise final response based only on this execution result. "
+            "Provide a concise final response enclosed in <answer>...</answer> based only on this execution result. "
+            "Include the exact pixel_area and area_ratio from metrics when provided. "
             "Do not invent measurements. If execution failed, state that it failed. "
             "Call another tool only if the request is still genuinely incomplete."
         )

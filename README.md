@@ -9,12 +9,13 @@
 - [队长执行与验收：当前进度、待协调事项与操作顺序](docs/队长执行与验收.md)
 - [接口与联调约定](docs/接口与联调约定.md)
 - [RemoteAgent 交付审查](docs/RemoteAgent交付审查.md)
+- [2026-09-22 完整现场联调验收](docs/完整现场联调验收_2026-09-22.md)
 - [v3 技术方案](docs/技术方案_v3.md)
 - [队员 A：RemoteAgent 开发入口](services/remoteagent/README.md)
 - [队员 B：RemoteSAM 开发入口](services/remotesam/README.md)
 - [上游代码来源及裁剪范围](docs/上游代码来源.md)
 
-**状态：A、B 和工作台代码已合并，两个官方模型均已分别完成真图验证。** RemoteAgent 已在实验室 GPU0 通过 vLLM 运行，完成影像描述和 RemoteSAM 工具决策；RemoteSAM 已返回同尺寸真实二值蒙版。工作台现在调用 A 交付的 `plan()`，校验允许的工具后调用 B 的 RemoteSAM 接口，并通过 `continue_with_tool_result()` 回传确定性统计。仍需保存一次同一任务中的完整现场闭环记录，才能宣布系统端到端验收完成。
+**状态：A、B 和工作台代码已合并，两个官方模型及完整现场闭环均已通过。** 2026-09-22 使用真实影像和中文“提取右侧建筑并计算面积占比”完成 RemoteAgent 决策、Harness 校验、RemoteSAM 蒙版、右半幅裁切、像素统计和结果回填；详细证据见完整现场联调验收报告。
 
 依据用户提供的《技术方案调整稿_v3_需求驱动版.md》制作。方案副本见本目录“方案依据_v3.md”。
 
@@ -92,4 +93,4 @@ SM3Det仓库附CC BY-NC 4.0许可证，但具体影像原始来源与许可未�
 
 `tests/browser.cjs` 为开发用浏览器检查，依赖本机Codex配套Playwright（运行时路径可用PLAYWRIGHT_PATH覆盖）。它检查主任务、条件修改、版本、下载、澄清、故障及移动端页面，截图位于test-results。
 
-后续优先事项：保存官方 Agent→Harness→RemoteSAM→统计→Agent 回填的同次现场记录 → 实测自定义影像 → 补充真实用户任务与标注 → 再开展论文基线与完整系统的质量、效率对照。
+后续优先事项：实测自定义影像 → 补充真实用户任务与标注 → 开展论文基线与完整系统的质量、效率对照 → 固化答辩演示与失败备用方案。

@@ -225,8 +225,9 @@ official model inference. The live RemoteSAM probe and the real
 
 ## Operational follow-up
 
-- Feed the verified RemoteSAM mask/statistics metadata into the full Harness
-  session when the UI workflow is enabled.
+- The full RemoteAgent -> Harness -> RemoteSAM -> statistics -> Agent feedback
+  path passed on 2026-09-22 for both whole-image buildings and the Chinese
+  right-half building task. See `docs/完整现场联调验收_2026-09-22.md`.
 - Keep at least one success and one failure case; never replace missing results
   with the Demo's hand-authored polygon.
 - Revoke the ModelScope token exposed during setup and create a replacement for

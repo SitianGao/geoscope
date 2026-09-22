@@ -69,6 +69,23 @@ class RemoteAgentWorkflowTests(unittest.TestCase):
         self.assertEqual(result.tool_call.name, "referring_expression_segmentation")
         self.assertEqual(result.tool_call.arguments["image_path"], str(self.image_path.resolve()))
 
+    def test_plan_accepts_tool_call_wrapped_in_answer_tag(self):
+        agent = FakeRemoteAgent(
+            [
+                '<think>Use RemoteSAM.</think><answer>'
+                'T_call(semantic_segmentation, "C:/untrusted.png", ["building"])'
+                '</answer>'
+            ],
+            allowed_tools={"semantic_segmentation"},
+        )
+
+        result = agent.plan("Extract all buildings.", self.image_path)
+
+        self.assertEqual(result.status, "tool_call")
+        self.assertEqual(result.tool_call.name, "semantic_segmentation")
+        self.assertEqual(result.tool_call.arguments["classes"], ["building"])
+        self.assertEqual(result.tool_call.arguments["image_path"], str(self.image_path.resolve()))
+
     def test_plan_rejects_tool_that_is_not_deployed(self):
         agent = FakeRemoteAgent(
             ['T_call(object_detection, "C:/untrusted.png", ["ship"])'],

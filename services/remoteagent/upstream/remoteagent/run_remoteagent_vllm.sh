@@ -7,6 +7,8 @@ MODEL_DIR="${1:-RemoteAgent}"
 SERVED_MODEL_NAME="${SERVED_MODEL_NAME:-RemoteAgent}"
 PORT="${2:-8000}"
 GPU_ID="${GPU_ID:-0}"
+BIND_HOST="${BIND_HOST:-127.0.0.1}"
+MAX_MODEL_LEN="${MAX_MODEL_LEN:-4096}"
 MODEL_PATH="${ROOT_DIR}/${MODEL_DIR}"
 
 if [[ ! -d "$MODEL_PATH" ]]; then
@@ -21,14 +23,24 @@ fi
 
 echo "Model path: $MODEL_PATH"
 echo "Served model name: $SERVED_MODEL_NAME"
-echo "Service port: $PORT"
+echo "Service address: $BIND_HOST:$PORT"
 echo "GPU device: $GPU_ID"
 echo "Starting vLLM service..."
 
-exec env CUDA_VISIBLE_DEVICES="$GPU_ID" vllm serve "$MODEL_PATH" \
+unset PYTHONPATH
+exec env \
+  CUDA_VISIBLE_DEVICES="$GPU_ID" \
+  PYTHONNOUSERSITE=1 \
+  HF_HUB_OFFLINE=1 \
+  TRANSFORMERS_OFFLINE=1 \
+  vllm serve "$MODEL_PATH" \
   --served-model-name "$SERVED_MODEL_NAME" \
-  --host 0.0.0.0 \
+  --host "$BIND_HOST" \
   --port "$PORT" \
-  --max-model-len 8192 \
+  --dtype bfloat16 \
+  --max-model-len "$MAX_MODEL_LEN" \
   --gpu-memory-utilization 0.90 \
-  --limit-mm-per-prompt '{"image":2,"video":2}'
+  --max-num-seqs 1 \
+  --limit-mm-per-prompt '{"image":1,"video":0}' \
+  --mm-processor-kwargs '{"min_pixels":3136,"max_pixels":1048576}' \
+  --enforce-eager

@@ -217,7 +217,7 @@ The offline tests verify:
 - the complete RemoteSAM mask response is retained;
 - mask bytes are omitted from the language-model feedback prompt.
 
-The repository currently passes 32 tests, including a regression test for a
+The integrated repository currently passes 44 tests, including a regression test for a
 valid `T_call(...)` wrapped by the checkpoint in an `<answer>` tag. Unit tests
 use controlled responses; the separate live probe described above records the
 official model inference. The live RemoteSAM probe and the real
@@ -231,6 +231,8 @@ official model inference. The live RemoteSAM probe and the real
   with the Demo's hand-authored polygon.
 - Revoke the ModelScope token exposed during setup and create a replacement for
   future downloads.
+- Record the immutable ModelScope revision and SHA-256 values for the index and
+  four Safetensors shards in a compact manifest; do not commit the shards.
 
 ## Modified files
 

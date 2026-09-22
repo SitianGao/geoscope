@@ -12,7 +12,7 @@
 - `upstream/remoteagent/parsing/`：官方工具调用解析。
 - `upstream/remoteagent/services/executor.py`：工具执行与结果返回。
 
-本目录不提交权重。实验室主机上的 Python 3.10、PyTorch CUDA 环境和 RemoteSAM 真图调用已验证；官方 RemoteAgent 权重与 vLLM 服务仍按部署文档中的阻塞项推进。
+本目录不提交权重。实验室主机上的 Python 3.10、PyTorch CUDA 环境、官方 RemoteAgent 权重、vLLM 服务和 RemoteSAM 真图调用均已分别验证；完整工作台现场闭环仍按部署文档推进。
 
 在 `feature/remoteagent` 分支工作。负责本目录及相关测试、说明；根目录工作台与 Harness 的修改交由队长整合。保留上游来源，不把官方算法作为团队自研成果。
 
@@ -38,4 +38,4 @@
 python -m unittest discover -s tests -v
 ```
 
-当前工作流与 Harness 合计 18 项测试通过，其中 RemoteAgent 专项测试 5 项，覆盖真实图片输入、工具白名单、影像路径绑定、完整 mask 保留和工具结果回填。
+当前整仓 44 项测试通过，其中 RemoteAgent 工作流专项测试 6 项，覆盖真实图片输入、工具白名单、影像路径绑定、完整 mask 保留、工具结果回填，以及官方模型实际出现的 `<answer>T_call(...)</answer>` 包装。

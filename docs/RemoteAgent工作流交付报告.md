@@ -1,6 +1,6 @@
 # RemoteAgent 工作流交付报告
 
-更新时间：2026-09-21。本文已按最终整合分支更新。
+更新时间：2026-09-22。本文已按最终整合分支更新。
 
 ## 已完成
 
@@ -27,7 +27,8 @@ GEO_SERVICE_PROXY_MODE=direct
 
 ## 验证结果
 
-- 最终整合代码本机全量测试：43/43 通过，其中包含 A 的无额外依赖 vLLM 客户端、正式 Agent 决策/反馈合同和工作台闭环测试。
+- 最终整合代码本机全量测试：44/44 通过，其中包含 A 的无额外依赖 vLLM 客户端、正式 Agent 决策/反馈合同、官方模型包装工具调用的兼容测试和工作台闭环测试。
+- 官方 `AIMGroup/RemoteAgent` 已在实验室 GPU0 通过 vLLM 0.15.1 运行；`/v1/models` 返回模型 id `RemoteAgent`，上下文长度 4096。真实图像描述返回 `completed`，真实建筑提取请求返回已校验的 `semantic_segmentation` 工具调用。
 - 实验室机 `/home/gst/projects/geoscope-remoteagent`：9/9 通过，命令通过 `CUDA_VISIBLE_DEVICES=0` 固定 GPU0 环境。
 - 早前真实 RemoteSAM 真图验证：800×600 输入，返回同尺寸 0/255 二值 PNG；前景 52,637 px，占比约 10.966%；服务耗时约 574.53 ms，峰值显存约 1836.53 MiB；检查点 SHA-256 为 `f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7`。
 - 2026-09-20 21:44 的一次联调曾连接超时，代码正确返回失败且未生成伪蒙版或伪统计。2026-09-21 队长侧复验时 B 服务已经恢复：`/ready` 返回版本 1.1.0、CUDA 0、FP16 与同一权重哈希；使用 `web/assets/urban.png` 和 `buildings` 再次真图调用成功，800×600 输入与蒙版完全对齐、掩膜值仅为 0/255、前景 52,637 px。B 模块已经具备最终联调条件；启动官方 Agent 后用下列探针验证整条真实链路：
@@ -42,12 +43,8 @@ CUDA_VISIBLE_DEVICES=0 python -B tests/live_workbench_probe.py \
   --sam-revision "<RemoteSAM权重SHA256或固定版本>"
 ```
 
-## 仍需队长提供
+## 最后现场验收
 
-官方 Agent 权重尚未在实验室机落盘，因此还不能启动真实 vLLM Agent 推理。需要队长确认：
+两个模型已分别通过真图验证，当前只需在两个服务同时在线时运行上面的 `live_workbench_probe.py`，保存一次 RemoteAgent 决策、RemoteSAM 蒙版、Harness 统计和 Agent 回填的同次运行记录。队长电脑需要自己的 SSH 端口转发；队员 A 电脑上的 `127.0.0.1:18000` 不能直接共享。
 
-1. ModelScope 权重的具体文件/版本或已审批的下载方式；
-2. 权重目录和 `GEO_AGENT_MODEL` 实际名称；
-3. `GEO_REMOTESAM_REVISION` 应记录的正式权重 SHA-256。
-
-权重必须保存在实验室电脑，不进入 Git，也不下载到个人电脑。启动时固定 `CUDA_VISIBLE_DEVICES=0`。
+`GEO_AGENT_MODEL` 已确认使用 `RemoteAgent`，`GEO_REMOTESAM_REVISION` 使用正式权重 SHA-256 `f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7`。权重不得进入 Git。A 的部署报告明确记录安装期间曾暴露 ModelScope 令牌；仓库扫描未发现令牌内容，但原令牌仍应立即作废并重新生成。

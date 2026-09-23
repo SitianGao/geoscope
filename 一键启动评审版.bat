@@ -16,8 +16,8 @@ if errorlevel 1 (
   exit /b 1
 )
 
-echo GeoScope v0.4.0 正在启动...
-echo 浏览器将打开 http://127.0.0.1:4180/?v=0.4.0
-start "" "http://127.0.0.1:4180/?v=0.4.0"
+echo GeoScope v0.5.0 正在启动...
+echo 浏览器将打开 http://127.0.0.1:4180/?v=0.5.0
+start "" "http://127.0.0.1:4180/?v=0.5.0"
 python server.py
 pause

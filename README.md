@@ -10,6 +10,7 @@
 - [接口与联调约定](docs/接口与联调约定.md)
 - [RemoteAgent 交付审查](docs/RemoteAgent交付审查.md)
 - [2026-09-22 完整现场联调验收](docs/完整现场联调验收_2026-09-22.md)
+- [v4 国赛申报版技术方案](docs/技术方案_v4_国赛申报版.md)
 - [v3 技术方案](docs/技术方案_v3.md)
 - [队员 A：RemoteAgent 开发入口](services/remoteagent/README.md)
 - [队员 B：RemoteSAM 开发入口](services/remotesam/README.md)

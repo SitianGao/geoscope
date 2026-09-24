@@ -1,0 +1,11 @@
+task_id,category,image_id,request,expected_task_type,expected_target,expected_side,task_route,agent_status,tool_name,outcome,resolved_target,resolved_side,decision_latency_ms,routing_correct,failure_reason
+A01,scene_qa,urban,这张遥感影像主要是什么场景？,answer,,,internal,completed,,scene,,,2218.6,True,
+A02,scene_qa,airport,描述这幅影像的内容。,answer,,,internal,completed,,scene,,,2790.6,True,
+A03,scene_qa,hkust,图中是否有大量建筑物？,answer,,,internal,completed,,scene,,,1046.7,True,
+A04,scene_qa,satellite_mixed,描述图中的地形和土地利用特征。,answer,,,internal,completed,,scene,,,4401.0,True,
+A05,scene_qa,nuist,这幅影像拍摄的是城市还是乡村？,answer,,,internal,completed,,scene,,,1548.7,True,
+A06,scene_qa,satellite_qingming,图中有没有明显的植被或水域？,answer,,,internal,completed,,scene,,,2772.7,True,
+A07,scene_qa,urban,概括这幅影像的主要地物类型。,answer,,,internal,completed,,scene,,,3257.2,True,
+A08,scene_qa,aerial_1831,这是一幅什么类型的遥感影像？,answer,,,internal,completed,,scene,,,2233.2,True,
+B01,full_extract,urban,提取全图的所有建筑。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2956.6,True,
+B02,full_extract,hkust,提取整幅影像中的建筑像素。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2421.5,True,

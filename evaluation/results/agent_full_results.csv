@@ -1,0 +1,41 @@
+task_id,category,image_id,request,expected_task_type,expected_target,expected_side,task_route,agent_status,tool_name,outcome,resolved_target,resolved_side,decision_latency_ms,routing_correct,failure_reason
+A01,scene_qa,urban,这张遥感影像主要是什么场景？,answer,,,internal,completed,,scene,,,2167.1,True,
+A02,scene_qa,airport,描述这幅影像的内容。,answer,,,internal,completed,,scene,,,2333.5,True,
+A03,scene_qa,hkust,图中是否有大量建筑物？,answer,,,internal,completed,,scene,,,922.2,True,
+A04,scene_qa,satellite_mixed,描述图中的地形和土地利用特征。,answer,,,internal,completed,,scene,,,2916.5,True,
+A05,scene_qa,nuist,这幅影像拍摄的是城市还是乡村？,answer,,,internal,completed,,scene,,,1281.1,True,
+A06,scene_qa,satellite_qingming,图中有没有明显的植被或水域？,answer,,,internal,completed,,scene,,,2195.0,True,
+A07,scene_qa,urban,概括这幅影像的主要地物类型。,answer,,,internal,completed,,scene,,,2299.6,True,
+A08,scene_qa,aerial_1831,这是一幅什么类型的遥感影像？,answer,,,internal,completed,,scene,,,1715.0,True,
+B01,full_extract,urban,提取全图的所有建筑。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2967.4,True,
+B02,full_extract,hkust,提取整幅影像中的建筑像素。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2364.8,True,
+B03,full_extract,nuist,把图中的建筑分割出来。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,1630.8,True,
+B04,full_extract,aerial_1831,Extract all buildings in this image.,tool_call,building,all,dense,unparsed,,unparsed,,,3298.2,False,模型决策未通过校验（unparsed）
+B05,full_extract,satellite_qingming,分割出全图的建筑物。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2736.2,True,
+B06,full_extract,urban,提取这幅影像中的所有建筑并计算面积占比。,tool_call,building,all,dense,rejected_tool,crossearth_semantic_segmentation,rejected_tool,,,2452.3,False,模型决策未通过校验（rejected_tool）
+B07,full_extract,hkust,标注出图中的所有建筑。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2130.3,True,
+B08,full_extract,nuist,分割整幅影像的建筑区域。,tool_call,building,all,dense,tool_call,semantic_segmentation,segment,building,all,2391.9,True,
+C01,side_extract,urban,提取右侧建筑。,tool_call,building,right,dense,tool_call,semantic_segmentation,segment,building,right,3446.6,True,
+C02,side_extract,urban,提取左侧建筑。,tool_call,building,left,dense,tool_call,semantic_segmentation,segment,building,left,3475.5,True,
+C03,side_extract,hkust,提取上半部分的建筑。,tool_call,building,top,dense,tool_call,semantic_segmentation,segment,building,top,3272.7,True,
+C04,side_extract,aerial_1831,提取下半部分的建筑。,tool_call,building,bottom,dense,tool_call,semantic_segmentation,segment,building,bottom,3178.8,True,
+C05,side_extract,urban,提取右侧建筑并计算面积占比。,tool_call,building,right,dense,tool_call,semantic_segmentation,segment,building,right,2714.9,True,
+C06,side_extract,nuist,只提取左边的建筑。,tool_call,building,left,dense,tool_call,referring_expression_segmentation,reject_args,,,3385.1,False,本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。
+C07,side_extract,hkust,提取图中右侧的建筑像素。,tool_call,building,right,dense,completed,,dense_answered_text,,,2183.2,False,需要像素结果但 RemoteAgent 只返回了文字回答
+C08,side_extract,satellite_qingming,分割出右半幅的建筑。,tool_call,building,right,dense,tool_call,semantic_segmentation,segment,building,right,3553.8,True,
+D01,modify,urban,改成左侧的建筑。,tool_call,building,left,dense,tool_call,semantic_segmentation,segment,building,left,2553.1,True,
+D02,modify,urban,把提取结果改成左侧。,tool_call,building,left,dense,tool_call,semantic_segmentation,segment,building,left,2663.2,True,
+D03,modify,airport,现在换成提取飞机。,tool_call,aircraft,right,dense,tool_call,referring_expression_segmentation,segment,aircraft,right,2635.5,True,
+D04,modify,urban,改成提取全图的建筑。,tool_call,building,all,dense,rejected_tool,crossearth_semantic_segmentation,rejected_tool,,,2803.0,False,模型决策未通过校验（rejected_tool）
+E01,aircraft,airport,提取图中的飞机。,tool_call,aircraft,all,dense,rejected_tool,skysense_detection,rejected_tool,,,2173.8,False,模型决策未通过校验（rejected_tool）
+E02,aircraft,airport,分割出机场里的所有飞机。,tool_call,aircraft,all,dense,rejected_tool,skysense_detection,rejected_tool,,,2441.7,False,模型决策未通过校验（rejected_tool）
+E03,aircraft,airport,Extract all aircraft in this image.,tool_call,aircraft,all,dense,unparsed,,unparsed,,,3465.4,False,模型决策未通过校验（unparsed）
+E04,aircraft,airport,提取右侧的飞机。,tool_call,aircraft,right,dense,tool_call,referring_expression_segmentation,reject_args,,,2295.8,False,本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。
+E05,aircraft,airport,标注出图中的飞机目标。,tool_call,aircraft,all,dense,unparsed,,unparsed,,,2299.8,False,模型决策未通过校验（unparsed）
+E06,aircraft,airport,分割整幅影像中的飞机。,tool_call,aircraft,all,dense,tool_call,semantic_segmentation,segment,aircraft,all,2950.2,True,
+F01,ambiguous,urban,提取那个区域。,clarify,,,dense,n/a,,deterministic_clarify,,,0.0,True,
+F02,ambiguous,airport,把那个东西分割出来。,clarify,,,dense,n/a,,deterministic_clarify,,,0.0,True,
+F03,ambiguous,urban,提取画面中央的目标。,clarify,,,dense,tool_call,referring_expression_segmentation,reject_args,,,2742.9,True,
+G01,illegal,urban,提取图中的车辆。,clarify,,,dense,rejected_tool,skysense_detection,rejected_tool,,,2168.2,True,
+G02,illegal,urban,同时提取建筑和水体两个类别。,clarify,,,dense,tool_call,semantic_segmentation,reject_args,,,2039.2,True,
+G03,illegal,urban,提取图中所有物体的轮廓。,clarify,,,dense,rejected_tool,contour_extraction,rejected_tool,,,1696.4,True,

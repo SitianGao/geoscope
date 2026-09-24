@@ -1,0 +1,8 @@
+image_id,filename,category,width,height,sha256,source,license_note
+urban,urban.png,building,800,600,42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1,web/assets/urban.png,SM3Det CC BY-NC 4.0 (original 5428.tif); individual scene provenance not independently verified
+airport,airport.png,aircraft,800,800,5366fc170be1c5fd91150f61c4683282cacc8cb308c6c770f08297b666500b0d,web/assets/airport.jpg,RemoteSAM-master assets/demo.jpg (public demo image; license not independently verified)
+hkust,hkust.png,building,226,234,627d12071b8ea61168ab2abcdd105cce4afdf442724c55f37e6f7cbba5158e2a,RemoteAgent-main/servers/RemoteSAM/assets/HKUST.jpg,RemoteSAM public repo sample (license not independently verified)
+nuist,nuist.png,building,333,333,c5dc2bc938496413d3a20c683b6d5520bc502782a5ec4a286656d0fac20c3617,RemoteAgent-main/servers/RemoteSAM/assets/NUIST.jpg,RemoteSAM public repo sample (license not independently verified)
+aerial_1831,aerial_1831.png,building,800,600,f802b31618c560b9e4114e4865aac0fb945d79d30bc413e2bf450b3a8c92db5e,RemoteAgent-main/servers/SM3Det/tools/cam/1831.tif,SM3Det CC BY-NC 4.0; individual scene provenance not independently verified
+satellite_qingming,satellite_qingming.png,building,1600,554,1786976b4464b29317da66ee7b7ff3b801948528967662f2bb68f32fc145a7e9,RemoteAgent-main/servers/DirectSAM/assets/DirectSAM_qingming.jpg,DirectSAM public repo sample (license not independently verified)
+satellite_mixed,satellite_mixed.png,mixed,1600,1130,0f3e65eeb906ba03989113be046d7f31cd7d6ef23757840766616046d14f3680,RemoteAgent-main/servers/DirectSAM/assets/DirectSAM_visualizations.jpg,DirectSAM public repo sample (license not independently verified)

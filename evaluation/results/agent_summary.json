@@ -1,0 +1,64 @@
+{
+  "config": {
+    "model": "RemoteAgent (AIMGroup/RemoteAgent, Qwen2.5-VL, BF16, vLLM 0.15.1)",
+    "endpoint": "http://127.0.0.1:18000/v1",
+    "allowed_tools": [
+      "referring_expression_segmentation",
+      "semantic_segmentation"
+    ],
+    "proxy_mode": "direct",
+    "note": "路由与校验复用工作台 server.py / agent_bridge 的真实代码"
+  },
+  "total_tasks": 40,
+  "metrics": {
+    "task_routing_accuracy": 0.75,
+    "legal_tool_call_rate": 0.769231,
+    "target_category_accuracy": 1.0,
+    "spatial_condition_accuracy": 1.0,
+    "clarification_recognition_rate": 1.0,
+    "avg_decision_latency_ms": 2524.8,
+    "median_decision_latency_ms": 2452.3
+  },
+  "outcome_counts": {
+    "scene": 8,
+    "segment": 16,
+    "unparsed": 3,
+    "rejected_tool": 6,
+    "reject_args": 4,
+    "dense_answered_text": 1,
+    "deterministic_clarify": 2
+  },
+  "agent_status_counts": {
+    "completed": 9,
+    "tool_call": 20,
+    "unparsed": 3,
+    "rejected_tool": 6,
+    "n/a": 2
+  },
+  "failure_reason_counts": {
+    "模型决策未通过校验（unparsed）": 3,
+    "模型决策未通过校验（rejected_tool）": 4,
+    "本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。": 2,
+    "需要像素结果但 RemoteAgent 只返回了文字回答": 1
+  },
+  "baseline_agent_vs_harness": {
+    "baseline_agent": {
+      "direct_answers": 9,
+      "legal_tool_calls": 20,
+      "illegal_tool_calls": 6,
+      "unparsed": 3,
+      "not_called_deterministic": 2
+    },
+    "harness": {
+      "executed_segment": 16,
+      "scene_answer": 8,
+      "blocked_illegal_tool": 6,
+      "blocked_unparsed": 3,
+      "rejected_args": 4,
+      "dense_answered_text": 1,
+      "internal_called_tool": 0,
+      "deterministic_clarify": 2
+    }
+  },
+  "generated_at": "2026-09-24T14:03:24+0800"
+}

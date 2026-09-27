@@ -1,0 +1,47 @@
+{
+  "protocol_version": "sam-eval-v1.0",
+  "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "service_version": "1.1.0",
+  "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7",
+  "overall": {
+    "images": 3,
+    "successes": 3,
+    "failures": 0,
+    "failure_rate": 0.0,
+    "empty_masks": 0,
+    "mean_iou_all_failure_as_zero": 0.21876796344529645,
+    "mean_dice_all_failure_as_zero": 0.32724786364674063,
+    "mean_iou_success_only": 0.21876796344529645,
+    "mean_dice_success_only": 0.32724786364674063,
+    "mean_service_inference_ms": 407.17,
+    "median_service_inference_ms": 427.48
+  },
+  "by_class": {
+    "building": {
+      "images": 1,
+      "successes": 1,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_all_failure_as_zero": 0.43045278602934556,
+      "mean_dice_all_failure_as_zero": 0.6018413054012045,
+      "mean_iou_success_only": 0.43045278602934556,
+      "mean_dice_success_only": 0.6018413054012045,
+      "mean_service_inference_ms": 538.07,
+      "median_service_inference_ms": 538.07
+    },
+    "plane": {
+      "images": 2,
+      "successes": 2,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_all_failure_as_zero": 0.11292555215327188,
+      "mean_dice_all_failure_as_zero": 0.18995114276950872,
+      "mean_iou_success_only": 0.11292555215327188,
+      "mean_dice_success_only": 0.18995114276950872,
+      "mean_service_inference_ms": 341.72,
+      "median_service_inference_ms": 341.72
+    }
+  }
+}

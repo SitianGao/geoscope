@@ -1,0 +1,51 @@
+{
+  "config": {
+    "model": "RemoteAgent (AIMGroup/RemoteAgent, Qwen2.5-VL, BF16, vLLM 0.15.1)",
+    "endpoint": "http://127.0.0.1:18000/v1",
+    "allowed_tools": [
+      "referring_expression_segmentation",
+      "semantic_segmentation"
+    ],
+    "proxy_mode": "direct",
+    "note": "路由与校验复用工作台 server.py / agent_bridge 的真实代码"
+  },
+  "total_tasks": 10,
+  "metrics": {
+    "task_routing_accuracy": 1.0,
+    "legal_tool_call_rate": 1.0,
+    "target_category_accuracy": 1.0,
+    "spatial_condition_accuracy": 1.0,
+    "clarification_recognition_rate": null,
+    "avg_decision_latency_ms": 2564.7,
+    "median_decision_latency_ms": 2772.7
+  },
+  "outcome_counts": {
+    "scene": 8,
+    "segment": 2
+  },
+  "agent_status_counts": {
+    "completed": 8,
+    "tool_call": 2
+  },
+  "failure_reason_counts": {},
+  "baseline_agent_vs_harness": {
+    "baseline_agent": {
+      "direct_answers": 8,
+      "legal_tool_calls": 2,
+      "illegal_tool_calls": 0,
+      "unparsed": 0,
+      "not_called_deterministic": 0
+    },
+    "harness": {
+      "executed_segment": 2,
+      "scene_answer": 8,
+      "blocked_illegal_tool": 0,
+      "blocked_unparsed": 0,
+      "rejected_args": 0,
+      "dense_answered_text": 0,
+      "internal_called_tool": 0,
+      "deterministic_clarify": 0
+    }
+  },
+  "generated_at": "2026-09-24T13:54:50+0800"
+}

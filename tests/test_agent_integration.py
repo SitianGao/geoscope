@@ -105,6 +105,28 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertIn('only these deployed tools are available: none', request['messages'][0]['content'])
         self.assertEqual(json.loads(request['messages'][-1]['content'][0]['text'])['context']['task_route'], 'internal')
 
+    def test_dense_prompt_exposes_only_deployed_tools_and_whole_image_airplanes(self):
+        FakeAgentAndSAM.decision = 'T_call(referring_expression_segmentation, "wrong.png", "all airplanes")'
+        result = self.run_task('提取右侧的飞机')
+        self.assertEqual(result['status'], 'completed')
+        first, sam, _ = FakeAgentAndSAM.requests
+        prompt = first[1]['messages'][0]['content']
+        self.assertIn('exactly ONE plain T_call', prompt)
+        self.assertIn('"all airplanes"', prompt)
+        self.assertIn('["aircraft"]', prompt)
+        self.assertIn('"只提取左边的建筑"', prompt)
+        self.assertIn('"所有物体的轮廓"', prompt)
+        self.assertNotIn('object_detection(', prompt)
+        self.assertNotIn('crossearth_semantic_segmentation', prompt)
+        self.assertEqual(sam[1]['text'], 'all airplanes')
+        self.assertEqual(result['task']['side'], 'right')
+
+    def test_semantic_aircraft_keeps_canonical_service_class(self):
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "wrong.png", ["aircraft"])'
+        result = self.run_task('Extract all aircraft in this image.')
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(FakeAgentAndSAM.requests[1][1]['classes'], ['aircraft'])
+
     def test_visual_question_cannot_accidentally_run_segmentation(self):
         FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "wrong.png", ["building", "road"])'
         result = self.run_task('这张影像主要是什么场景？')

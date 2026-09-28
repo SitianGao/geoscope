@@ -23,7 +23,7 @@ LABELS = {
     'tree': ('tree', 'trees', 'vegetation', 'trees and vegetation', '植被', '树木'),
     'ship': ('ship', 'ships', '船舶'),
 }
-PROMPTS = {'building':'all buildings', 'aircraft':'all aircraft', 'road':'all roads',
+PROMPTS = {'building':'all buildings', 'aircraft':'all airplanes', 'road':'all roads',
            'water':'water bodies', 'tree':'trees and vegetation', 'ship':'all ships'}
 CLASSES = {'building':'building', 'aircraft':'aircraft', 'road':'road',
            'water':'water', 'tree':'tree', 'ship':'ship'}
@@ -69,35 +69,40 @@ class WorkbenchAgent(RemoteAgent):
             raise ValueError('未知的 RemoteAgent 任务路由')
         self.task_route = task_route
         allowed_tools = ALLOWED_TOOLS if task_route == 'dense' else set()
+        token_limit = 1024 if task_route == 'internal' else 512
         super().__init__(vllm_url=self.base, model_name=model, allowed_tools=allowed_tools,
-                         api_urls={}, max_tokens=1024)
+                         api_urls={}, max_tokens=token_limit, system_prompt='GeoScope RemoteAgent')
 
     def _runtime_system_prompt(self):
-        base = super()._runtime_system_prompt()
         if self.task_route == 'internal':
-            return base + (
-                '\nGeoScope turn route: INTERNAL VISUAL UNDERSTANDING ONLY. No external tool is available '
-                'or needed for this turn. Inspect the supplied image yourself and answer the user directly '
-                'inside exactly one <answer>...</answer> block. Scene description, image captioning, visual '
-                'question answering, classification, counting, comparison, and asking what the image shows '
-                'are internal tasks even when the image contains several object categories. Do not output '
-                'T_call, do not request segmentation, and do not ask the user to choose one target category. '
-                'Answer in concise Chinese unless the user requested another language.'
+            return (
+                'You are RemoteAgent in the GeoScope workbench. This turn is INTERNAL VISUAL UNDERSTANDING ONLY; '
+                'only these deployed tools are available: none. Inspect the supplied image and answer the user '
+                'inside exactly one <answer>...</answer> block. Scene description, captioning, visual question '
+                'answering, classification, counting, and comparison are internal tasks. Do not output T_call. '
+                'Answer concisely in the user\'s language.'
             )
-        return base + (
-            '\nGeoScope workbench contract: preserve <answer> and T_call syntax. '
-            'For extraction, request exactly one supported category: building, aircraft, road, water, tree, ship. '
-            'Use a whole-image category prompt (e.g. all buildings), or semantic_segmentation with one class. '
-            'The Harness applies the explicit pixel scope in context AFTER whole-image segmentation. '
-            'Mandatory extraction output rule: emit exactly one allowed T_call and no second tool call. '
-            'Never call contour_extraction, region_contour_extraction, or any other spatial tool, even when '
-            'the user asks for left, right, top, bottom, area, or ratio; those operations belong to the Harness. '
-            'If context.invert is true because the user asks for non-X or everything except X, call segmentation '
-            'for the positive base category X only; the Harness deterministically inverts the returned mask. '
-            'Do not use an XML <T_call> wrapper. A plain T_call(...) or <answer>T_call(...)</answer> is accepted. '
-            'Never invent new spatial conditions. For unsupported targets or ambiguous requests, '
-            'ask for clarification inside <answer>. The selected version supplies previous target and scope. '
-            'Area and ratio must come from the Harness execution result. Never claim a mask was generated before execution.'
+        return (
+            'You are RemoteAgent in the GeoScope workbench. This turn needs a pixel mask. '
+            'Only these deployed tools are available: referring_expression_segmentation and semantic_segmentation. '
+            'For a supported extraction request, output exactly ONE plain T_call(...) and nothing else: '
+            'no <think>, <answer>, XML wrapper, markdown, explanation, or second call. '
+            'Exact signatures: T_call(referring_expression_segmentation, "image_path", "whole-image English prompt") '
+            'or T_call(semantic_segmentation, "image_path", ["one English class"]). '
+            'Copy image_path from the user message. Valid targets are building, aircraft, road, water, tree, ship. '
+            'For any airplane, aircraft, plane, or 飞机 extraction, use '
+            'T_call(referring_expression_segmentation, "image_path", "all airplanes") '
+            'or T_call(semantic_segmentation, "image_path", ["aircraft"]). '
+            'For buildings, use "all buildings" or ["building"]. '
+            '"只提取左边的建筑" is a valid building request: call whole-image building segmentation. '
+            'The tool always segments the WHOLE image. Do not put left, right, top, bottom, region, area, '
+            'ratio, or other spatial conditions in tool arguments. The Harness applies those conditions afterward. '
+            'For a follow-up, inherit the previous target from context unless the user changes it. '
+            'If context.invert is true, request the positive target mask; the Harness inverts it. '
+            'Do not guess a target from the image or substitute a supported target. '
+            '"所有物体的轮廓" / "contours of all objects" has no single supported target; ask for clarification. '
+            'For unsupported targets, multiple categories, or ambiguous targets, output a concise '
+            '<answer>clarification needed</answer>. Never claim a mask or measurement before tool execution.'
         )
 
     def _run_llm(self, messages):

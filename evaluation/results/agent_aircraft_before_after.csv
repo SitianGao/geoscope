@@ -1,0 +1,7 @@
+task_id,category,request,before_status,before_tool,before_outcome,before_correct,before_failure_reason,after_status,after_tool,after_outcome,after_correct,after_failure_reason
+E01,aircraft,提取图中的飞机。,rejected_tool,skysense_detection,rejected_tool,False,模型决策未通过校验（rejected_tool）,tool_call,referring_expression_segmentation,segment,True,
+E02,aircraft,分割出机场里的所有飞机。,rejected_tool,skysense_detection,rejected_tool,False,模型决策未通过校验（rejected_tool）,tool_call,referring_expression_segmentation,segment,True,
+E03,aircraft,Extract all aircraft in this image.,unparsed,,unparsed,False,模型决策未通过校验（unparsed）,tool_call,referring_expression_segmentation,segment,True,
+E04,aircraft,提取右侧的飞机。,tool_call,referring_expression_segmentation,reject_args,False,本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。,tool_call,referring_expression_segmentation,segment,True,
+E05,aircraft,标注出图中的飞机目标。,unparsed,,unparsed,False,模型决策未通过校验（unparsed）,tool_call,referring_expression_segmentation,segment,True,
+E06,aircraft,分割整幅影像中的飞机。,tool_call,semantic_segmentation,segment,True,,tool_call,referring_expression_segmentation,segment,True,

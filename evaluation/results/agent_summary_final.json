@@ -1,0 +1,59 @@
+{
+  "config": {
+    "model": "RemoteAgent (AIMGroup/RemoteAgent, Qwen2.5-VL, BF16, vLLM 0.15.1)",
+    "endpoint": "http://127.0.0.1:18000/v1",
+    "allowed_tools": [
+      "referring_expression_segmentation",
+      "semantic_segmentation"
+    ],
+    "proxy_mode": "direct",
+    "note": "路由与校验复用工作台 server.py / agent_bridge 的真实代码"
+  },
+  "total_tasks": 40,
+  "metrics": {
+    "task_routing_accuracy": 0.975,
+    "legal_tool_call_rate": 1.0,
+    "target_category_accuracy": 1.0,
+    "spatial_condition_accuracy": 1.0,
+    "clarification_recognition_rate": 1.0,
+    "avg_decision_latency_ms": 873.0,
+    "median_decision_latency_ms": 858.5
+  },
+  "outcome_counts": {
+    "scene": 7,
+    "unparsed": 1,
+    "segment": 26,
+    "deterministic_clarify": 2,
+    "reject_args": 3,
+    "dense_answered_text": 1
+  },
+  "agent_status_counts": {
+    "completed": 8,
+    "unparsed": 1,
+    "tool_call": 29,
+    "n/a": 2
+  },
+  "failure_reason_counts": {
+    "模型决策未通过校验（unparsed）": 1
+  },
+  "baseline_agent_vs_harness": {
+    "baseline_agent": {
+      "direct_answers": 8,
+      "legal_tool_calls": 29,
+      "illegal_tool_calls": 0,
+      "unparsed": 1,
+      "not_called_deterministic": 2
+    },
+    "harness": {
+      "executed_segment": 26,
+      "scene_answer": 7,
+      "blocked_illegal_tool": 0,
+      "blocked_unparsed": 1,
+      "rejected_args": 3,
+      "dense_answered_text": 1,
+      "internal_called_tool": 0,
+      "deterministic_clarify": 2
+    }
+  },
+  "generated_at": "2026-09-28T20:33:31+0800"
+}

@@ -1,0 +1,58 @@
+{
+  "protocol_version": "sam-aircraft-v2.0",
+  "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "service_version": "1.1.0",
+  "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7",
+  "run": {
+    "mode": "upscale",
+    "manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+    "plane_ids": [
+      "ISAID_VAL_P1492",
+      "ISAID_VAL_P1738",
+      "ISAID_VAL_P1143",
+      "ISAID_VAL_P1184",
+      "ISAID_VAL_P1483",
+      "ISAID_VAL_P0179",
+      "ISAID_VAL_P0257",
+      "ISAID_VAL_P1529",
+      "ISAID_VAL_P1122",
+      "ISAID_VAL_P0259"
+    ],
+    "service": {
+      "ready": {
+        "status": "ready",
+        "service_version": "1.1.0",
+        "device": "cuda:0",
+        "fp16": true,
+        "epoc": false,
+        "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+      },
+      "model_loaded_at": 1790591783.6052694,
+      "model_load_time_ms": 8484.67
+    },
+    "note": "Ground truth is used only after inference for scoring."
+  },
+  "experiments": {
+    "upscale_1.25_all_planes": {
+      "configuration": {
+        "strategy": "upscale",
+        "prompt": "all planes",
+        "scale": 1.25,
+        "tile_size": "",
+        "overlap": "",
+        "probability_threshold": 0.5
+      },
+      "images": 10,
+      "successes": 10,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 1,
+      "mean_iou_failure_as_zero": 0.24697743820591495,
+      "mean_dice_failure_as_zero": 0.33002960325796127,
+      "mean_service_inference_ms_per_image": 600.723,
+      "median_service_inference_ms_per_image": 606.1,
+      "mean_client_wall_ms_per_image": 5598.548,
+      "total_requests": 10
+    }
+  }
+}

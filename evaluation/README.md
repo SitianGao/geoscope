@@ -94,3 +94,14 @@ from the two local `selected_manifest.csv` files. Its current SHA-256 is
 Before inference, run `verify_dataset_manifest.py --manifest
 evaluation/dataset_manifest.csv --data-root DATASETS_ROOT --expected-sha256
 5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241`.
+
+## Aircraft improvement experiment
+
+The separately versioned `sam-aircraft-v2.0` experiment retains the same ten
+aircraft images and masks while comparing prompt wording, 1.25× client-side
+upscaling, and 1024-pixel tiled inference. Its verified combined records are in
+`results/aircraft_v2/remotesam_aircraft_all_experiments_verified.csv`; the
+machine-readable comparison is
+`results/aircraft_v2/remotesam_aircraft_experiment_summary_verified.json`.
+See `docs/RemoteSAM飞机分割改进实验.md` for the result, limitations, and
+runtime tradeoff. This experiment does not alter the frozen building protocol.

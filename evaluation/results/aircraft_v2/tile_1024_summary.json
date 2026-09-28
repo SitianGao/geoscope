@@ -1,0 +1,121 @@
+{
+  "protocol_version": "sam-aircraft-v2.0",
+  "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "service_version": "1.1.0",
+  "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7",
+  "run": {
+    "mode": "tile",
+    "manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+    "plane_ids": [
+      "ISAID_VAL_P1492",
+      "ISAID_VAL_P1738",
+      "ISAID_VAL_P1143",
+      "ISAID_VAL_P1184",
+      "ISAID_VAL_P1483",
+      "ISAID_VAL_P0179",
+      "ISAID_VAL_P0257",
+      "ISAID_VAL_P1529",
+      "ISAID_VAL_P1122",
+      "ISAID_VAL_P0259"
+    ],
+    "service": {
+      "ready": {
+        "status": "ready",
+        "service_version": "1.1.0",
+        "device": "cuda:0",
+        "fp16": true,
+        "epoc": false,
+        "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+      },
+      "model_loaded_at": 1790591783.6052694,
+      "model_load_time_ms": 8484.67
+    },
+    "note": "Ground truth is used only after inference for scoring."
+  },
+  "experiments": {
+    "tile_1024_overlap_256_p0_5": {
+      "configuration": {
+        "strategy": "tile",
+        "prompt": "all planes",
+        "scale": 1.0,
+        "tile_size": 1024,
+        "overlap": 256,
+        "probability_threshold": 0.5
+      },
+      "images": 10,
+      "successes": 10,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_failure_as_zero": 0.19193462628887042,
+      "mean_dice_failure_as_zero": 0.27652245805513614,
+      "mean_service_inference_ms_per_image": 5658.794,
+      "median_service_inference_ms_per_image": 5917.79,
+      "mean_client_wall_ms_per_image": 12388.663,
+      "total_requests": 237
+    },
+    "tile_1024_overlap_256_p0_6": {
+      "configuration": {
+        "strategy": "tile",
+        "prompt": "all planes",
+        "scale": 1.0,
+        "tile_size": 1024,
+        "overlap": 256,
+        "probability_threshold": 0.6
+      },
+      "images": 10,
+      "successes": 10,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_failure_as_zero": 0.20817876977882221,
+      "mean_dice_failure_as_zero": 0.29728691234832033,
+      "mean_service_inference_ms_per_image": 5658.794,
+      "median_service_inference_ms_per_image": 5917.79,
+      "mean_client_wall_ms_per_image": 12388.663,
+      "total_requests": 237
+    },
+    "tile_1024_overlap_256_p0_7": {
+      "configuration": {
+        "strategy": "tile",
+        "prompt": "all planes",
+        "scale": 1.0,
+        "tile_size": 1024,
+        "overlap": 256,
+        "probability_threshold": 0.7
+      },
+      "images": 10,
+      "successes": 10,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_failure_as_zero": 0.23164595643247424,
+      "mean_dice_failure_as_zero": 0.32737790576965203,
+      "mean_service_inference_ms_per_image": 5658.794,
+      "median_service_inference_ms_per_image": 5917.79,
+      "mean_client_wall_ms_per_image": 12388.663,
+      "total_requests": 237
+    },
+    "tile_1024_overlap_256_p0_8": {
+      "configuration": {
+        "strategy": "tile",
+        "prompt": "all planes",
+        "scale": 1.0,
+        "tile_size": 1024,
+        "overlap": 256,
+        "probability_threshold": 0.8
+      },
+      "images": 10,
+      "successes": 10,
+      "failures": 0,
+      "failure_rate": 0.0,
+      "empty_masks": 0,
+      "mean_iou_failure_as_zero": 0.27876385011417365,
+      "mean_dice_failure_as_zero": 0.38118395324459603,
+      "mean_service_inference_ms_per_image": 5658.794,
+      "median_service_inference_ms_per_image": 5917.79,
+      "mean_client_wall_ms_per_image": 12388.663,
+      "total_requests": 237
+    }
+  }
+}

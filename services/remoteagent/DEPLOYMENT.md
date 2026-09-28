@@ -130,7 +130,7 @@ must come from the Harness, not from the model.
 
 ## Assigned remote deployment host
 
-The assigned laboratory host is Ubuntu at `10.199.139.30` using account `gst`.
+The assigned laboratory host is an Ubuntu GPU server. Its private address and account belong in the local `.env`, not in the repository.
 It has two RTX 3090 GPUs. The team selected GPU 0. It was rechecked before
 deployment and showed only 37 MiB used and 0% utilization, with no compute
 process. RemoteAgent must therefore use `CUDA_VISIBLE_DEVICES=0`; GPU 1 is
@@ -143,9 +143,9 @@ its `RemoteAgent/` subdirectory.
 
 The RemoteSAM contract supplied by teammate B is:
 
-- prediction: `POST http://10.113.228.79:6657/predict`;
-- health: `GET http://10.113.228.79:6657/health`;
-- readiness: `GET http://10.113.228.79:6657/ready`;
+- prediction: `POST http://<REMOTESAM_HOST>:6657/predict`;
+- health: `GET http://<REMOTESAM_HOST>:6657/health`;
+- readiness: `GET http://<REMOTESAM_HOST>:6657/ready`;
 - request: `{"task":"referring_seg","image":"<base64>","text":"building"}`.
 
 The RemoteAgent host can reach this service. On 2026-09-20, `/ready` returned
@@ -155,7 +155,7 @@ No additional Windows firewall rule was needed. `.env.geoscope.example`
 records the base URL without credentials.
 
 After the RemoteSAM computer restarted on 2026-09-22, its campus-network IP
-changed from `10.199.156.100` to `10.113.228.79`. The new `/ready` endpoint
+changed after a restart. After updating local configuration, the new `/ready` endpoint
 returned the same service version, CUDA device, FP16 flag and checkpoint hash.
 A fresh `referring_seg` request using the 800×600 urban image also passed:
 HTTP 200, 800×600 binary 0/255 mask, 52,637 foreground pixels, 1,621.79 ms

@@ -12,12 +12,15 @@
 - [RemoteAgent 交付审查](docs/RemoteAgent交付审查.md)
 - [2026-09-22 完整现场联调验收](docs/完整现场联调验收_2026-09-22.md)
 - [v4 国赛申报版技术方案](docs/技术方案_v4_国赛申报版.md)
+- [2026-09-28 队长整合验收报告](docs/队长整合验收报告_2026-09-28.md)
+- [队员 A：RemoteAgent 评测说明](docs/Agent评测说明.md)
+- [队员 B：RemoteSAM 评测说明](docs/RemoteSAM评测说明.md)
 - [v3 技术方案](docs/技术方案_v3.md)
 - [队员 A：RemoteAgent 开发入口](services/remoteagent/README.md)
 - [队员 B：RemoteSAM 开发入口](services/remotesam/README.md)
 - [上游代码来源及裁剪范围](docs/上游代码来源.md)
 
-**状态：A、B 和工作台代码已合并，两个官方模型及完整现场闭环均已通过。** 2026-09-22 使用真实影像和中文“提取右侧建筑并计算面积占比”完成 RemoteAgent 决策、Harness 校验、RemoteSAM 蒙版、右半幅裁切、像素统计和结果回填；详细证据见完整现场联调验收报告。
+**状态：A、B 和工作台代码已合并，两个官方模型及完整现场闭环均已通过。** 除 2026-09-22 的完整现场联调外，现已完成 40 条 RemoteAgent 决策评测和 20 幅带真值影像的 RemoteSAM 评测。当前 Agent 路由正确率为 75.0%，RemoteSAM 总体 IoU 为 0.2554；飞机任务是共同短板。完整结论和证据边界见 2026-09-28 队长整合验收报告。
 
 依据用户提供的《技术方案调整稿_v3_需求驱动版.md》制作。方案副本见本目录“方案依据_v3.md”。
 
@@ -91,7 +94,9 @@ SM3Det仓库附CC BY-NC 4.0许可证，但具体影像原始来源与许可未�
 
 ## 核查
 
-`python -m unittest discover -s tests -v` 当前运行 50 项检查，覆盖 RemoteAgent 决策、场景理解与像素任务分流、非目标区域取反、官方模型实际出现的 `<answer>T_call(...)</answer>` 与单调用 XML 风格、多个工具调用拒绝、工具白名单、当前影像绑定、RemoteSAM 两种分割合同、工具结果反馈、复杂范围拒绝、文字回答不得冒充分割、推理文本脱敏、上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。HTTP 集成测试使用明确标注的模拟服务；真实模型证据另见两项服务的部署和联调报告。
+`python -m unittest discover -s tests -v` 当前运行 51 项检查，覆盖 RemoteAgent 决策、场景理解与像素任务分流、非目标区域取反、官方模型实际出现的 `<answer>T_call(...)</answer>` 与单调用 XML 风格、多个工具调用拒绝、工具白名单、当前影像绑定、RemoteSAM 两种分割合同、工具结果反馈、飞机提示口径、复杂范围拒绝、文字回答不得冒充分割、推理文本脱敏、上下文、半幅统计、失败不产出、版本隔离、磁盘恢复、蒙版复用、二值编码及 HTTP 导出一致性。HTTP 集成测试使用明确标注的模拟服务；真实模型证据另见两项服务的部署和联调报告。
+
+提交的两套评测指标可在离线状态下复算：`python evaluation/recompute_integrated_metrics.py --write`。脚本从逐任务/逐图 CSV 核对 RemoteAgent 汇总、RemoteSAM 的 TP/FP/FN、IoU、Dice 和接口合同。
 
 `tests/browser.cjs` 为开发用浏览器检查，依赖本机Codex配套Playwright（运行时路径可用PLAYWRIGHT_PATH覆盖）。它检查主任务、条件修改、版本、下载、澄清、故障及移动端页面，截图位于test-results。
 

@@ -67,5 +67,5 @@ python evaluation/verify_remotesam_results.py --manifest evaluation/dataset_mani
 ## 交给团队的决策
 
 1. **请勿把 20/20 接口成功宣传为分割准确或端到端成功。**答辩应同时展示分类别均值、最佳与最差样例，并如实解释错误。
-2. 现有主流程 `agent_bridge.py` 对 `aircraft` 使用 `all aircraft`，本次为对齐 iSAID `plane` 真值使用 `all airplanes`。若队长希望把本结果称为**当前 GeoScope 整条链路**的精度，需主流程负责人先对齐语义并重新联调；否则仅标记 RemoteSAM 工具评测。
+2. 主流程已于 2026-09-28 将 `aircraft` 指代提示统一为本评测使用的 `all airplanes`。这消除了后续实验的提示口径差异，但当前数字仍是 RemoteSAM 工具评测；只有重新执行同批 Agent→Harness→RemoteSAM 任务后，才能称为整条链路精度。
 3. 后续优化应另开**不污染基线**的实验：优先验证飞机复杂背景下的提示词、平铺/多尺度和误检抑制；记录每种改动的完整 20 图逐图结果及额外耗时，不能仅选成功样例或替换失败图。任何实质性评测口径变化升级协议版本。模型未达精度目标前，前端应保留人工核查/修正提示。

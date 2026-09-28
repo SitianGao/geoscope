@@ -20,7 +20,7 @@ def _decode_base64(value: str) -> bytes:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--image", required=True, type=Path)
-    parser.add_argument("--url", default="http://10.113.228.79:6657/predict")
+    parser.add_argument("--url", default="http://127.0.0.1:6657/predict")
     parser.add_argument("--text", default="buildings")
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()

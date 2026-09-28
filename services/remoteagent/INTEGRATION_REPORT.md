@@ -2,9 +2,9 @@
 
 Date: 2026-09-20
 
-Source host: `10.199.139.30` (RemoteAgent, GPU 0 reserved)
+Source host: laboratory GPU server (RemoteAgent, GPU 0 reserved; private address omitted)
 
-Target service: `http://10.113.228.79:6657` (updated after the RemoteSAM host restarted)
+Target service: `http://<REMOTESAM_HOST>:6657` (updated after the RemoteSAM host restarted)
 
 ## Readiness
 

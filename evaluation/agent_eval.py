@@ -39,6 +39,7 @@ import re
 import sys
 import time
 from pathlib import Path
+from statistics import median
 from typing import Any, Dict, List, Optional
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -251,7 +252,7 @@ def compute_summary(rows: List[Dict[str, Any]]) -> Dict[str, Any]:
                 sum(1 for r in clarify if r["outcome"] != "segment") / len(clarify), 6
             ) if clarify else None,
             "avg_decision_latency_ms": round(sum(latencies) / len(latencies), 1) if latencies else None,
-            "median_decision_latency_ms": round(latencies[len(latencies) // 2], 1) if latencies else None,
+            "median_decision_latency_ms": round(median(latencies), 1) if latencies else None,
         },
         "outcome_counts": outcome_counts,
         "agent_status_counts": status_counts,

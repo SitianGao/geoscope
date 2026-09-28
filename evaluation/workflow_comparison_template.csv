@@ -1,0 +1,2 @@
+task_id,image_id,target,scope,workflow,run_id,completed,correct_target,correct_scope,total_seconds,operation_steps,manual_interventions,export_complete,failure_reason,evidence_path
+待填写,待填写,building_or_aircraft,all_left_right_top_bottom,manual_or_agent_or_geoscope,,,,,,,,,,

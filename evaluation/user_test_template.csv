@@ -1,0 +1,2 @@
+participant_id,participant_background,workflow,task_id,start_time,end_time,duration_seconds,operation_steps,manual_interventions,task_completed,result_correct,export_complete,ease_of_use_1_to_5,result_trust_1_to_5,notes
+P01,待填写,manual_or_geoscope,待填写,,,,,,,,,,,

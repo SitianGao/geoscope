@@ -7,8 +7,8 @@ Verification date: 2026-09-21
 The RemoteAgent laboratory host successfully called the independently hosted
 RemoteSAM service over the laboratory network.
 
-- RemoteAgent host: `10.199.139.30`
-- Current RemoteSAM host: `10.113.228.79:6657` (the previous campus-network address `10.199.156.100` became unavailable after restart)
+- RemoteAgent host: laboratory GPU server (private address omitted)
+- Current RemoteSAM host: `<REMOTESAM_HOST>:6657` (the campus-network address changed after restart)
 - `GET /ready`: HTTP 200, `status=ready`, CUDA device 0, FP16 enabled
 - `POST /predict`: HTTP 200, `status=success`
 - Input image: 800 x 600

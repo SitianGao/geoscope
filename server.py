@@ -29,7 +29,7 @@ LOCK = threading.RLock()
 SID_RE = re.compile(r'^[a-f0-9]{12}$')
 SIDES = {'all': '全图', 'left': '左半幅', 'right': '右半幅', 'top': '上半幅', 'bottom': '下半幅'}
 TARGETS = {'building': '建筑', 'aircraft': '飞机', 'road': '道路', 'water': '水体', 'tree': '植被', 'ship': '船舶'}
-DESCRIPTIONS = {'building':'all buildings','aircraft':'all aircraft','road':'all roads','water':'water bodies','tree':'trees and vegetation','ship':'all ships'}
+DESCRIPTIONS = {'building':'all buildings','aircraft':'all airplanes','road':'all roads','water':'water bodies','tree':'trees and vegetation','ship':'all ships'}
 SAMPLES = {
  'urban': {'name': '街区建筑研究样区', 'file': 'urban.png', 'target': 'building', 'size': [800,600],
   'source': '本地 RemoteAgent / SM3Det 仓库 tools/cam/5428.tif；原始影像来源与发布许可需在正式参赛前进一步核对。',

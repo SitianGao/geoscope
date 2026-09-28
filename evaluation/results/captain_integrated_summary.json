@@ -1,0 +1,94 @@
+{
+  "verification_scope": "offline aggregate recomputation from committed per-task/per-image CSV evidence",
+  "remoteagent": {
+    "verified": true,
+    "checks": {
+      "total_tasks": true,
+      "task_routing_accuracy": true,
+      "legal_tool_call_rate": true,
+      "target_category_accuracy": true,
+      "spatial_condition_accuracy": true,
+      "clarification_recognition_rate": true,
+      "avg_decision_latency_ms": true,
+      "median_decision_latency_ms": true,
+      "outcome_counts": true,
+      "agent_status_counts": true
+    },
+    "metrics": {
+      "total_tasks": 40,
+      "task_routing_accuracy": 0.75,
+      "legal_tool_call_rate": 0.7692307692307693,
+      "target_category_accuracy": 1.0,
+      "spatial_condition_accuracy": 1.0,
+      "clarification_recognition_rate": 1.0,
+      "avg_decision_latency_ms": 2524.7552631578947,
+      "median_decision_latency_ms": 2447.0,
+      "outcome_counts": {
+        "scene": 8,
+        "segment": 16,
+        "unparsed": 3,
+        "rejected_tool": 6,
+        "reject_args": 4,
+        "dense_answered_text": 1,
+        "deterministic_clarify": 2
+      },
+      "agent_status_counts": {
+        "completed": 9,
+        "tool_call": 20,
+        "unparsed": 3,
+        "rejected_tool": 6,
+        "n/a": 2
+      }
+    }
+  },
+  "remotesam": {
+    "verified": true,
+    "checks": {
+      "row_formulas_and_contract": true,
+      "images": true,
+      "successes": true,
+      "mean_iou": true,
+      "mean_dice": true,
+      "building_images": true,
+      "building_mean_iou": true,
+      "building_mean_dice": true,
+      "plane_images": true,
+      "plane_mean_iou": true,
+      "plane_mean_dice": true
+    },
+    "metrics": {
+      "images": 20,
+      "successes": 20,
+      "mean_iou": 0.255352573372817,
+      "mean_dice": 0.3697820672102867,
+      "mean_service_inference_ms": 313.3825,
+      "median_service_inference_ms": 267.64
+    },
+    "by_class": {
+      "building": {
+        "images": 10,
+        "successes": 10,
+        "mean_iou": 0.35223397579445986,
+        "mean_dice": 0.5114964213020148,
+        "mean_service_inference_ms": 262.107,
+        "median_service_inference_ms": 236.48000000000002
+      },
+      "plane": {
+        "images": 10,
+        "successes": 10,
+        "mean_iou": 0.1584711709511742,
+        "mean_dice": 0.22806771311855864,
+        "mean_service_inference_ms": 364.658,
+        "median_service_inference_ms": 346.49
+      }
+    },
+    "protocol_version": "sam-eval-v1.0",
+    "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+    "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+  },
+  "evidence_boundaries": {
+    "end_to_end_precision": "not measured by these separate evaluations",
+    "user_study": "not completed",
+    "workflow_comparison": "not completed"
+  }
+}

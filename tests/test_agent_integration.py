@@ -153,7 +153,7 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertEqual(FakeAgentAndSAM.requests[1][1]['task'],'semantic_seg')
         self.assertEqual(FakeAgentAndSAM.requests[1][1]['classes'],['building'])
 
-    def test_aircraft_referring_prompt_matches_frozen_evaluation_protocol(self):
+    def test_aircraft_referring_prompt_matches_improved_fast_configuration(self):
         FakeAgentAndSAM.decision = (
             'T_call(referring_expression_segmentation, "wrong.png", "all aircraft")'
         )
@@ -161,7 +161,7 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertEqual(result['status'], 'completed')
         request = FakeAgentAndSAM.requests[1][1]
         self.assertEqual(request['task'], 'referring_seg')
-        self.assertEqual(request['text'], 'all airplanes')
+        self.assertEqual(request['text'], 'all planes')
 
     def test_unsupported_model_constraints_and_multi_class_require_clarification(self):
         for response in ['T_call(referring_expression_segmentation, "x.png", "buildings near roads")',

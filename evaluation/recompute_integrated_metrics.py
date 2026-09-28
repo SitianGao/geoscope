@@ -115,6 +115,78 @@ def verify_sam() -> dict:
             "checkpoint_sha256": source["checkpoint_sha256"]}
 
 
+def verify_aircraft_improvement() -> dict:
+    folder = RESULTS / "aircraft_v2"
+    with (folder / "remotesam_aircraft_all_experiments_verified.csv").open(
+        encoding="utf-8", newline=""
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+    source = json.loads(
+        (folder / "remotesam_aircraft_experiment_summary_verified.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    grouped: dict[str, list[dict[str, str]]] = defaultdict(list)
+    formula_checks = []
+    for row in rows:
+        grouped[row["experiment_id"]].append(row)
+        tp, fp, fn = (int(row[key]) for key in ("tp", "fp", "fn"))
+        iou = tp / (tp + fp + fn) if tp + fp + fn else 1.0
+        dice = 2 * tp / (2 * tp + fp + fn) if 2 * tp + fp + fn else 1.0
+        formula_checks.append(
+            _same(iou, float(row["iou"]), 1e-12)
+            and _same(dice, float(row["dice"]), 1e-12)
+            and row["binary_valid"].lower() == "true"
+            and int(row["width"]) == int(row["output_width"])
+            and int(row["height"]) == int(row["output_height"])
+        )
+
+    aggregates = {}
+    for experiment_id, items in grouped.items():
+        aggregates[experiment_id] = {
+            "images": len(items),
+            "successes": sum(row["status"] == "success" for row in items),
+            "mean_iou": mean(float(row["iou"]) for row in items),
+            "mean_dice": mean(float(row["dice"]) for row in items),
+            "mean_service_inference_ms": mean(float(row["service_inference_ms"]) for row in items),
+            "mean_client_wall_ms": mean(float(row["client_wall_ms"]) for row in items),
+            "total_requests": sum(int(row["request_count"]) for row in items),
+        }
+    best_id = max(aggregates, key=lambda name: aggregates[name]["mean_iou"])
+    best = aggregates[best_id]
+    saved_best = source["best_experiment"]
+    baseline = source["baseline"]
+    checks = {
+        "rows": len(rows) == 160,
+        "experiments": len(grouped) == 16,
+        "ten_images_per_experiment": all(len(items) == 10 for items in grouped.values()),
+        "same_image_set": len({tuple(sorted(row["image_id"] for row in items)) for items in grouped.values()}) == 1,
+        "row_formulas_and_contract": all(formula_checks),
+        "best_experiment": best_id == saved_best["experiment_id"],
+        "best_mean_iou": _same(best["mean_iou"], saved_best["mean_iou_failure_as_zero"]),
+        "best_mean_dice": _same(best["mean_dice"], saved_best["mean_dice_failure_as_zero"]),
+        "best_service_time": _same(best["mean_service_inference_ms"], saved_best["mean_service_inference_ms_per_image"]),
+        "best_client_time": _same(best["mean_client_wall_ms"], saved_best["mean_client_wall_ms_per_image"]),
+        "best_request_count": best["total_requests"] == saved_best["total_requests"],
+        "absolute_gain": _same(
+            best["mean_iou"] - float(baseline["mean_iou"]), saved_best["absolute_iou_gain"]
+        ),
+        "target_met": saved_best["target_met"] is True and best["mean_iou"] >= 0.25,
+    }
+    if not all(checks.values()):
+        raise ValueError(f"RemoteSAM aircraft improvement mismatch: {checks}")
+    return {
+        "verified": True,
+        "checks": checks,
+        "baseline_mean_iou": baseline["mean_iou"],
+        "best_experiment_id": best_id,
+        "best": best,
+        "absolute_iou_gain": saved_best["absolute_iou_gain"],
+        "relative_iou_gain": saved_best["relative_iou_gain"],
+        "selection_boundary": source["run"]["selection_note"],
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Offline verification of integrated competition metrics")
     parser.add_argument("--write", action="store_true", help="write evaluation/results/captain_integrated_summary.json")
@@ -123,6 +195,7 @@ def main() -> None:
         "verification_scope": "offline aggregate recomputation from committed per-task/per-image CSV evidence",
         "remoteagent": verify_agent(),
         "remotesam": verify_sam(),
+        "remotesam_aircraft_improvement": verify_aircraft_improvement(),
         "evidence_boundaries": {
             "end_to_end_precision": "not measured by these separate evaluations",
             "user_study": "not completed",

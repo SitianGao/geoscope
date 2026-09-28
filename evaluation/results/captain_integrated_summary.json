@@ -86,6 +86,38 @@
     "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
     "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
   },
+  "remotesam_aircraft_improvement": {
+    "verified": true,
+    "checks": {
+      "rows": true,
+      "experiments": true,
+      "ten_images_per_experiment": true,
+      "same_image_set": true,
+      "row_formulas_and_contract": true,
+      "best_experiment": true,
+      "best_mean_iou": true,
+      "best_mean_dice": true,
+      "best_service_time": true,
+      "best_client_time": true,
+      "best_request_count": true,
+      "absolute_gain": true,
+      "target_met": true
+    },
+    "baseline_mean_iou": 0.1584711709511742,
+    "best_experiment_id": "tile_1024_overlap_256_p0_88",
+    "best": {
+      "images": 10,
+      "successes": 10,
+      "mean_iou": 0.3055661981202589,
+      "mean_dice": 0.4132893733561945,
+      "mean_service_inference_ms": 5658.794,
+      "mean_client_wall_ms": 12388.663,
+      "total_requests": 237
+    },
+    "absolute_iou_gain": 0.14709502716908474,
+    "relative_iou_gain": 0.9282131651214056,
+    "selection_boundary": "The best configuration was selected on these same 10 diagnostic images; the improvement is not an independent generalization estimate."
+  },
   "evidence_boundaries": {
     "end_to_end_precision": "not measured by these separate evaluations",
     "user_study": "not completed",

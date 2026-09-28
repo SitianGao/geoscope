@@ -23,7 +23,7 @@ LABELS = {
     'tree': ('tree', 'trees', 'vegetation', 'trees and vegetation', '植被', '树木'),
     'ship': ('ship', 'ships', '船舶'),
 }
-PROMPTS = {'building':'all buildings', 'aircraft':'all airplanes', 'road':'all roads',
+PROMPTS = {'building':'all buildings', 'aircraft':'all planes', 'road':'all roads',
            'water':'water bodies', 'tree':'trees and vegetation', 'ship':'all ships'}
 CLASSES = {'building':'building', 'aircraft':'aircraft', 'road':'road',
            'water':'water', 'tree':'tree', 'ship':'ship'}

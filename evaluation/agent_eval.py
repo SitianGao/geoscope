@@ -61,7 +61,7 @@ from server import requires_dense_result, resolve_invert  # noqa: E402
 
 EVAL_DIR = Path(__file__).resolve().parent
 IMAGES_DIR = EVAL_DIR / "images"
-MANIFEST_PATH = EVAL_DIR / "dataset_manifest.csv"
+MANIFEST_PATH = EVAL_DIR / "agent_dataset_manifest.csv"
 TASK_SET_PATH = EVAL_DIR / "task_set.csv"
 RESULTS_DIR = EVAL_DIR / "results"
 

@@ -38,7 +38,7 @@
 
 ## 3. 数据与任务集
 
-### 3.1 影像（7 幅，见 `evaluation/dataset_manifest.csv`）
+### 3.1 影像（7 幅，见 `evaluation/agent_dataset_manifest.csv`）
 
 | image_id | 目标类别 | 尺寸 | 来源 |
 |---|---|---|---|

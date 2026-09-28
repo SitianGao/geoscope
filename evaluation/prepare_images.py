@@ -2,7 +2,7 @@
 
 This script is intentionally deterministic and re-runnable: it reproduces
 ``evaluation/images/`` from documented, on-disk sources and writes
-``evaluation/dataset_manifest.csv`` with provenance, size and SHA-256.
+``evaluation/agent_dataset_manifest.csv`` with provenance, size and SHA-256.
 
 The binary images themselves are *not* committed (the upstream sample images
 have license terms the team has not fully cleared for redistribution). The
@@ -27,7 +27,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 UPSTREAM_REMOTE_AGENT = Path(r"D:\AI算法\GeoScope-RemoteAgent-workflow\RemoteAgent-main")
 IMAGES_DIR = Path(__file__).resolve().parent / "images"
-MANIFEST_PATH = Path(__file__).resolve().parent / "dataset_manifest.csv"
+MANIFEST_PATH = Path(__file__).resolve().parent / "agent_dataset_manifest.csv"
 
 MAX_DIM = 1600  # cap the long side so vLLM's mm-processor-kwargs stay within budget
 

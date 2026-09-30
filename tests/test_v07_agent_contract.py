@@ -58,6 +58,20 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertEqual(self.run_task('提取飞机', quality_mode='turbo')['status'], 'failed')
         self.assertEqual(self.run_task('快速且高精度提取飞机')['status'], 'failed')
         self.assertEqual(self.run_task('把同一任务应用到这些影像')['status'], 'needs_clarification')
+        with patch('agent_bridge.WorkbenchAgent._run_llm') as model, \
+             patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                                            'GEO_AGENT_MODEL': 'TEST'}):
+            ambiguous = server.run_task(self.session, {'query': '提取所有物体的轮廓', 'mode': 'live'})
+        self.assertEqual(ambiguous['status'], 'needs_clarification')
+        model.assert_not_called()
+        with self.assertRaisesRegex(ValueError, 'batch_id'):
+            self.run_task('批量提取飞机', batch_id='untrusted')
+        with self.assertRaisesRegex(ValueError, 'session_ids'):
+            server.run_batch({'session_ids': [{}, self.session['id']], 'query': '批量提取飞机'})
+        other = server.SESSIONS[server.new_session('airport')['id']]
+        with self.assertRaisesRegex(ValueError, '共同的目标'):
+            server.run_batch({'session_ids': [self.session['id'], other['id']],
+                              'query': '把同一任务应用到这些影像', 'mode': 'demo'})
 
     def test_batch_keeps_other_images_after_one_failure(self):
         other = server.SESSIONS[server.new_session('urban')['id']]

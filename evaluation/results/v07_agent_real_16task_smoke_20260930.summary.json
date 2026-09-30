@@ -1,0 +1,14 @@
+{
+  "total": 16,
+  "real_agent_calls": 8,
+  "evidence_mode": "real_agent_decision_only",
+  "routing_correct": 16,
+  "routing_accuracy": 1.0,
+  "task_outcome_correct": 16,
+  "legal_call_rate": 1.0,
+  "failure_types": {
+    "clarify": 2,
+    "reject": 6,
+    "segment": 8
+  }
+}

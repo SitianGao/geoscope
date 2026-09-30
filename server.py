@@ -198,14 +198,18 @@ def new_session(sample='urban',uploaded=None,name=None):
     with LOCK: SESSIONS[sid]=s
     save_json(folder/'session.json',public_session(s)); return public_session(s)
 
-def run_task(s,p):
+def run_task(s,p,allow_batch=False):
+    if p.get('batch_id') and not allow_batch:
+        raise ValueError('batch_id 只能由 Harness 批量任务生成')
     if not s['lock'].acquire(blocking=False): raise ValueError('当前实验仍在执行，请稍后再试')
-    try: return _run_task(s,p)
+    try: return _run_task(s,p,allow_batch=allow_batch)
     finally: s['lock'].release()
 
 def run_batch(p):
     ids=p.get('session_ids')
-    if not isinstance(ids,list) or not 2<=len(ids)<=5 or len(set(ids))!=len(ids):
+    if (not isinstance(ids,list) or not 2<=len(ids)<=5 or
+        any(not isinstance(sid,str) or not SID_RE.fullmatch(sid) for sid in ids) or
+        len(set(ids))!=len(ids)):
         raise ValueError('批量任务需要 2 至 5 个不重复的 session_ids')
     sessions=[get_session(sid) for sid in ids]
     if any(s is None for s in sessions):
@@ -215,17 +219,22 @@ def run_batch(p):
         raise ValueError('请填写不超过1800字的批量任务')
     if p.get('mode','live') not in ('demo','live'):
         raise ValueError('未知模式')
-    if p.get('quality_mode') is not None and p['quality_mode'] not in ('fast','accurate','auto'):
+    if p.get('quality_mode') is not None and (not isinstance(p['quality_mode'],str) or p['quality_mode'] not in ('fast','accurate','auto')):
         raise ValueError('非法 quality_mode')
     batch_quality,batch_effective_quality,_=resolve_quality(query,{},p.get('quality_mode'))
+    if not has_target_intent(query):
+        inherited={s['context'].get('target') for s in sessions}
+        if len(inherited)!=1 or None in inherited:
+            raise ValueError('批量任务缺少所有影像共同的目标类别')
     batch_id=uid()
     results=[]
     for index,s in enumerate(sessions,1):
         item_id=uid()
         item={key:p[key] for key in ('query','mode','quality_mode','roi','scope','force_perception') if key in p}
+        item['quality_mode']=batch_quality
         item.update(batch_id=batch_id,item_id=item_id)
         try:
-            result=run_task(s,item)
+            result=run_task(s,item,allow_batch=True)
             results.append({'item_id':item_id,'session_id':s['id'],'run_id':result['id'],
                             'status':result['status'],'failure_reason':result.get('message') if result['status'] in ('failed','needs_clarification') else None,
                             'metrics':result.get('metrics'),'duration_ms':result['duration_ms']})
@@ -241,7 +250,7 @@ def run_batch(p):
     save_json(folder/f'{batch_id}.json',batch)
     return batch
 
-def _run_task(s,p):
+def _run_task(s,p,allow_batch=False):
     query=str(p.get('query','')).strip()
     if not query or len(query)>1800: raise ValueError('请填写不超过1800字的任务')
     mode=p.get('mode','demo')
@@ -284,7 +293,7 @@ def _run_task(s,p):
         quality_mode,effective_quality,quality_source=resolve_quality(query,context,p.get('quality_mode'))
         if roi and p.get('scope') not in (None,'all'):
             raise ValueError('矩形 ROI 与半幅范围不能同时选择')
-        if batch_requested(query) and not p.get('batch_id'):
+        if batch_requested(query) and not allow_batch:
             raise Clarification('批量任务需要通过 /api/batch 指定 2 至 5 幅已绑定影像。')
         result['task_options']={'roi':roi,'roi_source':roi_source,'quality_mode':quality_mode,
                                 'effective_quality_mode':effective_quality,'quality_source':quality_source,
@@ -299,6 +308,8 @@ def _run_task(s,p):
             plan={'action':'export','planner_protocol':'harness_export_command'}
         else:
             dense_task=requires_dense_result(query,context)
+            if dense_task and not has_target_intent(query) and not context.get('target'):
+                raise Clarification('请明确要提取的单一目标类别；当前不能提取所有物体的轮廓。')
             invert=resolve_invert(query,context) if dense_task else False
             side,scope_source=resolve_scope(query,context,p.get('scope'))
             if re.search(r'那个|那片|那块|这块',query):

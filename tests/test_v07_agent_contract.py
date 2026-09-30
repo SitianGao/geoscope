@@ -95,6 +95,22 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertIn('未确认', result['message'])
         self.assertNotIn('mask_url', result)
 
+    def test_live_mode_records_actual_service_parameters_separately_from_roi_metrics(self):
+        mask = Image.new('L', (800, 800), 255)
+        response = {'status': 'success', 'mask': server.image_b64(mask), 'quality_mode': 'accurate',
+                    'mode_parameters': {'tile_size': 1024, 'overlap': 256},
+                    'candidate_stats': {'candidate_count': 1, 'total_area_pixels': 640000}}
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value='T_call(referring_expression_segmentation, "ignored.png", "all airplanes")'), \
+             patch.object(server, 'post_json', return_value=response), \
+             patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                                            'GEO_AGENT_MODEL': 'TEST', 'GEO_REMOTESAM_URL': 'http://example.invalid/predict'}):
+            result = server.run_task(self.session, {'query': '高精度提取框选区域内的飞机',
+                                                      'mode': 'live', 'roi': self.roi})
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(result['service_metadata']['mode_parameters']['overlap'], 256)
+        self.assertEqual(result['service_metadata']['full_mask_candidate_stats']['total_area_pixels'], 640000)
+        self.assertEqual(result['metrics']['pixel_area'], 90000)
+
     def test_live_batch_calls_each_image_and_keeps_failure_isolated(self):
         sessions = [self.session] + [server.SESSIONS[server.new_session('airport')['id']] for _ in range(2)]
         mask = server.image_b64(Image.new('L', (800, 800), 255))

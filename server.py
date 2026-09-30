@@ -377,7 +377,12 @@ def _run_task(s,p,allow_batch=False):
                 if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
                 mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
-                result['service_metadata']={key:data[key] for key in ('model','timing_ms','quality','quality_mode','parameters','service_version','original_size','output_size') if key in data}
+                result['service_metadata']={key:data[key] for key in (
+                    'model','timing_ms','quality','quality_mode','requested_quality_mode',
+                    'parameters','service_version','mode_parameters',
+                    'original_size','output_size','peak_vram_mb') if key in data}
+                if 'candidate_stats' in data:
+                    result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
                 event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
             mask=binary_mask(mask)
             if mask.size!=image.size: raise ValueError('完整蒙版尺寸与原图不一致')

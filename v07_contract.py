@@ -7,18 +7,28 @@ import re
 QUALITY_MODES = {'fast', 'accurate', 'auto'}
 ROI_WORDS = re.compile(r'框选|框内|选区|研究区|矩形|\broi\b|selected region', re.I)
 BATCH_WORDS = re.compile(r'批量|整批|这一批|这些影像|所有影像|\bbatch\b|these images', re.I)
-TARGET_WORDS = (r'建筑|房屋|\bbuildings?\b', r'飞机|\b(?:aircraft|airplanes?|planes?)\b',
-                r'道路|\broads?\b', r'水体|\bwater\b', r'植被|树木|\btrees?\b',
-                r'船舶?|\bships?\b')
+TARGET_WORDS = {
+    'building': r'建筑|房屋|\bbuildings?\b',
+    'aircraft': r'飞机|\b(?:aircraft|airplanes?|planes?)\b',
+    'road': r'道路|\broads?\b',
+    'water': r'水体|\bwater\b',
+    'tree': r'植被|树木|\btrees?\b',
+    'ship': r'船舶?|\bships?\b',
+}
 
 
 def validate_target_intent(query):
-    if sum(bool(re.search(pattern, query, re.I)) for pattern in TARGET_WORDS) > 1:
+    if sum(bool(re.search(pattern, query, re.I)) for pattern in TARGET_WORDS.values()) > 1:
         raise ValueError('一次任务只支持一个目标类别，请分别提取并保存版本。')
 
 
 def has_target_intent(query):
-    return any(re.search(pattern, query, re.I) for pattern in TARGET_WORDS)
+    return target_intent(query) is not None
+
+
+def target_intent(query):
+    return next((target for target, pattern in TARGET_WORDS.items()
+                 if re.search(pattern, query, re.I)), None)
 
 
 def resolve_roi(query, context, selected, width, height):

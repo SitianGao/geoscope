@@ -124,6 +124,12 @@ class WorkbenchAgent(RemoteAgent):
 def decision_record(decision):
     raw = decision.raw_response or ''
     def sanitize(value):
+        if isinstance(value, dict):
+            return {key: sanitize(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [sanitize(item) for item in value]
+        if not isinstance(value, str):
+            return value
         value = re.sub(r'<think>[\s\S]*?</think>', '<think>[推理过程不写入实验记录]</think>',
                        value, flags=re.IGNORECASE)
         value = re.sub(r'(?i)\b(?:https?://)[^\s"\'<>]+', '[服务地址已隐去]', value)
@@ -132,19 +138,12 @@ def decision_record(decision):
         value = re.sub(r'(?i)\bBearer\s+[A-Za-z0-9._~+/-]+', 'Bearer [已隐去]', value)
         return value.strip()
     visible = sanitize(raw)
-    history = []
-    for item in decision.history:
-        record = dict(item)
-        if isinstance(record.get('response'), str):
-            record['response'] = sanitize(record['response'])
-        history.append(record)
+    history = sanitize(decision.history)
     return {'status': decision.status, 'raw_response': visible,
             'raw_response_sha256': hashlib.sha256(raw.encode('utf-8')).hexdigest() if raw else None,
             'text': sanitize(decision.text or ''), 'history': history,
             'tool_call': None if decision.tool_call is None else {
-                'name': decision.tool_call.name, 'arguments': {
-                    k: sanitize(v) if isinstance(v,str) else v
-                    for k,v in decision.tool_call.arguments.items()}}}
+                'name': decision.tool_call.name, 'arguments': sanitize(decision.tool_call.arguments)}}
 
 
 def target_from_label(label, side):
@@ -164,7 +163,7 @@ def target_from_label(label, side):
     raise Clarification('本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。')
 
 
-def segmentation_plan(decision, image_path, side, scope_source, invert=False):
+def segmentation_plan(decision, image_path, side, scope_source, invert=False, expected_target=None):
     call = decision.tool_call
     if decision.status != 'tool_call' or call is None or call.name not in ALLOWED_TOOLS:
         raise ValueError('认知核心没有返回允许执行的分割工具')
@@ -184,6 +183,8 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False):
         target = target_from_label(classes[0], side)
         request = {'task': 'semantic_seg', 'classes': [CLASSES[target]]}
         mask_field = CLASSES[target]
+    if expected_target is not None and target != expected_target:
+        raise Clarification('RemoteAgent 工具目标与本次任务目标不一致，未执行分割。')
     return {'action': 'segment', 'target': target, 'side': side, 'invert': bool(invert), 'scope_source': scope_source,
             'tool_name': call.name, 'service_request': request, 'mask_field': mask_field,
             'planner_protocol': 'remoteagent', 'scope_rule': '整图目标分割后按像素半幅裁切；由 Harness 执行'}

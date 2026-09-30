@@ -49,10 +49,12 @@ def verify_run(session_id, run_id):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('runs', nargs='+', metavar='SESSION_ID/RUN_ID')
+    parser.add_argument('runs', nargs='*', metavar='SESSION_ID/RUN_ID')
     parser.add_argument('--batch', action='append', default=[], metavar='BATCH_ID')
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
+    if not args.runs and not args.batch:
+        parser.error('provide at least one run or batch')
     records = []
     for identifier in args.runs:
         session_id, run_id = identifier.split('/', 1)

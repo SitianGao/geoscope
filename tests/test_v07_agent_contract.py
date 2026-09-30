@@ -95,6 +95,32 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertIn('未确认', result['message'])
         self.assertNotIn('mask_url', result)
 
+    def test_auto_mode_keeps_legacy_result_without_claiming_actual_mode(self):
+        mask = Image.new('L', (800, 800), 255)
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value='T_call(referring_expression_segmentation, "ignored.png", "all planes")'), \
+             patch.object(server, 'post_json', return_value={'status': 'success', 'mask': server.image_b64(mask)}), \
+             patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                                            'GEO_AGENT_MODEL': 'TEST', 'GEO_REMOTESAM_URL': 'http://example.invalid/predict'}):
+            result = server.run_task(self.session, {'query': '提取飞机', 'mode': 'live'})
+        self.assertEqual(result['status'], 'completed')
+        self.assertIsNone(result['task']['effective_quality_mode'])
+        self.assertEqual(result['service_metadata']['quality_confirmation'], 'legacy_service_unconfirmed')
+
+    def test_agent_target_must_match_explicit_and_inherited_target(self):
+        wrong_call = 'T_call(referring_expression_segmentation, "ignored.png", "all buildings")'
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value=wrong_call), \
+             patch.object(server, 'post_json') as service, \
+             patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                                            'GEO_AGENT_MODEL': 'TEST', 'GEO_REMOTESAM_URL': 'http://example.invalid/predict'}):
+            explicit = server.run_task(self.session, {'query': '提取飞机', 'mode': 'live'})
+            self.session['context'] = {'target': 'aircraft', 'side': 'all', 'quality_mode': 'fast'}
+            inherited = server.run_task(self.session, {'query': '改成快速模式', 'mode': 'live'})
+        self.assertEqual([explicit['status'], inherited['status']],
+                         ['needs_clarification', 'needs_clarification'])
+        self.assertNotIn('mask_url', explicit)
+        self.assertNotIn('mask_url', inherited)
+        service.assert_not_called()
+
     def test_live_mode_records_actual_service_parameters_separately_from_roi_metrics(self):
         mask = Image.new('L', (800, 800), 255)
         response = {'status': 'success', 'mask': server.image_b64(mask), 'quality_mode': 'accurate',
@@ -132,7 +158,9 @@ class V07AgentContractTests(unittest.TestCase):
     def test_agent_record_redacts_service_address_and_token(self):
         raw = 'call http://192.168.1.9:8000/v1 Bearer secret-token'
         decision = SimpleNamespace(raw_response=raw, status='completed', text=raw,
-                                   history=[{'response': raw}], tool_call=None)
+                                   history=[{'response': raw, 'tool_call': {'arguments': {'image_path': raw}}}],
+                                   tool_call=SimpleNamespace(name='referring_expression_segmentation',
+                                                             arguments={'image_path': raw}))
         record = decision_record(decision)
         self.assertNotIn('192.168.1.9', str(record))
         self.assertNotIn('secret-token', str(record))

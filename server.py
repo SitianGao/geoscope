@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw, ImageOps
 from runtime_config import load_settings, settings_status
 from service_transport import request_json, inspect_services
 from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan
-from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, validate_target_intent
+from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
 
 load_settings()
 
@@ -225,7 +225,7 @@ def run_batch(p):
     if not has_target_intent(query):
         inherited={s['context'].get('target') for s in sessions}
         if len(inherited)!=1 or None in inherited:
-            raise ValueError('批量任务缺少所有影像共同的目标类别')
+            raise Clarification('批量任务缺少所有影像共同的目标类别')
     batch_id=uid()
     results=[]
     for index,s in enumerate(sessions,1):
@@ -327,7 +327,8 @@ def _run_task(s,p,allow_batch=False):
             elif decision.status=='tool_call':
                 if not dense_task:
                     raise ValueError('这是看图问答任务，RemoteAgent 不应调用像素分割工具；系统已阻止错误执行。')
-                plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert)
+                plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert,
+                                       expected_target=target_intent(query) or context.get('target'))
                 event('确认执行边界',f'目标由 Agent 工具参数提供；范围 {SIDES[side]}，来源 {scope_source}；先全图分割再裁切')
             else:
                 raise ValueError(f'RemoteAgent 决策未通过校验（{decision.status}），未执行工具。')
@@ -363,6 +364,10 @@ def _run_task(s,p,allow_batch=False):
                 result['provenance']['perception']=previous['provenance']['perception']
                 result['reused_from_run_id']=previous['id']
                 result['service_metadata']=previous.get('service_metadata',{})
+                if result['service_metadata'].get('quality_confirmation')=='legacy_service_unconfirmed':
+                    result['task_options']['effective_quality_mode']=None
+                    plan['effective_quality_mode']=None
+                    plan['quality_confirmation']='legacy_service_unconfirmed'
             elif mode=='demo':
                 if not s['sample']: raise ValueError('上传影像没有预置标注。请选择模型模式，或返回内置样例体验流程。')
                 if target!=SAMPLES[s['sample']]['target']: raise ValueError(f'这个样例只提供{TARGETS[SAMPLES[s["sample"]]["target"]]}的演示标注，不能据此判断其他类别。')
@@ -371,8 +376,13 @@ def _run_task(s,p,allow_batch=False):
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
                 data=post_json(url,{**plan['service_request'],'image':image_b64(image)})
-                if (quality_mode!='auto' or p.get('quality_mode') is not None) and data.get('quality_mode')!=effective_quality:
-                    raise ValueError('RemoteSAM 未确认所选质量模式，不能将结果标记为该模式')
+                confirmed_quality=data.get('quality_mode')
+                if confirmed_quality!=effective_quality:
+                    if confirmed_quality is not None or quality_mode!='auto' or p.get('quality_mode') is not None:
+                        raise ValueError('RemoteSAM 未确认所选质量模式，不能将结果标记为该模式')
+                    result['task_options']['effective_quality_mode']=None
+                    plan['effective_quality_mode']=None
+                    plan['quality_confirmation']='legacy_service_unconfirmed'
                 encoded=data.get('masks',{}).get(plan['mask_field']) if plan.get('mask_field') else data.get('mask')
                 if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
                 mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
@@ -383,6 +393,8 @@ def _run_task(s,p,allow_batch=False):
                     'original_size','output_size','peak_vram_mb') if key in data}
                 if 'candidate_stats' in data:
                     result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
+                if confirmed_quality is None:
+                    result['service_metadata']['quality_confirmation']='legacy_service_unconfirmed'
                 event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
             mask=binary_mask(mask)
             if mask.size!=image.size: raise ValueError('完整蒙版尺寸与原图不一致')

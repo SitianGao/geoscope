@@ -1,0 +1,100 @@
+{
+  "evidence_mode": "real_services",
+  "runs": [],
+  "batches": [
+    {
+      "batch_id": "1b692c8f018c",
+      "completed_count": 3,
+      "failed_count": 0,
+      "items": [
+        {
+          "session_id": "6ede6805a884",
+          "run_id": "8607ec9a5b57",
+          "status": "completed",
+          "pixel_area_recomputed": 49215,
+          "mask_size": [
+            800,
+            800
+          ],
+          "mask_values": [
+            0,
+            255
+          ],
+          "quality_mode": "fast",
+          "mode_parameters": {
+            "requested_mode": "fast",
+            "resolved_mode": "fast",
+            "tile_count": 1,
+            "strategy": "whole_image_argmax",
+            "tile_size": null,
+            "overlap": 0,
+            "probability_threshold": null,
+            "blend": null,
+            "blend_min_weight": null
+          },
+          "agent_status": "tool_call",
+          "full_mask_area_recomputed": 49215,
+          "full_mask_candidate_count": 2
+        },
+        {
+          "session_id": "4942e968fc06",
+          "run_id": "db3b962807d7",
+          "status": "completed",
+          "pixel_area_recomputed": 45553,
+          "mask_size": [
+            700,
+            700
+          ],
+          "mask_values": [
+            0,
+            255
+          ],
+          "quality_mode": "fast",
+          "mode_parameters": {
+            "requested_mode": "fast",
+            "resolved_mode": "fast",
+            "tile_count": 1,
+            "strategy": "whole_image_argmax",
+            "tile_size": null,
+            "overlap": 0,
+            "probability_threshold": null,
+            "blend": null,
+            "blend_min_weight": null
+          },
+          "agent_status": "tool_call",
+          "full_mask_area_recomputed": 45553,
+          "full_mask_candidate_count": 2
+        },
+        {
+          "session_id": "e1ab124fa1c5",
+          "run_id": "cbcd2ba6f0cb",
+          "status": "completed",
+          "pixel_area_recomputed": 31478,
+          "mask_size": [
+            640,
+            640
+          ],
+          "mask_values": [
+            0,
+            255
+          ],
+          "quality_mode": "fast",
+          "mode_parameters": {
+            "requested_mode": "fast",
+            "resolved_mode": "fast",
+            "tile_count": 1,
+            "strategy": "whole_image_argmax",
+            "tile_size": null,
+            "overlap": 0,
+            "probability_threshold": null,
+            "blend": null,
+            "blend_min_weight": null
+          },
+          "agent_status": "tool_call",
+          "full_mask_area_recomputed": 31478,
+          "full_mask_candidate_count": 2
+        }
+      ]
+    }
+  ]
+}

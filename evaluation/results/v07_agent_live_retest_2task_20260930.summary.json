@@ -1,0 +1,12 @@
+{
+  "total": 2,
+  "real_agent_calls": 2,
+  "evidence_mode": "real_services",
+  "routing_correct": 2,
+  "routing_accuracy": 1.0,
+  "task_outcome_correct": 2,
+  "legal_call_rate": 1.0,
+  "failure_types": {
+    "segment": 2
+  }
+}

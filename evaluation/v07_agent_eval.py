@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import server
 from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan
-from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, validate_target_intent
+from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
 
 TASKS = Path(__file__).with_name('v07_agent_task_set.csv')
 
@@ -54,16 +54,36 @@ def evaluate(task, mode='live'):
         request['roi'] = roi_for(task['roi_case'], task['image_id'])
     if count == 1:
         results = [server.run_task(server.get_session(sessions[0]['id']), request)]
+        batch_items = []
     else:
-        batch = server.run_batch({**request, 'session_ids': [s['id'] for s in sessions]})
+        try:
+            batch = server.run_batch({**request, 'session_ids': [s['id'] for s in sessions]})
+        except Clarification as exc:
+            return {'evidence_mode': 'offline_demo' if mode == 'demo' else 'real_services',
+                    'task_id': task['task_id'], 'request': task['request'],
+                    'expected_outcome': task['expected_outcome'], 'actual_outcome': 'clarify',
+                    'routing_correct': None if mode == 'demo' else task['expected_outcome'] == 'clarify',
+                    'task_outcome_correct': task['expected_outcome'] == 'clarify',
+                    'expected_target': task['expected_target'], 'resolved_target': None,
+                    'expected_quality': task['expected_quality'], 'resolved_quality': None,
+                    'agent_status': 'not_called', 'agent_decisions': [], 'model_calls': 0,
+                    'agent_raw_response': None, 'agent_raw_sha256': None, 'agent_tool_call': None,
+                    'harness_status': 'needs_clarification', 'harness_reason': str(exc),
+                    'run_id': None, 'session_ids': [s['id'] for s in sessions], 'batch_items': []}
+        batch_items = batch['items']
         results = [next(r for r in server.get_session(item['session_id'])['runs'] if r['id'] == item['run_id'])
                    for item in batch['items'] if item['run_id']]
     first = results[0] if results else {}
     decision = first.get('agent_decision', {})
     plan = first.get('task', {})
     actual = outcome(first) if first else 'reject'
+    if count > 1 and not all(item['status'] in ('completed', 'needs_review') for item in batch_items):
+        actual = 'reject'
+    decisions = [r['agent_decision'] for r in results if 'agent_decision' in r]
     routed = (None if mode == 'demo' else
-              (decision.get('status') == 'tool_call' and plan.get('target') == task['expected_target']
+              (len(results) == count and all(r.get('agent_decision', {}).get('status') == 'tool_call'
+                                             and r.get('task', {}).get('target') == task['expected_target']
+                                             for r in results)
                if task['expected_outcome'] == 'segment' else actual == task['expected_outcome']))
     return {
         'evidence_mode': 'offline_demo' if mode == 'demo' else 'real_services',
@@ -74,12 +94,17 @@ def evaluate(task, mode='live'):
         'expected_quality': task['expected_quality'],
         'resolved_quality': plan.get('effective_quality_mode'),
         'agent_status': decision.get('status', 'not_called'),
+        'agent_decisions': decisions, 'model_calls': len(decisions),
         'agent_raw_response': decision.get('raw_response'),
         'agent_raw_sha256': decision.get('raw_response_sha256'),
         'agent_tool_call': decision.get('tool_call'),
-        'harness_status': first.get('status'), 'harness_reason': first.get('message'),
+        'harness_status': actual if count > 1 else first.get('status'),
+        'harness_reason': (next((item['failure_reason'] for item in batch_items
+                                 if item['failure_reason']), None) if count > 1 else first.get('message')),
         'run_id': first.get('id'), 'session_ids': [s['id'] for s in sessions],
-        'batch_items': [{'status': r['status'], 'run_id': r['id']} for r in results],
+        'batch_items': ([{'status': item['status'], 'run_id': item['run_id']}
+                         for item in batch_items] if count > 1 else
+                        [{'status': first['status'], 'run_id': first['id']}]),
     }
 
 
@@ -112,7 +137,8 @@ def evaluate_agent_only(task):
                              quality_mode=requested, batch_id='evaluation' if count > 1 else None)
             decisions.append(decision_record(turn.decision))
             if turn.decision.status == 'tool_call' and dense:
-                plan = segmentation_plan(turn.decision, image_path, side, scope_source)
+                plan = segmentation_plan(turn.decision, image_path, side, scope_source,
+                                         expected_target=target_intent(query))
                 actions.append({'tool': plan['tool_name'], 'target': plan['target'],
                                 'roi': roi, 'quality_mode': requested,
                                 'effective_quality_mode': effective})
@@ -132,7 +158,10 @@ def evaluate_agent_only(task):
     return {
         'task_id': task['task_id'], 'evidence_mode': 'real_agent_decision_only',
         'request': task['request'], 'expected_outcome': task['expected_outcome'],
-        'actual_outcome': actual, 'routing_correct': actual == task['expected_outcome'],
+        'actual_outcome': actual,
+        'routing_correct': (actual == task['expected_outcome'] and
+                            (actual != 'segment' or len(actions) == count and
+                             all(action['target'] == task['expected_target'] for action in actions))),
         'task_outcome_correct': actual == task['expected_outcome'],
         'expected_target': task['expected_target'],
         'resolved_target': actions[0]['target'] if actions else None,
@@ -146,9 +175,12 @@ def evaluate_agent_only(task):
 
 
 def summarize(rows):
-    called = [r for r in rows if r['agent_status'] != 'not_called']
-    attempts = [r for r in called if r['agent_status'] in ('tool_call', 'rejected_tool', 'unparsed')]
-    legal = [r for r in attempts if r['agent_status'] == 'tool_call']
+    decisions = [decision for row in rows for decision in
+                 (row['agent_decisions'] if 'agent_decisions' in row else
+                  [{'status': row['agent_status']}]) if decision['status'] != 'not_called']
+    attempts = [decision for decision in decisions
+                if decision['status'] in ('tool_call', 'rejected_tool', 'unparsed')]
+    legal = [decision for decision in attempts if decision['status'] == 'tool_call']
     return {
         'total': len(rows), 'real_agent_calls': sum(r.get('model_calls', 1 if r['agent_status'] != 'not_called' else 0) for r in rows),
         'evidence_mode': rows[0].get('evidence_mode') if rows else None,
@@ -158,8 +190,8 @@ def summarize(rows):
                              if rows and rows[0].get('evidence_mode') != 'offline_demo' else None),
         'task_outcome_correct': sum(r.get('task_outcome_correct', False) for r in rows),
         'legal_call_rate': len(legal) / len(attempts) if attempts else None,
-        'failure_types': {status: sum(r['harness_status'] == status for r in rows)
-                          for status in sorted({r['harness_status'] for r in rows})},
+        'failure_types': {status: sum(r['actual_outcome'] == status for r in rows)
+                          for status in sorted({r['actual_outcome'] for r in rows})},
     }
 
 

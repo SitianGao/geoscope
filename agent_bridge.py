@@ -95,7 +95,9 @@ class WorkbenchAgent(RemoteAgent):
             'or T_call(semantic_segmentation, "image_path", ["aircraft"]). '
             'For buildings, use "all buildings" or ["building"]. '
             '"只提取左边的建筑" is a valid building request: call whole-image building segmentation. '
-            'The tool always segments the WHOLE image. Do not put left, right, top, bottom, region, area, '
+            'The tool always segments the WHOLE image. ROI coordinates, quality mode, and batch membership '
+            'are Harness-owned context; never add them to tool arguments or issue multiple calls. '
+            'Do not put left, right, top, bottom, region, area, '
             'ratio, or other spatial conditions in tool arguments. The Harness applies those conditions afterward. '
             'For a follow-up, inherit the previous target from context unless the user changes it. '
             'If context.invert is true, request the positive target mask; the Harness inverts it. '
@@ -121,21 +123,28 @@ class WorkbenchAgent(RemoteAgent):
 
 def decision_record(decision):
     raw = decision.raw_response or ''
-    visible = re.sub(r'<think>[\s\S]*?</think>', '<think>[推理过程不写入实验记录]</think>', raw,
-                     flags=re.IGNORECASE).strip()
+    def sanitize(value):
+        value = re.sub(r'<think>[\s\S]*?</think>', '<think>[推理过程不写入实验记录]</think>',
+                       value, flags=re.IGNORECASE)
+        value = re.sub(r'(?i)\b(?:https?://)[^\s"\'<>]+', '[服务地址已隐去]', value)
+        value = re.sub(r'\b(?:10\.(?:\d{1,3}\.){2}\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(?::\d+)?\b',
+                       '[内网地址已隐去]', value)
+        value = re.sub(r'(?i)\bBearer\s+[A-Za-z0-9._~+/-]+', 'Bearer [已隐去]', value)
+        return value.strip()
+    visible = sanitize(raw)
     history = []
     for item in decision.history:
         record = dict(item)
         if isinstance(record.get('response'), str):
-            record['response'] = re.sub(r'<think>[\s\S]*?</think>',
-                                        '<think>[推理过程不写入实验记录]</think>',
-                                        record['response'], flags=re.IGNORECASE).strip()
+            record['response'] = sanitize(record['response'])
         history.append(record)
     return {'status': decision.status, 'raw_response': visible,
             'raw_response_sha256': hashlib.sha256(raw.encode('utf-8')).hexdigest() if raw else None,
-            'text': decision.text, 'history': history,
+            'text': sanitize(decision.text or ''), 'history': history,
             'tool_call': None if decision.tool_call is None else {
-                'name': decision.tool_call.name, 'arguments': decision.tool_call.arguments}}
+                'name': decision.tool_call.name, 'arguments': {
+                    k: sanitize(v) if isinstance(v,str) else v
+                    for k,v in decision.tool_call.arguments.items()}}}
 
 
 def target_from_label(label, side):
@@ -181,12 +190,14 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False):
 
 
 class AgentTurn:
-    def __init__(self, query, image_path, context, side, scope_source, task_route='dense', invert=False):
+    def __init__(self, query, image_path, context, side, scope_source, task_route='dense', invert=False,
+                 roi=None, quality_mode='auto', batch_id=None):
         self.agent = WorkbenchAgent(task_route=task_route)
         self.query, self.image_path = query, image_path
         self.context = {**context, 'side': side, 'scope_source': scope_source,
                         'scope_rule': 'whole-image segmentation then deterministic pixel-half clipping',
-                        'task_route': task_route, 'invert': bool(invert)}
+                        'task_route': task_route, 'invert': bool(invert), 'roi': roi,
+                        'quality_mode': quality_mode, 'batch_id': batch_id}
         self.decision = self.agent.plan(query, image_path, context=self.context)
 
     def feedback(self, result):

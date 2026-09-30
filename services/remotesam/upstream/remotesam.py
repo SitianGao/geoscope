@@ -61,8 +61,15 @@ def _env_list(name: str, default: str) -> List[str]:
 app = FastAPI(
     title="RemoteSAM API Server",
     description="Traceable RemoteSAM inference service for GeoScope",
-    version="1.1.0",
+    version="1.2.0",
 )
+
+QUALITY_MODES = {"fast", "accurate", "auto"}
+ACCURATE_TILE_SIZE = 1024
+ACCURATE_TILE_OVERLAP = 256
+ACCURATE_PROBABILITY_THRESHOLD = 0.88
+ACCURATE_BLEND_MIN_WEIGHT = 0.05
+AUTO_ACCURATE_MIN_PIXELS = 1024 * 1024
 
 cors_origins = _env_list("GEO_REMOTESAM_CORS_ORIGINS", "http://127.0.0.1:4180,http://localhost:4180")
 app.add_middleware(
@@ -82,6 +89,8 @@ class PredictRequest(BaseModel):
     text: str = ""
     classes: List[str] = Field(default_factory=list)
     return_probability: bool = False
+    quality_mode: str = "fast"
+    candidate_min_area_pixels: int = Field(default=1, ge=1)
     # Retained only to return an explicit compatibility error to older clients.
     mask_size: Optional[int] = None
 
@@ -224,6 +233,208 @@ def quality_summary(mask: np.ndarray, probability: Optional[np.ndarray]) -> Dict
     return summary
 
 
+def candidate_summary(mask: np.ndarray, min_area_pixels: int = 1) -> Dict[str, object]:
+    """Return deterministic connected-component statistics for a binary mask.
+
+    These are candidate regions from a semantic mask, not guaranteed object
+    instances. Eight-connectivity is fixed so the result can be reproduced.
+    """
+    if min_area_pixels < 1:
+        raise ValueError("candidate_min_area_pixels must be at least 1")
+    binary = (np.asarray(mask) > 0).astype(np.uint8)
+    if binary.ndim != 2:
+        raise ValueError(f"Candidate statistics require a 2D mask, got {binary.shape}")
+
+    component_count, _, stats, centroids = cv2.connectedComponentsWithStats(
+        binary, connectivity=8
+    )
+    raw_candidate_count = max(0, int(component_count) - 1)
+    candidates: List[Dict[str, object]] = []
+    for label in range(1, int(component_count)):
+        x = int(stats[label, cv2.CC_STAT_LEFT])
+        y = int(stats[label, cv2.CC_STAT_TOP])
+        width = int(stats[label, cv2.CC_STAT_WIDTH])
+        height = int(stats[label, cv2.CC_STAT_HEIGHT])
+        area = int(stats[label, cv2.CC_STAT_AREA])
+        if area < min_area_pixels:
+            continue
+        candidates.append(
+            {
+                "candidate_id": len(candidates) + 1,
+                "area_pixels": area,
+                "bbox": {"x": x, "y": y, "width": width, "height": height},
+                "center": {
+                    "x": round(float(centroids[label, 0]), 3),
+                    "y": round(float(centroids[label, 1]), 3),
+                },
+            }
+        )
+
+    areas = [int(item["area_pixels"]) for item in candidates]
+    return {
+        "label": "candidate_regions",
+        "connectivity": 8,
+        "min_area_pixels": int(min_area_pixels),
+        "raw_candidate_count": raw_candidate_count,
+        "candidate_count": len(candidates),
+        "filtered_out_count": raw_candidate_count - len(candidates),
+        "total_area_pixels": int(sum(areas)),
+        "min_area": min(areas) if areas else 0,
+        "max_area": max(areas) if areas else 0,
+        "mean_area": round(float(np.mean(areas)), 3) if areas else 0.0,
+        "candidates": candidates,
+        "notice": "Connected regions are candidate targets and require human review.",
+    }
+
+
+def _tile_positions(length: int, tile_size: int, overlap: int) -> List[int]:
+    if length <= tile_size:
+        return [0]
+    stride = tile_size - overlap
+    positions = list(range(0, length - tile_size + 1, stride))
+    last = length - tile_size
+    if positions[-1] != last:
+        positions.append(last)
+    return positions
+
+
+def _blend_weight(tile_size: int) -> np.ndarray:
+    axis = np.hanning(tile_size).astype(np.float32)
+    return np.maximum(np.outer(axis, axis), ACCURATE_BLEND_MIN_WEIGHT)
+
+
+def _padded_tile(
+    image: np.ndarray, x: int, y: int, tile_size: int
+) -> Tuple[np.ndarray, int, int]:
+    height, width = image.shape[:2]
+    crop = image[y : min(y + tile_size, height), x : min(x + tile_size, width)]
+    crop_height, crop_width = crop.shape[:2]
+    if crop_height == tile_size and crop_width == tile_size:
+        return crop, crop_width, crop_height
+    padded = np.pad(
+        crop,
+        ((0, tile_size - crop_height), (0, tile_size - crop_width), (0, 0)),
+        mode="edge",
+    )
+    return padded, crop_width, crop_height
+
+
+def resolve_quality_mode(requested: str, image_hw: Tuple[int, int]) -> str:
+    normalized = requested.strip().lower()
+    if normalized not in QUALITY_MODES:
+        raise ValueError(
+            f"Unsupported quality_mode: {requested!r}; expected fast, accurate, or auto"
+        )
+    if normalized != "auto":
+        return normalized
+    height, width = image_hw
+    return "accurate" if height * width >= AUTO_ACCURATE_MIN_PIXELS else "fast"
+
+
+def mode_parameters(requested: str, resolved: str, tile_count: int) -> Dict[str, object]:
+    parameters: Dict[str, object] = {
+        "requested_mode": requested,
+        "resolved_mode": resolved,
+        "tile_count": int(tile_count),
+    }
+    if resolved == "accurate":
+        parameters.update(
+            strategy="overlapping_tiles_probability_blend",
+            tile_size=ACCURATE_TILE_SIZE,
+            overlap=ACCURATE_TILE_OVERLAP,
+            probability_threshold=ACCURATE_PROBABILITY_THRESHOLD,
+            blend="hann_center_weighted",
+            blend_min_weight=ACCURATE_BLEND_MIN_WEIGHT,
+        )
+    else:
+        parameters.update(
+            strategy="whole_image_argmax",
+            tile_size=None,
+            overlap=0,
+            probability_threshold=None,
+            blend=None,
+            blend_min_weight=None,
+        )
+    return parameters
+
+
+def _accurate_referring_seg(image: np.ndarray, sentence: str) -> Tuple[np.ndarray, np.ndarray, int]:
+    height, width = image.shape[:2]
+    xs = _tile_positions(width, ACCURATE_TILE_SIZE, ACCURATE_TILE_OVERLAP)
+    ys = _tile_positions(height, ACCURATE_TILE_SIZE, ACCURATE_TILE_OVERLAP)
+    weight = _blend_weight(ACCURATE_TILE_SIZE)
+    probability_sum = np.zeros((height, width), dtype=np.float32)
+    weight_sum = np.zeros((height, width), dtype=np.float32)
+
+    for y in ys:
+        for x in xs:
+            tile, crop_width, crop_height = _padded_tile(
+                image, x, y, ACCURATE_TILE_SIZE
+            )
+            _, raw_probability = sam_model.referring_seg(
+                image=tile, sentence=sentence, return_prob=True
+            )
+            probability = normalize_probability(
+                raw_probability, (ACCURATE_TILE_SIZE, ACCURATE_TILE_SIZE)
+            )
+            tile_weight = weight[:crop_height, :crop_width]
+            probability_sum[y : y + crop_height, x : x + crop_width] += (
+                probability[:crop_height, :crop_width] * tile_weight
+            )
+            weight_sum[y : y + crop_height, x : x + crop_width] += tile_weight
+
+    if np.any(weight_sum <= 0):
+        raise ValueError("Accurate mode failed to cover the complete input image")
+    blended = probability_sum / weight_sum
+    mask = (blended >= ACCURATE_PROBABILITY_THRESHOLD).astype(np.uint8)
+    return mask, blended, len(xs) * len(ys)
+
+
+def _accurate_semantic_seg(
+    image: np.ndarray, classes: List[str]
+) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray], int]:
+    height, width = image.shape[:2]
+    xs = _tile_positions(width, ACCURATE_TILE_SIZE, ACCURATE_TILE_OVERLAP)
+    ys = _tile_positions(height, ACCURATE_TILE_SIZE, ACCURATE_TILE_OVERLAP)
+    weight = _blend_weight(ACCURATE_TILE_SIZE)
+    probability_sums = {
+        name: np.zeros((height, width), dtype=np.float32) for name in classes
+    }
+    weight_sum = np.zeros((height, width), dtype=np.float32)
+
+    for y in ys:
+        for x in xs:
+            tile, crop_width, crop_height = _padded_tile(
+                image, x, y, ACCURATE_TILE_SIZE
+            )
+            _, raw_probabilities = sam_model.semantic_seg(
+                image=tile, classnames=classes, return_prob=True
+            )
+            tile_weight = weight[:crop_height, :crop_width]
+            for class_name in classes:
+                if class_name not in raw_probabilities:
+                    raise ValueError(f"RemoteSAM returned no probability for {class_name!r}")
+                probability = normalize_probability(
+                    raw_probabilities[class_name],
+                    (ACCURATE_TILE_SIZE, ACCURATE_TILE_SIZE),
+                )
+                probability_sums[class_name][
+                    y : y + crop_height, x : x + crop_width
+                ] += probability[:crop_height, :crop_width] * tile_weight
+            weight_sum[y : y + crop_height, x : x + crop_width] += tile_weight
+
+    if np.any(weight_sum <= 0):
+        raise ValueError("Accurate mode failed to cover the complete input image")
+    probabilities = {
+        name: probability_sums[name] / weight_sum for name in classes
+    }
+    masks = {
+        name: (probability >= ACCURATE_PROBABILITY_THRESHOLD).astype(np.uint8)
+        for name, probability in probabilities.items()
+    }
+    return masks, probabilities, len(xs) * len(ys)
+
+
 def runtime_metadata() -> Dict[str, object]:
     return {
         "service_version": app.version,
@@ -274,6 +485,8 @@ async def predict(request: PredictRequest) -> Dict[str, object]:
         image_bgr = base64_to_cv2(request.image)
         image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
         image_hw = image_bgr.shape[:2]
+        requested_quality_mode = request.quality_mode.strip().lower()
+        resolved_quality_mode = resolve_quality_mode(request.quality_mode, image_hw)
         preprocess_ms = (time.perf_counter() - total_started) * 1000
 
         if DEVICE.startswith("cuda"):
@@ -285,42 +498,56 @@ async def predict(request: PredictRequest) -> Dict[str, object]:
                 if request.task in ("referring_seg", "referring_segmentation"):
                     if not request.text.strip():
                         raise ValueError("Text prompt is required for referring segmentation")
-                    raw = sam_model.referring_seg(
-                        image=image_rgb,
-                        sentence=request.text.strip(),
-                        return_prob=request.return_probability,
-                    )
-                    if request.return_probability:
-                        raw_mask, raw_probability = raw
-                        probability = normalize_probability(raw_probability, image_hw)
+                    if resolved_quality_mode == "accurate":
+                        mask, probability, tile_count = _accurate_referring_seg(
+                            image_rgb, request.text.strip()
+                        )
                     else:
-                        raw_mask, probability = raw, None
-                    mask = normalize_mask(raw_mask, image_hw)
+                        raw = sam_model.referring_seg(
+                            image=image_rgb,
+                            sentence=request.text.strip(),
+                            return_prob=request.return_probability,
+                        )
+                        if request.return_probability:
+                            raw_mask, raw_probability = raw
+                            probability = normalize_probability(raw_probability, image_hw)
+                        else:
+                            raw_mask, probability = raw, None
+                        mask = normalize_mask(raw_mask, image_hw)
+                        tile_count = 1
                     per_class_masks = None
 
                 elif request.task in ("semantic_seg", "semantic_segmentation"):
                     classes = [item.strip() for item in request.classes if item.strip()]
                     if not classes:
                         raise ValueError("Classes are required for semantic segmentation")
-                    raw = sam_model.semantic_seg(
-                        image=image_rgb,
-                        classnames=classes,
-                        return_prob=request.return_probability,
-                    )
-                    if request.return_probability:
-                        raw_masks, raw_probabilities = raw
+                    if resolved_quality_mode == "accurate":
+                        masks, probabilities, tile_count = _accurate_semantic_seg(
+                            image_rgb, classes
+                        )
                     else:
-                        raw_masks, raw_probabilities = raw, {}
-                    masks: Dict[str, np.ndarray] = {}
-                    probabilities: Dict[str, np.ndarray] = {}
-                    for class_name in classes:
-                        if class_name not in raw_masks:
-                            continue
-                        masks[class_name] = normalize_mask(raw_masks[class_name], image_hw)
-                        if request.return_probability and class_name in raw_probabilities:
-                            probabilities[class_name] = normalize_probability(
-                                raw_probabilities[class_name], image_hw
+                        raw = sam_model.semantic_seg(
+                            image=image_rgb,
+                            classnames=classes,
+                            return_prob=request.return_probability,
+                        )
+                        if request.return_probability:
+                            raw_masks, raw_probabilities = raw
+                        else:
+                            raw_masks, raw_probabilities = raw, {}
+                        masks = {}
+                        probabilities = {}
+                        for class_name in classes:
+                            if class_name not in raw_masks:
+                                continue
+                            masks[class_name] = normalize_mask(
+                                raw_masks[class_name], image_hw
                             )
+                            if request.return_probability and class_name in raw_probabilities:
+                                probabilities[class_name] = normalize_probability(
+                                    raw_probabilities[class_name], image_hw
+                                )
+                        tile_count = 1
                     if not masks:
                         raise ValueError("RemoteSAM returned no class masks")
                     mask = np.maximum.reduce(list(masks.values()))
@@ -335,6 +562,7 @@ async def predict(request: PredictRequest) -> Dict[str, object]:
         postprocess_started = time.perf_counter()
         visualization = apply_mask(image_bgr, mask)
         quality = quality_summary(mask, probability)
+        candidates = candidate_summary(mask, request.candidate_min_area_pixels)
         warnings = ["RemoteSAM returned an empty mask; this does not prove the target is absent"] if quality["empty_mask"] else []
         postprocess_ms = (time.perf_counter() - postprocess_started) * 1000
         peak_vram_mb = (
@@ -351,6 +579,12 @@ async def predict(request: PredictRequest) -> Dict[str, object]:
             "original_size": [int(image_bgr.shape[1]), int(image_bgr.shape[0])],
             "output_size": [int(mask.shape[1]), int(mask.shape[0])],
             "quality": quality,
+            "quality_mode": resolved_quality_mode,
+            "requested_quality_mode": requested_quality_mode,
+            "mode_parameters": mode_parameters(
+                requested_quality_mode, resolved_quality_mode, tile_count
+            ),
+            "candidate_stats": candidates,
             "warnings": warnings,
             "timing_ms": {
                 "preprocess": round(preprocess_ms, 2),
@@ -361,7 +595,7 @@ async def predict(request: PredictRequest) -> Dict[str, object]:
             "peak_vram_mb": peak_vram_mb,
             "model": runtime_metadata(),
         }
-        if probability is not None:
+        if probability is not None and request.return_probability:
             response["probability_map"] = probability_to_base64(probability)
         if per_class_masks is not None:
             response["masks"] = per_class_masks

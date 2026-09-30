@@ -2,6 +2,8 @@
 
 Verification date: 2026-09-20
 
+v0.7 extension verification date: 2026-09-30
+
 ## Verified runtime
 
 - Conda environment: `geoscope-remotesam` (Python 3.10)
@@ -11,6 +13,11 @@ Verification date: 2026-09-20
 - Service bind address: `0.0.0.0:6657`
 - FP16 autocast: enabled
 - EPOC: disabled for the first referring-segmentation integration
+- Service API version: 1.2.0
+- Quality modes: backward-compatible whole-image `fast`; fixed tiled `accurate`;
+  deterministic `auto` fallback
+- Candidate statistics: deterministic 8-connected components with a recorded
+  minimum-area threshold
 
 ## Verified model
 

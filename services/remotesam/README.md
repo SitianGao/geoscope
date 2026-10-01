@@ -30,3 +30,25 @@ powershell -ExecutionPolicy Bypass -File services/remotesam/start_service.ps1 `
   -CheckpointPath "D:\models\RemoteSAM\RemoteSAMv1.pth" `
   -TokenizerPath "D:\models\RemoteSAM\bert-base-uncased"
 ```
+
+## v0.7 模式与候选统计接口
+
+`POST /predict` 保持旧调用兼容：未提供新字段时默认使用 `fast`，原有
+`task`、`image`、`text`、`classes` 和 `return_probability` 含义不变。新增可选字段：
+
+- `quality_mode`：`fast`、`accurate` 或 `auto`，默认 `fast`；
+- `candidate_min_area_pixels`：候选区域最小像素面积，默认 `1`，必须大于等于 1。
+
+飞机模式对照固定使用提示词 `all planes`。`fast` 为整图 argmax；`accurate`
+采用 1024 像素切片、256 像素重叠、Hann 中心加权概率融合和 0.88 阈值。
+`auto` 仅作为确定性兜底：输入达到 1,048,576 像素时选择 `accurate`，否则选择
+`fast`；正式工作台仍应由 Agent 建议并由 Harness 校验最终模式。
+
+成功响应新增：
+
+- `quality_mode`、`requested_quality_mode`；
+- `mode_parameters`：实际策略、切片、重叠、阈值和切片数量；
+- `candidate_stats`：8 邻域连通区域的过滤前后数量、面积、中心点和外接矩形。
+
+`candidate_stats` 只表示语义蒙版中的候选目标区域，不能当作绝对准确的实例计数。
+服务返回的 mask 仍与原图同尺寸并采用 0/255 二值编码。

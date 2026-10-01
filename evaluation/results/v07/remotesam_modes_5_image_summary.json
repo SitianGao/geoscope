@@ -1,0 +1,160 @@
+{
+  "schema_version": "geoscope-v0.7-remotesam-modes-v1",
+  "generated_at": "2026-09-30T00:26:12.267897+00:00",
+  "manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "selected_image_ids": [
+    "ISAID_VAL_P1492",
+    "ISAID_VAL_P1738",
+    "ISAID_VAL_P1143",
+    "ISAID_VAL_P1184",
+    "ISAID_VAL_P1483"
+  ],
+  "prompt": "all planes",
+  "candidate_min_area_pixels": 16,
+  "service": {
+    "service_version": "1.2.0",
+    "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+  },
+  "modes": {
+    "fast": {
+      "images": 5,
+      "successes": 5,
+      "failures": 0,
+      "mean_iou": 0.23223674849094778,
+      "mean_dice": 0.29878584117965806,
+      "mean_candidate_count": 5.6,
+      "mean_prediction_area_pixels": 2794874.0,
+      "mean_service_inference_ms": 569.412,
+      "mean_service_total_ms": 1338.554,
+      "mean_client_round_trip_ms": 1417.5399999999997
+    },
+    "accurate": {
+      "images": 5,
+      "successes": 5,
+      "failures": 0,
+      "mean_iou": 0.3478015265801357,
+      "mean_dice": 0.4411094948280267,
+      "mean_candidate_count": 51.6,
+      "mean_prediction_area_pixels": 869178.0,
+      "mean_service_inference_ms": 6273.784000000001,
+      "mean_service_total_ms": 6989.35,
+      "mean_client_round_trip_ms": 7094.026
+    }
+  },
+  "per_image_comparison": [
+    {
+      "image_id": "ISAID_VAL_P1492",
+      "fast_iou": 0.5335257754923982,
+      "accurate_iou": 0.6924463800693078,
+      "iou_delta": 0.1589206045769096,
+      "fast_candidate_count": 4,
+      "accurate_candidate_count": 6,
+      "fast_client_round_trip_ms": 1446.88,
+      "accurate_client_round_trip_ms": 2162.92
+    },
+    {
+      "image_id": "ISAID_VAL_P1738",
+      "fast_iou": 0.0,
+      "accurate_iou": 0.16064575645756457,
+      "iou_delta": 0.16064575645756457,
+      "fast_candidate_count": 0,
+      "accurate_candidate_count": 40,
+      "fast_client_round_trip_ms": 951.03,
+      "accurate_client_round_trip_ms": 6806.54
+    },
+    {
+      "image_id": "ISAID_VAL_P1143",
+      "fast_iou": 0.021060504167290703,
+      "accurate_iou": 0.05467416760955608,
+      "iou_delta": 0.03361366344226538,
+      "fast_candidate_count": 9,
+      "accurate_candidate_count": 183,
+      "fast_client_round_trip_ms": 2448.14,
+      "accurate_client_round_trip_ms": 15588.09
+    },
+    {
+      "image_id": "ISAID_VAL_P1184",
+      "fast_iou": 0.0014145116405348537,
+      "accurate_iou": 0.08062813407231459,
+      "iou_delta": 0.07921362243177973,
+      "fast_candidate_count": 12,
+      "accurate_candidate_count": 26,
+      "fast_client_round_trip_ms": 1657.54,
+      "accurate_client_round_trip_ms": 9175.16
+    },
+    {
+      "image_id": "ISAID_VAL_P1483",
+      "fast_iou": 0.6051829511545151,
+      "accurate_iou": 0.7506131946919352,
+      "iou_delta": 0.14543024353742007,
+      "fast_candidate_count": 3,
+      "accurate_candidate_count": 3,
+      "fast_client_round_trip_ms": 584.11,
+      "accurate_client_round_trip_ms": 1737.42
+    }
+  ],
+  "mean_iou_delta_accurate_minus_fast": 0.11556477808918789,
+  "cases": {
+    "worst": {
+      "image_id": "ISAID_VAL_P1143",
+      "iou": 0.05467416760955608,
+      "dice": 0.1036797321650086,
+      "candidate_count": 183,
+      "artifact_key": "ISAID_VAL_P1143/accurate"
+    },
+    "middle": {
+      "image_id": "ISAID_VAL_P1738",
+      "iou": 0.16064575645756457,
+      "dice": 0.27682133943758247,
+      "candidate_count": 40,
+      "artifact_key": "ISAID_VAL_P1738/accurate"
+    },
+    "best": {
+      "image_id": "ISAID_VAL_P1483",
+      "iou": 0.7506131946919352,
+      "dice": 0.8575431705506191,
+      "candidate_count": 3,
+      "artifact_key": "ISAID_VAL_P1483/accurate"
+    }
+  },
+  "stability": {
+    "serial_requests": 10,
+    "successes": 10,
+    "failures": 0,
+    "all_candidate_stats_independently_verified": true
+  },
+  "error_probes": [
+    {
+      "name": "invalid_base64",
+      "passed": true,
+      "http_status": 200,
+      "service_status": "error",
+      "message": "ValueError: Invalid base64 image data",
+      "client_round_trip_ms": 6.0,
+      "returned_mask": false
+    },
+    {
+      "name": "invalid_quality_mode",
+      "passed": true,
+      "http_status": 200,
+      "service_status": "error",
+      "message": "ValueError: Unsupported quality_mode: 'turbo'; expected fast, accurate, or auto",
+      "client_round_trip_ms": 1.65,
+      "returned_mask": false
+    },
+    {
+      "name": "unsupported_mask_size",
+      "passed": true,
+      "http_status": 400,
+      "service_status": null,
+      "message": "mask_size is not supported by the upstream RemoteSAM API; output always matches the input image",
+      "client_round_trip_ms": 1.0,
+      "returned_mask": false
+    }
+  ],
+  "limitations": [
+    "Connected mask regions are candidate targets, not guaranteed object instances.",
+    "The accurate threshold was selected on the fixed diagnostic aircraft set and is not an independent generalization estimate.",
+    "All areas are pixel areas because the PNG inputs have no georeferencing."
+  ]
+}

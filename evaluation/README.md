@@ -105,3 +105,29 @@ machine-readable comparison is
 `results/aircraft_v2/remotesam_aircraft_experiment_summary_verified.json`.
 See `docs/RemoteSAM飞机分割改进实验.md` for the result, limitations, and
 runtime tradeoff. This experiment does not alter the frozen building protocol.
+
+## GeoScope v0.7 fast/accurate mode comparison
+
+`run_v07_remotesam_modes.py` exercises the v0.7 service contract on the first
+five frozen aircraft cases. It sends the same `all planes` prompt in both
+modes, records real service/client timing, validates binary mask dimensions,
+recomputes IoU and Dice from ground truth, and independently recomputes every
+candidate-region statistic from the saved mask. Raw masks, overlays, and
+compact responses belong in a machine-local artifact directory because the
+dataset images are not redistributed through Git.
+
+Example:
+
+```powershell
+python evaluation/run_v07_remotesam_modes.py `
+  --data-root DATASETS_ROOT `
+  --artifact-dir LOCAL_ARTIFACT_DIR `
+  --results-csv evaluation/results/v07/remotesam_modes_5_image_results.csv `
+  --summary-json evaluation/results/v07/remotesam_modes_5_image_summary.json
+```
+
+The verified result contains ten successful serial calls (five images × two
+modes), independent agreement for all candidate statistics, and explicit
+no-mask failures for invalid Base64, invalid mode, and unsupported legacy
+`mask_size`. The compact evidence is in `results/v07/`; see
+`docs/v0.7_RemoteSAM模式与候选统计.md` for the contract, result, and limitations.

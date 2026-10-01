@@ -74,6 +74,62 @@ class RemoteSAMServiceTests(unittest.TestCase):
         self.assertIn("probability_map", result)
         self.assertGreater(result["quality"]["foreground_pixels"], 0)
         self.assertEqual(result["model"]["checkpoint_sha256"], "test-checkpoint")
+        self.assertEqual(result["quality_mode"], "fast")
+        self.assertEqual(result["mode_parameters"]["strategy"], "whole_image_argmax")
+        self.assertGreater(result["candidate_stats"]["candidate_count"], 0)
+
+    def test_legacy_request_defaults_to_fast_mode(self):
+        result = self.run_predict(task="referring_seg", text="all planes")
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["quality_mode"], "fast")
+        self.assertNotIn("probability_map", result)
+
+    def test_accurate_mode_returns_fixed_parameters_and_aligned_mask(self):
+        result = self.run_predict(
+            task="referring_seg",
+            text="all planes",
+            quality_mode="accurate",
+            candidate_min_area_pixels=5,
+        )
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(result["quality_mode"], "accurate")
+        self.assertEqual(result["original_size"], [13, 7])
+        self.assertEqual(result["output_size"], [13, 7])
+        self.assertEqual(result["mode_parameters"]["tile_size"], 1024)
+        self.assertEqual(result["mode_parameters"]["overlap"], 256)
+        self.assertEqual(result["mode_parameters"]["probability_threshold"], 0.88)
+        self.assertNotIn("probability_map", result)
+
+    def test_auto_mode_resolution_is_deterministic(self):
+        self.assertEqual(remotesam.resolve_quality_mode("auto", (800, 800)), "fast")
+        self.assertEqual(remotesam.resolve_quality_mode("auto", (2048, 2048)), "accurate")
+
+    def test_invalid_mode_returns_error_without_mask(self):
+        result = self.run_predict(
+            task="referring_seg", text="all planes", quality_mode="turbo"
+        )
+        self.assertEqual(result["status"], "error")
+        self.assertIn("Unsupported quality_mode", result["message"])
+        self.assertNotIn("mask", result)
+
+    def test_candidate_statistics_filter_noise_and_handle_empty_mask(self):
+        mask = np.zeros((10, 12), dtype=np.uint8)
+        mask[1:4, 2:6] = 1
+        mask[8, 10] = 1
+        result = remotesam.candidate_summary(mask, min_area_pixels=2)
+        self.assertEqual(result["raw_candidate_count"], 2)
+        self.assertEqual(result["candidate_count"], 1)
+        self.assertEqual(result["filtered_out_count"], 1)
+        self.assertEqual(result["total_area_pixels"], 12)
+        self.assertEqual(
+            result["candidates"][0]["bbox"],
+            {"x": 2, "y": 1, "width": 4, "height": 3},
+        )
+
+        empty = remotesam.candidate_summary(np.zeros((3, 4), dtype=np.uint8))
+        self.assertEqual(empty["raw_candidate_count"], 0)
+        self.assertEqual(empty["candidate_count"], 0)
+        self.assertEqual(empty["total_area_pixels"], 0)
 
     def test_semantic_segmentation_returns_per_class_masks(self):
         result = self.run_predict(

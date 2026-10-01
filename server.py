@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw, ImageOps
 from runtime_config import load_settings, settings_status
 from service_transport import request_json, inspect_services
 from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan
+from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
 
 load_settings()
 
@@ -70,17 +71,24 @@ def demo_mask(sample):
     for p in polys: d.polygon(p,fill=255)
     return mask
 
-def constrain(mask, side):
+def constrain(mask, side, roi=None):
     w,h=mask.size; region=Image.new('L',(w,h),0)
     boxes={'all':(0,0,w,h),'left':(0,0,w//2,h),'right':(w//2,0,w,h),'top':(0,0,w,h//2),'bottom':(0,h//2,w,h)}
-    box=boxes[side]; region.paste(mask.crop(box),box[:2]); return region
+    box=boxes[side]; region.paste(mask.crop(box),box[:2])
+    if roi:
+        x1,y1,x2,y2=roi['xyxy']
+        clipped=Image.new('L',(w,h),0)
+        clipped.paste(region.crop((x1,y1,x2,y2)),(x1,y1))
+        return clipped
+    return region
 
-def statistics(mask,side):
+def statistics(mask,side,roi=None):
     w,h=mask.size; area=sum(mask.histogram()[1:]); bbox=mask.getbbox()
     return {'pixel_area':area,'total_pixels':w*h,'area_ratio':area/(w*h),'bbox_xyxy':list(bbox) if bbox else None,
             'width':w,'height':h,'scope':side,'scope_label':SIDES[side], 'unit':'pixel',
             'spatial_rule':'像素范围裁切；面积比例的分母始终为整幅影像',
-            'spatial_check':mask.tobytes()==constrain(mask,side).tobytes(),'ground_area_available':False}
+            'spatial_check':mask.tobytes()==constrain(mask,side,roi).tobytes(),
+            'roi':roi,'ground_area_available':False}
 
 def parse_task(query,context):
     q=query.strip().lower()
@@ -98,7 +106,7 @@ def parse_task(query,context):
         if re.search(pattern,q): side=key; break
     inherited=target is None
     target=target or context.get('target')
-    if not target or not re.search(r'提取|分割|建筑|飞机|改|换|占比|面积|统计|左|右|上半|下半|全部|全图|segment|building|aircraft',q):
+    if not target or not re.search(r'提取|分割|建筑|飞机|改|换|占比|面积|统计|左|右|上半|下半|全部|全图|框选|选区|研究区|模式|快一点|小目标|整批|批量|segment|building|aircraft',q):
         return {'action':'clarify','question':'请说明想提取什么目标，以及要分析全图还是某一侧。例如：提取右侧建筑并计算面积占比。'}
     return {'action':'segment','target':target,'side':side or context.get('side','all'),
             'invert':resolve_invert(query,context),'inherited_target':inherited,
@@ -111,7 +119,7 @@ def requires_dense_result(query, context=None):
     # A short follow-up such as "改成左侧" inherits the selected segmentation
     # result. Without a selected target the same wording remains ordinary VQA.
     return bool((context or {}).get('target') and
-                re.search(r'改|换|左|右|上半|下半|全部|全图|重新|重跑|统计',q))
+                re.search(r'改|换|左|右|上半|下半|全部|全图|重新|重跑|统计|框选|选区|研究区|模式|快一点|小目标|整批|批量',q))
 
 def resolve_invert(query, context=None):
     q=query.lower()
@@ -190,12 +198,59 @@ def new_session(sample='urban',uploaded=None,name=None):
     with LOCK: SESSIONS[sid]=s
     save_json(folder/'session.json',public_session(s)); return public_session(s)
 
-def run_task(s,p):
+def run_task(s,p,allow_batch=False):
+    if p.get('batch_id') and not allow_batch:
+        raise ValueError('batch_id 只能由 Harness 批量任务生成')
     if not s['lock'].acquire(blocking=False): raise ValueError('当前实验仍在执行，请稍后再试')
-    try: return _run_task(s,p)
+    try: return _run_task(s,p,allow_batch=allow_batch)
     finally: s['lock'].release()
 
-def _run_task(s,p):
+def run_batch(p):
+    ids=p.get('session_ids')
+    if (not isinstance(ids,list) or not 2<=len(ids)<=5 or
+        any(not isinstance(sid,str) or not SID_RE.fullmatch(sid) for sid in ids) or
+        len(set(ids))!=len(ids)):
+        raise ValueError('批量任务需要 2 至 5 个不重复的 session_ids')
+    sessions=[get_session(sid) for sid in ids]
+    if any(s is None for s in sessions):
+        raise ValueError('批量任务包含不存在的影像')
+    query=p.get('query')
+    if not isinstance(query,str) or not query.strip() or len(query)>1800:
+        raise ValueError('请填写不超过1800字的批量任务')
+    if p.get('mode','live') not in ('demo','live'):
+        raise ValueError('未知模式')
+    if p.get('quality_mode') is not None and (not isinstance(p['quality_mode'],str) or p['quality_mode'] not in ('fast','accurate','auto')):
+        raise ValueError('非法 quality_mode')
+    batch_quality,batch_effective_quality,_=resolve_quality(query,{},p.get('quality_mode'))
+    if not has_target_intent(query):
+        inherited={s['context'].get('target') for s in sessions}
+        if len(inherited)!=1 or None in inherited:
+            raise Clarification('批量任务缺少所有影像共同的目标类别')
+    batch_id=uid()
+    results=[]
+    for index,s in enumerate(sessions,1):
+        item_id=uid()
+        item={key:p[key] for key in ('query','mode','quality_mode','roi','scope','force_perception') if key in p}
+        item['quality_mode']=batch_quality
+        item.update(batch_id=batch_id,item_id=item_id)
+        try:
+            result=run_task(s,item,allow_batch=True)
+            results.append({'item_id':item_id,'session_id':s['id'],'run_id':result['id'],
+                            'status':result['status'],'failure_reason':result.get('message') if result['status'] in ('failed','needs_clarification') else None,
+                            'metrics':result.get('metrics'),'duration_ms':result['duration_ms']})
+        except Exception as exc:
+            results.append({'item_id':item_id,'session_id':s['id'],'run_id':None,'status':'failed',
+                            'failure_reason':str(exc) if isinstance(exc,ValueError) else type(exc).__name__,
+                            'metrics':None,'duration_ms':None})
+    batch={'batch_id':batch_id,'query':query,'mode':p.get('mode','live'),
+           'quality_mode':batch_quality,'effective_quality_mode':batch_effective_quality,'created_at':now(),
+           'items':results,'completed_count':sum(r['status'] in ('completed','needs_review') for r in results),
+           'failed_count':sum(r['status'] in ('failed','needs_clarification') for r in results)}
+    folder=DATA/'batches'; folder.mkdir(exist_ok=True)
+    save_json(folder/f'{batch_id}.json',batch)
+    return batch
+
+def _run_task(s,p,allow_batch=False):
     query=str(p.get('query','')).strip()
     if not query or len(query)>1800: raise ValueError('请填写不超过1800字的任务')
     mode=p.get('mode','demo')
@@ -230,6 +285,19 @@ def _run_task(s,p):
             event('模型结果反馈未完成',result['feedback_warning'],'warning')
     try:
         event('读取实验上下文',f'影像 {s["width"]} × {s["height"]}；'+('继承所选结果条件' if context else '新建任务'))
+        try: validate_target_intent(query)
+        except ValueError as exc: raise Clarification(str(exc)) from exc
+        if batch_requested(query) and not has_target_intent(query) and not context.get('target'):
+            raise Clarification('批量任务缺少明确目标类别，请指定目标或从已有目标结果继续。')
+        roi,roi_source=resolve_roi(query,context,p.get('roi'),s['width'],s['height'])
+        quality_mode,effective_quality,quality_source=resolve_quality(query,context,p.get('quality_mode'))
+        if roi and p.get('scope') not in (None,'all'):
+            raise ValueError('矩形 ROI 与半幅范围不能同时选择')
+        if batch_requested(query) and not allow_batch:
+            raise Clarification('批量任务需要通过 /api/batch 指定 2 至 5 幅已绑定影像。')
+        result['task_options']={'roi':roi,'roi_source':roi_source,'quality_mode':quality_mode,
+                                'effective_quality_mode':effective_quality,'quality_source':quality_source,
+                                'batch_id':p.get('batch_id'),'item_id':p.get('item_id')}
         if p.get('simulate_failure'):
             event('注入演示故障','用户主动触发的工具不可用测试','failed')
             raise ValueError('故障演示：工具未返回结果。已有版本保留，本次不生成蒙版或统计。')
@@ -240,12 +308,15 @@ def _run_task(s,p):
             plan={'action':'export','planner_protocol':'harness_export_command'}
         else:
             dense_task=requires_dense_result(query,context)
+            if dense_task and not has_target_intent(query) and not context.get('target'):
+                raise Clarification('请明确要提取的单一目标类别；当前不能提取所有物体的轮廓。')
             invert=resolve_invert(query,context) if dense_task else False
             side,scope_source=resolve_scope(query,context,p.get('scope'))
             if re.search(r'那个|那片|那块|这块',query):
                 raise Clarification('请明确目标类别与像素范围，或从已有结果版本继续；本次没有执行分割。')
             agent_turn=AgentTurn(query,image_path,context,side,scope_source,
-                                 task_route='dense' if dense_task else 'internal',invert=invert)
+                                 task_route='dense' if dense_task else 'internal',invert=invert,
+                                 roi=roi,quality_mode=quality_mode,batch_id=p.get('batch_id'))
             decision=agent_turn.decision
             result['agent_decision']=decision_record(decision)
             result['provenance']['planner_protocol']='remoteagent'
@@ -256,11 +327,18 @@ def _run_task(s,p):
             elif decision.status=='tool_call':
                 if not dense_task:
                     raise ValueError('这是看图问答任务，RemoteAgent 不应调用像素分割工具；系统已阻止错误执行。')
-                plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert)
+                plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert,
+                                       expected_target=target_intent(query) or context.get('target'))
                 event('确认执行边界',f'目标由 Agent 工具参数提供；范围 {SIDES[side]}，来源 {scope_source}；先全图分割再裁切')
             else:
                 raise ValueError(f'RemoteAgent 决策未通过校验（{decision.status}），未执行工具。')
         event('理解任务与选择路径',f'{result["provenance"]["planner"]} · {plan["action"]}',elapsed=(time.perf_counter()-t)*1000)
+        if plan['action']=='segment':
+            plan.update(roi=roi,roi_source=roi_source,quality_mode=quality_mode,
+                        effective_quality_mode=effective_quality,quality_source=quality_source,
+                        batch_id=p.get('batch_id'),item_id=p.get('item_id'))
+            if mode=='live':
+                plan['service_request']['quality_mode']=effective_quality
         result['task']=plan
         if plan['action']=='clarify':
             result.update(status='needs_clarification',message=plan['question']); event('等待条件确认','需求尚未执行','waiting')
@@ -286,6 +364,10 @@ def _run_task(s,p):
                 result['provenance']['perception']=previous['provenance']['perception']
                 result['reused_from_run_id']=previous['id']
                 result['service_metadata']=previous.get('service_metadata',{})
+                if result['service_metadata'].get('quality_confirmation')=='legacy_service_unconfirmed':
+                    result['task_options']['effective_quality_mode']=None
+                    plan['effective_quality_mode']=None
+                    plan['quality_confirmation']='legacy_service_unconfirmed'
             elif mode=='demo':
                 if not s['sample']: raise ValueError('上传影像没有预置标注。请选择模型模式，或返回内置样例体验流程。')
                 if target!=SAMPLES[s['sample']]['target']: raise ValueError(f'这个样例只提供{TARGETS[SAMPLES[s["sample"]]["target"]]}的演示标注，不能据此判断其他类别。')
@@ -294,11 +376,25 @@ def _run_task(s,p):
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
                 data=post_json(url,{**plan['service_request'],'image':image_b64(image)})
+                confirmed_quality=data.get('quality_mode')
+                if confirmed_quality!=effective_quality:
+                    if confirmed_quality is not None or quality_mode!='auto' or p.get('quality_mode') is not None:
+                        raise ValueError('RemoteSAM 未确认所选质量模式，不能将结果标记为该模式')
+                    result['task_options']['effective_quality_mode']=None
+                    plan['effective_quality_mode']=None
+                    plan['quality_confirmation']='legacy_service_unconfirmed'
                 encoded=data.get('masks',{}).get(plan['mask_field']) if plan.get('mask_field') else data.get('mask')
                 if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
                 mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
-                result['service_metadata']={key:data[key] for key in ('model','timing_ms','quality','original_size','output_size') if key in data}
+                result['service_metadata']={key:data[key] for key in (
+                    'model','timing_ms','quality','quality_mode','requested_quality_mode',
+                    'parameters','service_version','mode_parameters',
+                    'original_size','output_size','peak_vram_mb') if key in data}
+                if 'candidate_stats' in data:
+                    result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
+                if confirmed_quality is None:
+                    result['service_metadata']['quality_confirmation']='legacy_service_unconfirmed'
                 event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
             mask=binary_mask(mask)
             if mask.size!=image.size: raise ValueError('完整蒙版尺寸与原图不一致')
@@ -308,8 +404,8 @@ def _run_task(s,p):
             result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','未记录')
             if plan.get('invert'):
                 mask=ImageOps.invert(mask)
-            mask=constrain(mask,side)
-            metrics=statistics(mask,side); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
+            mask=constrain(mask,side,roi)
+            metrics=statistics(mask,side,roi); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
             mask.save(folder/'mask.png'); overlay.save(folder/'overlay.png')
             status='completed' if metrics['pixel_area'] else 'needs_review'
@@ -317,7 +413,8 @@ def _run_task(s,p):
             base=f'/experiments/{s["id"]}/{runid}'
             result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
               message=f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
-            s['context']={'target':target,'side':side,'invert':bool(plan.get('invert'))}; save_json(folder/'statistics.json',metrics)
+            s['context']={'target':target,'side':side,'invert':bool(plan.get('invert')),
+                          'roi':roi,'quality_mode':quality_mode}; save_json(folder/'statistics.json',metrics)
             if mode=='live':
                 feedback({'status':'success','tool_name':plan['tool_name'],'metrics':metrics,
                           'scope_rule':plan['scope_rule'],'actual_service_request':plan['service_request'],
@@ -375,6 +472,7 @@ class Handler(SimpleHTTPRequestHandler):
                 s=get_session(p.get('session_id'))
                 if not s: raise ValueError('实验不存在，请重新选择影像')
                 return self.json(run_task(s,p))
+            if self.path=='/api/batch': return self.json(run_batch(p))
             return self.json({'error':'接口不存在'},404)
         except (ValueError,KeyError,Image.UnidentifiedImageError) as exc: return self.json({'error':str(exc)},400)
         except Exception: return self.json({'error':'无法处理影像或请求，请检查输入格式'},500)

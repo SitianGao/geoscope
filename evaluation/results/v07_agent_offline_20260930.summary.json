@@ -1,0 +1,15 @@
+{
+  "total": 20,
+  "real_agent_calls": 0,
+  "evidence_mode": "offline_demo",
+  "routing_correct": null,
+  "routing_accuracy": null,
+  "task_outcome_correct": 20,
+  "legal_call_rate": null,
+  "failure_types": {
+    "answered": 1,
+    "completed": 9,
+    "failed": 6,
+    "needs_clarification": 4
+  }
+}

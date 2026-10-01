@@ -27,9 +27,9 @@ def _same(actual: float, expected: float, tolerance: float = 1e-6) -> bool:
     return math.isclose(actual, expected, rel_tol=0, abs_tol=tolerance)
 
 
-def verify_agent() -> dict:
-    rows = _rows("agent_full_results.csv")
-    source = json.loads((RESULTS / "agent_summary.json").read_text(encoding="utf-8"))
+def verify_agent_run(csv_name: str, summary_name: str) -> dict:
+    rows = _rows(csv_name)
+    source = json.loads((RESULTS / summary_name).read_text(encoding="utf-8"))
     attempts = [r for r in rows if r["agent_status"] in {"tool_call", "rejected_tool"}]
     segmented = [r for r in rows if r["outcome"] == "segment"]
     with_target = [r for r in segmented if r["expected_target"]]
@@ -61,8 +61,52 @@ def verify_agent() -> dict:
         "agent_status_counts": calculated["agent_status_counts"] == source["agent_status_counts"],
     }
     if not all(checks.values()):
-        raise ValueError(f"RemoteAgent aggregate mismatch: {checks}")
+        raise ValueError(f"RemoteAgent aggregate mismatch in {csv_name}: {checks}")
     return {"verified": True, "checks": checks, "metrics": calculated}
+
+
+def verify_agent_improvement() -> dict:
+    baseline = verify_agent_run("agent_full_results.csv", "agent_summary.json")
+    optimized = verify_agent_run("agent_full_results_final.csv", "agent_summary_final.json")
+    old = {row["task_id"]: row for row in _rows("agent_full_results.csv")}
+    new = {row["task_id"]: row for row in _rows("agent_full_results_final.csv")}
+    if set(old) != set(new) or len(old) != 40:
+        raise ValueError("RemoteAgent before/after runs do not contain the same 40 tasks")
+    definition_checks = [
+        (old[key]["category"], old[key]["request"], old[key]["expected_task_type"],
+         old[key]["expected_target"], old[key]["expected_side"])
+        == (new[key]["category"], new[key]["request"], new[key]["expected_task_type"],
+            new[key]["expected_target"], new[key]["expected_side"])
+        for key in old
+    ]
+    aircraft_ids = [key for key, row in old.items() if row["category"] == "aircraft"]
+    failure_ids = [key for key, row in new.items() if row["routing_correct"].lower() != "true"]
+    checks = {
+        "same_frozen_40_tasks": all(definition_checks),
+        "six_aircraft_tasks": len(aircraft_ids) == 6,
+        "baseline_aircraft_correct": sum(old[key]["routing_correct"].lower() == "true" for key in aircraft_ids) == 1,
+        "optimized_aircraft_correct": sum(new[key]["routing_correct"].lower() == "true" for key in aircraft_ids) == 6,
+        "only_failure_is_A04": failure_ids == ["A04"],
+    }
+    if not all(checks.values()):
+        raise ValueError(f"RemoteAgent improvement mismatch: {checks}")
+    return {
+        "verified": True,
+        "checks": checks,
+        "baseline": baseline,
+        "optimized": optimized,
+        "routing_gain_percentage_points": round(
+            100 * (optimized["metrics"]["task_routing_accuracy"] - baseline["metrics"]["task_routing_accuracy"]), 1
+        ),
+        "aircraft_gain": "1/6 to 6/6",
+        "remaining_failure_ids": failure_ids,
+        "evidence_boundary": (
+            "The optimized Agent run used the historical aircraft phrase 'all airplanes'. "
+            "The integrated Harness now canonicalizes any accepted aircraft phrase to the "
+            "RemoteSAM-validated service phrase 'all planes'; an online rerun of the exact integrated "
+            "prompt remains required before claiming a fresh end-to-end score."
+        ),
+    }
 
 
 def verify_sam() -> dict:
@@ -193,7 +237,7 @@ def main() -> None:
     args = parser.parse_args()
     result = {
         "verification_scope": "offline aggregate recomputation from committed per-task/per-image CSV evidence",
-        "remoteagent": verify_agent(),
+        "remoteagent": verify_agent_improvement(),
         "remotesam": verify_sam(),
         "remotesam_aircraft_improvement": verify_aircraft_improvement(),
         "evidence_boundaries": {

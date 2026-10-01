@@ -1,6 +1,8 @@
 const $ = id => document.getElementById(id);
-const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0 };
+const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0,
+ roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false,batch:null };
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
+const qualityNames = {auto:'自动',fast:'快速',accurate:'高精度'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
 const statusNames = {completed:'待语义复核',answered:'已回答',needs_clarification:'待确认',failed:'未完成',needs_review:'待复核',export_ready:'可导出'};
@@ -28,7 +30,7 @@ async function newExperiment(sample='urban',image=null,name=null){
 
 async function showSession(session){
   const original=await loadImage(session.image_url);
-  state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1});
+  state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1,roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false});
   // Restore the mode that actually produced this experiment when the user has
   // not explicitly saved a different preference.
   if(session.runs.length&&!localStorage.getItem('geoscope-mode'))state.mode=session.runs.at(-1).mode;
@@ -42,6 +44,7 @@ async function showSession(session){
   $('stageLabel').textContent=session.sample?'研究样区 / '+(session.sample==='urban'?'01':'02'):'用户上传影像';
   $('imageWatermark').textContent=session.sample?'SAMPLE IMAGE':'USER IMAGE';
   $('contextChip').hidden=true;$('versions').innerHTML='<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
+  $('qualityMode').value='auto';updateRoiUI();
   $('trace').innerHTML='<div class="trace-placeholder">'+icon('target')+'<span>每一步操作，都有可追溯的依据。</span><small>任务理解 → 专业感知 → 几何统计 → 结果检查</small></div>';
   $('runLabel').textContent='等待实验开始';$('query').value='';updateMode();resetMetrics();draw();syncView();closeModal();
   localStorage.setItem('geoscope-session',session.id);
@@ -69,18 +72,55 @@ function updateMode(){
 function resetMetrics(){
  $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
  $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
- $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';
+ $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';$('candidateValue').textContent='—';$('qualityValue').textContent='—';
  $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';
  $('resultStatus').textContent='准备就绪';$('resultStatus').className='result-badge';$('coverageBar').style.width='0%';$('ringValue').setAttribute('stroke-dasharray','0 164');
- $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;
+ $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
 }
 function renderAnswer(run){
  $('answerCard').hidden=false;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
  $('resultEyebrow').textContent='IMAGE UNDERSTANDING';$('resultTitle').textContent='影像理解已完成';
  $('resultSubtitle').textContent='RemoteAgent 直接看图回答';$('answerText').textContent=run.message;
  $('resultStatus').textContent='已回答';$('resultStatus').className='result-badge success';
- $('artifactText').textContent='原图 · 模型回答 · 决策记录 · 运行日志';$('exportBtn').disabled=true;
+ $('artifactText').textContent='原图 · 模型回答 · 决策记录 · 运行日志';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
 }
+
+function updateRoiUI(){
+ const roi=state.roi?.xyxy;
+ $('roiLabel').textContent=roi?`研究区：(${roi[0]}, ${roi[1]}) – (${roi[2]}, ${roi[3]}) px`:'未设置矩形研究区';
+ $('drawRoiBtn').classList.toggle('selected',state.roiDrawing);
+ $('drawRoiBtn').textContent=state.roiDrawing?'在影像上拖动框选':'框选研究区';
+ $('clearRoiBtn').disabled=!roi;
+ $('imageCanvas').classList.toggle('roi-drawing',state.roiDrawing);
+}
+function imagePoint(event){
+ const canvas=$('imageCanvas'),rect=canvas.getBoundingClientRect();
+ return [Math.min(canvas.width,Math.max(0,Math.floor((event.clientX-rect.left)/rect.width*canvas.width))),
+         Math.min(canvas.height,Math.max(0,Math.floor((event.clientY-rect.top)/rect.height*canvas.height)))];
+}
+function finishRoi(event){
+ if(!state.roiStart)return;
+ const point=imagePoint(event),start=state.roiStart;
+ const box=[Math.min(start[0],point[0]),Math.min(start[1],point[1]),Math.max(start[0],point[0]),Math.max(start[1],point[1])];
+ state.roiStart=null;state.roiDraft=null;state.roiDrawing=false;
+ if(box[2]-box[0]>=3&&box[3]-box[1]>=3){
+  state.roi={xyxy:box,source:'drawn',image_size:[state.session.width,state.session.height]};state.roiClear=false;
+ }else toast('研究区太小，请重新框选');
+ updateRoiUI();draw();
+}
+$('drawRoiBtn').onclick=()=>{if(state.busy||!state.session)return;state.roiDrawing=!state.roiDrawing;state.roiDraft=null;state.roiStart=null;updateRoiUI();draw();};
+$('clearRoiBtn').onclick=()=>{state.roi=null;state.roiDraft=null;state.roiDrawing=false;state.roiClear=true;updateRoiUI();draw();};
+$('imageCanvas').addEventListener('pointerdown',event=>{
+ if(!state.roiDrawing||state.busy||!state.session)return;
+ event.preventDefault();state.roiStart=imagePoint(event);state.roiDraft=[...state.roiStart,...state.roiStart];
+ $('imageCanvas').setPointerCapture(event.pointerId);draw();
+});
+$('imageCanvas').addEventListener('pointermove',event=>{
+ if(!state.roiStart)return;
+ event.preventDefault();state.roiDraft=[...state.roiStart,...imagePoint(event)];draw();
+});
+$('imageCanvas').addEventListener('pointerup',finishRoi);
+$('imageCanvas').addEventListener('pointercancel',()=>{state.roiStart=null;state.roiDraft=null;state.roiDrawing=false;updateRoiUI();draw();});
 
 function draw(){
  if(!state.original)return;
@@ -104,8 +144,14 @@ function draw(){
    if(side&&side!=='all'){ctx.save();ctx.setLineDash([7,7]);ctx.strokeStyle='#effbd8bb';ctx.lineWidth=1.5;ctx.beginPath();if(side==='left'||side==='right'){ctx.moveTo(w/2,0);ctx.lineTo(w/2,h);}else{ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);}ctx.stroke();ctx.restore();}
   }
  }
+ const rectangle=state.roiDraft||state.roi?.xyxy;
+ if(rectangle){
+  const [ax,ay,bx,by]=rectangle,x=Math.min(ax,bx),y=Math.min(ay,by),rw=Math.abs(bx-ax),rh=Math.abs(by-ay);
+  ctx.save();ctx.fillStyle='#e9b75722';ctx.strokeStyle='#f2bd53';ctx.lineWidth=Math.max(2,w/500);
+  ctx.setLineDash([Math.max(6,w/100),Math.max(4,w/160)]);ctx.fillRect(x,y,rw,rh);ctx.strokeRect(x,y,rw,rh);ctx.restore();
+ }
  canvas.style.transform=`scale(${state.zoom})`; $('zoomLabel').textContent=Math.round(state.zoom*100)+'%';
- $('legendScope').textContent=state.selected?.metrics?sideNames[state.selected.task.side]:'暂无提取结果';
+ $('legendScope').textContent=state.selected?.metrics?(state.selected.task.roi?'矩形研究区':sideNames[state.selected.task.side]):'暂无提取结果';
  $('imageWatermark').textContent=state.selected?.mode==='demo'&&state.view!=='original'?'DEMO ANNOTATION · NOT MODEL OUTPUT':state.session?.sample?'SAMPLE IMAGE':'USER IMAGE';
 }
 function syncView(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('selected',b.dataset.view===state.view));$('compareControl').hidden=state.view!=='compare';}
@@ -139,7 +185,7 @@ function renderTrace(run){
 }
 function renderVersions(){
  const versions=state.session.runs.filter(r=>r.mask_url);
- $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(sideNames[r.task.side])}${escape(targetLabel(r))}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
+ $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(r.task.roi?'框选区域':sideNames[r.task.side])}${escape(targetLabel(r))}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
 }
 async function selectRun(run){
  const token=++state.loadToken;
@@ -147,14 +193,18 @@ async function selectRun(run){
   $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
   $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
+  state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
+  $('qualityMode').value=run.task?.quality_mode||'auto';updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
-  $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
-  $('resultTitle').textContent=sideNames[run.task.side]+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
+  $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
+  $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
+  $('qualityValue').textContent=run.mode==='demo'?'预置演示':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
+  $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
-  $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
+  $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
   $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${sideNames[run.task.side]}`;
-  $('exportBtn').disabled=false;renderVersions();renderTrace(run);draw();syncView();
+  $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){toast(e.message);}
 }
 async function run(query,simulateFailure=false){
@@ -165,7 +215,12 @@ async function run(query,simulateFailure=false){
  const welcome=$('chat').querySelector('.assistant-intro');if(welcome)welcome.remove();
  addMessage('user',query);const parent=state.selected?.id||null;
  try{
-  const result=await api('/api/run',{session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,simulate_failure:simulateFailure});
+  const payload={session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,simulate_failure:simulateFailure,
+                 quality_mode:$('qualityMode').value};
+  if(state.roi)payload.roi=state.roi;
+  else if(state.roiClear)payload.roi={};
+  if(state.roi)payload.scope='all';
+  const result=await api('/api/run',payload);
   state.session.runs.push(result);state.last=result;
   addMessage('assistant',result.message,['failed','needs_clarification','needs_review'].includes(result.status)?'warning':'',result);
   if(result.mask_url)await selectRun(result);else{if(result.status==='answered')renderAnswer(result);renderTrace(result);}
@@ -178,7 +233,8 @@ $('taskForm').onsubmit=e=>{e.preventDefault();run($('query').value);};
 $('query').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();run($('query').value);}};
 document.addEventListener('click',e=>{const experiment=e.target.closest('[data-session]');if(experiment)openExperiment(experiment.dataset.session);const prompt=e.target.closest('[data-prompt]');if(prompt)run(prompt.dataset.prompt);const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}});
 function download(url){const a=document.createElement('a');a.href=url;a.download='';document.body.append(a);a.click();a.remove();}
-$('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('实验包已开始下载，包含6个真实生成的文件');}};
+$('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('实验包已开始下载，包含影像、蒙版、统计、日志和报告');}};
+$('reportBtn').onclick=()=>{if(state.selected?.report_url)download(state.selected.report_url);};
 function gallery(){
  if(state.busy)return toast('请等待当前任务完成');
  modal('选择一幅研究影像',`<p>从预置样例体验完整实验，或上传自己的影像连接模型分析。</p><div class="sample-grid">${Object.entries(state.status?.samples||{}).map(([key,s])=>`<button class="sample-card" data-sample="${key}"><img src="assets/${escape(s.file)}" alt="${escape(s.name)}"><strong>${escape(s.name)}</strong><small>${s.size.join(' × ')} px · 预置${targetNames[s.target]}近似标注</small></button>`).join('')}</div><p style="margin-top:16px">样例蒙版用于演示交互与几何计算，不是RemoteSAM预测，也不是精度评测真值。</p><button class="secondary" id="modalUpload">${icon('image')}上传自己的影像</button>`,'IMAGE LIBRARY');
@@ -186,6 +242,65 @@ function gallery(){
 }
 $('galleryBtn').onclick=gallery;$('newBtn').onclick=gallery;$('uploadBtn').onclick=gallery;$('workspaceBtn').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 $('fileInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(file.size>12*1024*1024){toast('请上传12MB以内的影像');e.target.value='';return;}const reader=new FileReader();reader.onload=()=>newExperiment(null,reader.result,file.name);reader.onerror=()=>toast('无法读取影像');reader.readAsDataURL(file);e.target.value='';};
+
+function renderBatch(batch){
+ state.batch=batch;
+ if(!$('modal').open||$('modalTitle').textContent!=='批量实验')return;
+ const items=batch.items||[],total=batch.total_count||items.length;
+ const done=batch.status==='completed',failed=batch.status==='failed';
+ $('modalBody').innerHTML=`<div class="batch-progress"><strong>${failed?'批次未启动':done?'批次已完成':'正在逐图运行'} · ${batch.completed_items||items.length} / ${total}</strong><p>${failed?escape(batch.error):'每幅影像独立保留结果；失败项不会覆盖已完成项。'}</p></div>
+  <div class="batch-items">${items.map((item,i)=>`<div class="batch-item"><span>${i+1}. ${escape(item.session_id)}</span><b>${escape(statusNames[item.status]||item.status)}</b><small>${item.metrics?`${number(item.metrics.pixel_area)} px · ${(item.metrics.area_ratio*100).toFixed(2)}% · 候选 ${item.metrics.candidate_stats?.candidate_count??'—'}`:escape(item.failure_reason||'等待结果')}</small><button data-session="${escape(item.session_id)}">查看影像</button></div>`).join('')}</div>
+  ${done?`<button class="primary" id="batchExportBtn">导出批量 CSV</button>`:''}`;
+ if(done)$('batchExportBtn').onclick=()=>download(`/api/batch-export/${batch.batch_id}`);
+}
+async function watchBatch(batchId){
+ for(;;){
+  try{
+   const batch=await api(`/api/batch/${batchId}`);renderBatch(batch);
+   if(batch.status!=='running')return;
+  }catch(e){toast(e.message);return;}
+  await new Promise(resolve=>setTimeout(resolve,700));
+ }
+}
+async function batchDialog(){
+ if(state.busy)return toast('请等待当前任务完成');
+ if(state.batch?.status==='running'){
+  modal('批量实验','<p>正在恢复批次进度…</p>','BATCH EXPERIMENT');
+  renderBatch(state.batch);return;
+ }
+ try{
+  const data=await api('/api/sessions');
+  modal('批量实验',`<p>选择 2—5 幅已保存影像，系统依次运行同一任务。可先在“选择影像”中添加更多影像。</p>
+   <div class="batch-selector">${data.sessions.map(s=>`<label><input type="checkbox" class="batch-check" value="${escape(s.id)}" ${s.id===state.session?.id?'checked':''}><span>${escape(s.name)}<small>${s.width} × ${s.height} px · ${s.run_count} 次实验</small></span></label>`).join('')}</div>
+   <div class="batch-add"><button class="secondary" data-add-sample="airport">添加机场样例</button><button class="secondary" data-add-sample="urban">添加街区样例</button></div>
+   <label class="batch-label" for="batchQuery">统一任务</label><textarea id="batchQuery" rows="2" maxlength="1800" placeholder="例如：批量提取这些影像中的所有飞机并统计面积占比"></textarea>
+   <label class="batch-inline"><input id="batchUseRoi" type="checkbox" ${state.roi?'':'disabled'}> 同尺寸影像沿用当前矩形研究区</label>
+   <p>未勾选时各影像按全图处理。批次串行执行，单项失败会单独记录。</p>
+   <button class="primary" id="startBatchBtn">开始批量实验</button>`,'BATCH EXPERIMENT');
+  $('modalBody').querySelectorAll('[data-add-sample]').forEach(b=>b.onclick=async()=>{
+   try{await api('/api/session',{sample:b.dataset.addSample});await batchDialog();toast('样例已加入影像列表');}
+   catch(e){toast(e.message);}
+  });
+  $('startBatchBtn').onclick=async()=>{
+   const selected=[...$('modalBody').querySelectorAll('.batch-check:checked')].map(el=>el.value);
+   const query=$('batchQuery').value.trim();
+   if(selected.length<2||selected.length>5)return toast('请选择 2—5 幅影像');
+   if(!query)return toast('请先输入包含单一目标的统一任务');
+   const useRoi=$('batchUseRoi').checked;
+   if(useRoi){
+    const chosen=data.sessions.filter(s=>selected.includes(s.id));
+    if(chosen.some(s=>s.width!==state.roi.image_size[0]||s.height!==state.roi.image_size[1]))return toast('所选影像尺寸不同，不能共用当前矩形');
+   }
+   $('startBatchBtn').disabled=true;
+   try{
+    const batch=await api('/api/batch/start',{session_ids:selected,query,mode:state.mode,
+      quality_mode:$('qualityMode').value,roi:useRoi?state.roi:{},scope:'all'});
+    renderBatch(batch);watchBatch(batch.batch_id);
+   }catch(e){$('startBatchBtn').disabled=false;toast(e.message);}
+  };
+ }catch(e){toast(e.message);}
+}
+$('batchBtn').onclick=batchDialog;
 async function history(){
  const runs=state.session?.runs||[];
  modal('实验记录',runs.length?`<p>同一影像的结果分别保存。点击有效结果恢复查看，并以该版本为后续任务上下文。</p>${[...runs].reverse().map(r=>`<button class="history-row" ${r.mask_url?`data-run="${r.id}"`:''} ${!r.mask_url?'disabled':''}><span>V${r.version}</span><div><strong>${escape(r.query)}</strong><small>${statusNames[r.status]} · ${r.mode==='demo'?'演示':'模型'}</small></div><time>${r.duration_ms} ms</time></button>`).join('')}`:'<p>尚未运行实验。从提取右侧建筑开始，你的任务和结果会记录在这里。</p>','EXPERIMENT HISTORY');
@@ -216,7 +331,7 @@ async function connections(){
  };
 }
 $('connectionBtn').onclick=connections;
-$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope 是按你的v3技术方案制作的第一版工作台。</p><h3>建议体验顺序</h3><p>了解场景 → 提取右侧建筑 → 改成左侧 → 对比原图与结果 → 导出实验包。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、受限工具调用、RemoteSAM分割、确定性几何统计、工具结果反馈、上下文继承、版本恢复和实验包导出。</p><h3>当前边界</h3><p>内置样例来自本地科研仓库，蒙版为近似人工演示标注。模型模式只有在服务实际启动后才会推理；接口测试不代表模型精度。支持全图及上下左右半幅，复杂关系和地理面积暂未开放。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
+$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope v0.7 支持从自然语言任务到遥感分割结果的完整实验流程。</p><h3>建议体验顺序</h3><p>选择影像 → 框选研究区 → 选择快速或高精度模式 → 提取目标 → 查看候选区域与统计 → 下载实验报告。也可用“批量实验”处理多张影像。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、Harness校验、RemoteSAM分割、确定性几何统计、结果复核、上下文继承、版本恢复、批量运行和产物导出。</p><h3>当前边界</h3><p>演示模式使用预置标注，不代表真实模型精度；模型模式需要实际服务连通。候选区域按最终范围内的蒙版计算。像素面积不是地理面积，验证检查也不等于语义或边界正确。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
 
 async function init(){
  try{

@@ -126,13 +126,31 @@ class IntegrationTests(unittest.TestCase):
             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
             with opener.open(endpoint+result['export_url']) as response: payload = response.read()
             with zipfile.ZipFile(io.BytesIO(payload)) as z:
-                self.assertEqual(set(z.namelist()), {'original.png','mask.png','overlay.png','result.json','statistics.json','run_log.json'})
+                self.assertEqual(set(z.namelist()), {'original.png','mask.png','overlay.png','result.json','statistics.json','run_log.json','report.md'})
                 mask = Image.open(io.BytesIO(z.read('mask.png')))
                 metrics = json.loads(z.read('statistics.json'))
                 self.assertEqual(sum(mask.histogram()[1:]), metrics['pixel_area'])
+                report = z.read('report.md').decode('utf-8')
+                self.assertIn(f'{metrics["pixel_area"]:,} 像素', report)
+                self.assertIn('候选连通区域', report)
+            with opener.open(endpoint+result['report_url']) as response:
+                self.assertEqual(response.status, 200)
+                self.assertIn('GeoScope 实验报告', response.read().decode('utf-8'))
             self.assertIsNone(server.get_session('../../anything'))
         finally:
             httpd.shutdown(); httpd.server_close(); thread.join()
+    def test_roi_candidate_statistics_use_final_mask(self):
+        roi={'xyxy':[0,0,5,7],'source':'drawn','image_size':[11,7]}
+        result=self.run_task('提取框选区域内的建筑',roi=roi,scope='all')
+        self.assertEqual(result['status'],'completed')
+        self.assertEqual(result['metrics']['pixel_area'],35)
+        stats=result['metrics']['candidate_stats']
+        self.assertEqual(stats['candidate_count'],1)
+        self.assertEqual(stats['total_area_pixels'],35)
+        self.assertEqual(stats['candidates'][0]['bbox'],{'x':0,'y':0,'width':5,'height':7})
+        self.assertEqual(result['metrics']['distribution'],{
+            'basis':'full_mask_before_scope','left_pixels':35,'right_pixels':42,
+            'roi_inside_pixels':35,'roi_outside_pixels':42})
     def test_corrupt_persisted_session_is_not_loaded(self):
         sid = self.session['id']; server.SESSIONS.clear()
         (server.DATA/sid/'session.json').write_text('{invalid', encoding='utf-8')

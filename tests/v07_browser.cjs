@@ -1,0 +1,47 @@
+const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'C:/Users/26310/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert = require('node:assert/strict');
+
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:'msedge'});
+ const page=await browser.newPage({viewport:{width:1512,height:1050}});
+ const errors=[];page.on('pageerror',error=>errors.push(error.message));
+ await page.goto(process.env.GEO_TEST_BASE_URL||'http://127.0.0.1:4181');
+ await page.locator('#galleryBtn').click();await page.locator('[data-sample="airport"]').click();
+ await page.locator('#drawRoiBtn').click();
+ const rect=await page.locator('#imageCanvas').boundingBox();
+ await page.mouse.move(rect.x+rect.width*.18,rect.y+rect.height*.51);
+ await page.mouse.down();await page.mouse.move(rect.x+rect.width*.49,rect.y+rect.height*.81);await page.mouse.up();
+ assert.match(await page.locator('#roiLabel').textContent(),/研究区/);
+ assert.equal(await page.locator('#clearRoiBtn').isEnabled(),true);
+ await page.locator('#query').fill('提取框选区域内的飞机并统计面积');
+ const response=page.waitForResponse(r=>r.url().endsWith('/api/run'));
+ await page.locator('#sendBtn').click();const run=await(await response).json();
+ assert.equal(run.status,'completed');assert.equal(run.metrics.spatial_check,true);
+ assert.ok(run.task.roi);assert.equal(run.metrics.candidate_stats.total_area_pixels,run.metrics.pixel_area);
+ await page.waitForFunction(()=>document.getElementById('scopeValue').textContent==='矩形研究区');
+ assert.equal(await page.locator('#candidateValue').textContent(),`${run.metrics.candidate_stats.candidate_count} 个`);
+ const report=await page.request.get(new URL(run.report_url,page.url()).href);
+ assert.equal(report.status(),200);assert.match(await report.text(),new RegExp(`${run.metrics.pixel_area.toLocaleString('en-US')} 像素`));
+
+ await page.locator('#batchBtn').click();
+ const firstCount=await page.locator('.batch-check').count();
+ await page.locator('[data-add-sample="airport"]').click();
+ await page.waitForFunction(count=>document.querySelectorAll('.batch-check').length>count,firstCount);
+ const secondCount=await page.locator('.batch-check').count();
+ await page.locator('[data-add-sample="urban"]').click();
+ await page.waitForFunction(count=>document.querySelectorAll('.batch-check').length>count,secondCount);
+ await page.locator('.batch-check').first().waitFor();
+ const boxes=page.locator('.batch-check');
+ for(let i=0;i<await boxes.count();i++)await boxes.nth(i).uncheck();
+ for(let i=0;i<3;i++)await boxes.nth(i).check();
+ assert.equal(await page.locator('.batch-check:checked').count(),3);
+ await page.locator('#batchQuery').fill('批量提取这些影像中的所有飞机并统计面积');
+ await page.locator('#startBatchBtn').click();
+ await page.getByText('批次已完成',{exact:false}).waitFor({timeout:30000});
+ const rows=page.locator('.batch-item');assert.equal(await rows.count(),3);
+ const download=page.waitForEvent('download');await page.locator('#batchExportBtn').click();
+ const csv=(await (await download).path());assert.ok(csv);
+ assert.deepEqual(errors,[]);
+ console.log(JSON.stringify({roi:run.task.roi.xyxy,area:run.metrics.pixel_area,candidates:run.metrics.candidate_stats.candidate_count,batchItems:await rows.count(),browserErrors:errors}));
+ await browser.close();
+})().catch(error=>{console.error(error);process.exit(1)});

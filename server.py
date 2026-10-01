@@ -1,6 +1,7 @@
 """GeoScope prototype: traceable sessions, real geometry, explicit demo/live modes."""
 from __future__ import annotations
 import base64
+import csv
 import hashlib
 import io
 import json
@@ -10,6 +11,7 @@ import threading
 import time
 import uuid
 import zipfile
+from collections import deque
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -26,6 +28,7 @@ WEB = ROOT / 'web'
 DATA = ROOT / 'experiments'
 DATA.mkdir(exist_ok=True)
 SESSIONS = {}
+BATCHES = {}
 LOCK = threading.RLock()
 SID_RE = re.compile(r'^[a-f0-9]{12}$')
 SIDES = {'all': '全图', 'left': '左半幅', 'right': '右半幅', 'top': '上半幅', 'bottom': '下半幅'}
@@ -82,13 +85,118 @@ def constrain(mask, side, roi=None):
         return clipped
     return region
 
-def statistics(mask,side,roi=None):
+def foreground_area(mask):
+    return sum(mask.histogram()[1:])
+
+def statistics(mask,side,roi=None,full_mask=None):
     w,h=mask.size; area=sum(mask.histogram()[1:]); bbox=mask.getbbox()
+    full=full_mask if full_mask is not None else mask
+    left=foreground_area(full.crop((0,0,w//2,h)))
+    right=foreground_area(full.crop((w//2,0,w,h)))
+    distribution={'basis':'full_mask_before_scope','left_pixels':left,'right_pixels':right}
+    if roi:
+        distribution['roi_inside_pixels']=area
+        distribution['roi_outside_pixels']=left+right-area
     return {'pixel_area':area,'total_pixels':w*h,'area_ratio':area/(w*h),'bbox_xyxy':list(bbox) if bbox else None,
             'width':w,'height':h,'scope':side,'scope_label':SIDES[side], 'unit':'pixel',
             'spatial_rule':'像素范围裁切；面积比例的分母始终为整幅影像',
             'spatial_check':mask.tobytes()==constrain(mask,side,roi).tobytes(),
-            'roi':roi,'ground_area_available':False}
+            'roi':roi,'candidate_stats':candidate_statistics(mask),'distribution':distribution,'ground_area_available':False}
+
+def candidate_statistics(mask, min_area_pixels=1):
+    """Eight-connected candidate regions on the final, spatially constrained mask."""
+    w,h=mask.size
+    pixels=mask.tobytes()
+    seen=bytearray(len(pixels))
+    candidates=[]
+    raw_count=0
+    for seed,value in enumerate(pixels):
+        if not value or seen[seed]: continue
+        raw_count+=1
+        seen[seed]=1
+        queue=deque([seed])
+        area=0; sx=sy=0; left=w; top=h; right=bottom=0
+        while queue:
+            index=queue.popleft(); y,x=divmod(index,w)
+            area+=1; sx+=x; sy+=y
+            left=min(left,x); top=min(top,y); right=max(right,x+1); bottom=max(bottom,y+1)
+            for ny in range(max(0,y-1),min(h,y+2)):
+                row=ny*w
+                for nx in range(max(0,x-1),min(w,x+2)):
+                    neighbor=row+nx
+                    if pixels[neighbor] and not seen[neighbor]:
+                        seen[neighbor]=1; queue.append(neighbor)
+        if area>=min_area_pixels:
+            candidates.append({'candidate_id':len(candidates)+1,'area_pixels':area,
+                               'bbox':{'x':left,'y':top,'width':right-left,'height':bottom-top},
+                               'center':{'x':round(sx/area,3),'y':round(sy/area,3)}})
+    areas=[item['area_pixels'] for item in candidates]
+    return {'label':'candidate_regions','connectivity':8,'min_area_pixels':min_area_pixels,
+            'raw_candidate_count':raw_count,'candidate_count':len(candidates),
+            'filtered_out_count':raw_count-len(candidates),'total_area_pixels':sum(areas),
+            'min_area':min(areas,default=0),'max_area':max(areas,default=0),
+            'mean_area':round(sum(areas)/len(areas),3) if areas else 0.0,
+            'candidates':candidates,
+            'notice':'语义蒙版的连通区域只是候选目标，数量和边界需人工复核。'}
+
+def experiment_report(session, result):
+    """Build a readable report strictly from persisted, deterministic run fields."""
+    metrics=result['metrics']; task=result['task']; candidates=metrics['candidate_stats']
+    options=result.get('task_options',{})
+    service=result.get('service_metadata') or {}
+    decision=result.get('agent_decision') or {}
+    call=decision.get('tool_call') or {}
+    roi=options.get('roi')
+    quality=options.get('effective_quality_mode') or '服务未确认'
+    lines=[f'# GeoScope 实验报告：{session["name"]}', '',
+           f'- 实验编号：{result["id"]}',f'- 运行状态：{result["status"]}（语义与边界仍需人工复核）',
+           f'- 输入影像：{session["width"]} × {session["height"]} 像素',
+           f'- 数据来源：{session["source"]}',f'- 用户任务：{result["query"]}',
+           f'- 运行来源：{"预置样例演示，非模型预测" if result["mode"]=="demo" else "真实模型服务返回"}',
+           f'- 规划器：{result["provenance"]["planner"]}',
+           f'- 感知工具：{result["provenance"]["perception"]}',
+           f'- 目标：{TARGETS.get(task["target"],task["target"])}',
+           f'- 范围：{SIDES[task["side"]]}'+(f'；矩形 ROI {roi["xyxy"]}' if roi else ''),
+           f'- 请求模式：{options.get("quality_mode", "未记录")}',
+           f'- 服务确认的执行模式：{quality}',
+           f'- 受限工具调用：{call.get("name", "演示流程，未调用模型工具")}',
+           f'- Harness 校验：目标、影像、ROI、模式、二值蒙版尺寸与范围由程序检查',
+           f'- RemoteSAM 提示词：{DESCRIPTIONS[task["target"]]}',
+           f'- 服务版本：{service.get("service_version", "未记录")}',
+           f'- 模式参数：{json.dumps(service.get("mode_parameters", {}),ensure_ascii=False,sort_keys=True)}',
+           f'- 服务耗时：{json.dumps(service.get("timing_ms", {}),ensure_ascii=False,sort_keys=True)}',
+           f'- 推理与统计总耗时：{result["duration_ms"]} ms',
+           '', '## 定量结果', '',
+           f'- 前景面积：{metrics["pixel_area"]:,} 像素',
+           f'- 整图面积：{metrics["total_pixels"]:,} 像素',
+           f'- 面积占比：{metrics["area_ratio"]*100:.2f}%',
+           f'- 候选连通区域：{candidates["candidate_count"]} 个；仅供人工复核，不等同准确实例数',
+           f'- 连通方式：{candidates["connectivity"]}；最小候选面积阈值：{candidates["min_area_pixels"]} 像素',
+           f'- 过滤前/后候选数：{candidates["raw_candidate_count"]} / {candidates["candidate_count"]}',
+           f'- 候选区域平均面积：{candidates["mean_area"]} 像素',
+           f'- 完整蒙版左/右半幅前景：{metrics["distribution"]["left_pixels"]:,} / {metrics["distribution"]["right_pixels"]:,} 像素',
+           *(([f'- 完整蒙版 ROI 内/外前景：{metrics["distribution"]["roi_inside_pixels"]:,} / {metrics["distribution"]["roi_outside_pixels"]:,} 像素'] if roi else [])),
+           '', '## 复核与复现', '',
+           f'- 影像 SHA-256：{result["provenance"]["image_sha256"]}',
+           f'- 感知版本：{result["provenance"].get("perception_revision","未记录")}',
+           f'- mask 与原图对齐：{metrics["width"]==session["width"] and metrics["height"]==session["height"]}',
+           f'- 空间范围检查：{metrics["spatial_check"]}',
+           '- 同包附件：original.png、mask.png、overlay.png、statistics.json、result.json、run_log.json。',
+           '- 原图、mask、叠加图、完整统计与运行日志见同一实验包。',
+           '- 当前统计基于像素，不代表平方米、公顷或地理坐标。',
+           '- 模型语义准确性和候选边界需要人工核查。', '']
+    return '\n'.join(lines)
+
+def batch_csv(batch):
+    output=io.StringIO(newline='')
+    writer=csv.writer(output)
+    writer.writerow(['session_id','run_id','status','pixel_area','area_ratio','candidate_count','duration_ms','failure_reason'])
+    for item in batch['items']:
+        metrics=item.get('metrics') or {}
+        writer.writerow([item['session_id'],item.get('run_id'),item['status'],metrics.get('pixel_area'),
+                         metrics.get('area_ratio'),(metrics.get('candidate_stats') or {}).get('candidate_count'),
+                         item.get('duration_ms'),item.get('failure_reason')])
+    return '\ufeff'+output.getvalue()
 
 def parse_task(query,context):
     q=query.strip().lower()
@@ -205,7 +313,7 @@ def run_task(s,p,allow_batch=False):
     try: return _run_task(s,p,allow_batch=allow_batch)
     finally: s['lock'].release()
 
-def run_batch(p):
+def run_batch(p, progress=None, batch_id=None):
     ids=p.get('session_ids')
     if (not isinstance(ids,list) or not 2<=len(ids)<=5 or
         any(not isinstance(sid,str) or not SID_RE.fullmatch(sid) for sid in ids) or
@@ -226,7 +334,7 @@ def run_batch(p):
         inherited={s['context'].get('target') for s in sessions}
         if len(inherited)!=1 or None in inherited:
             raise Clarification('批量任务缺少所有影像共同的目标类别')
-    batch_id=uid()
+    batch_id=batch_id or uid()
     results=[]
     for index,s in enumerate(sessions,1):
         item_id=uid()
@@ -242,13 +350,34 @@ def run_batch(p):
             results.append({'item_id':item_id,'session_id':s['id'],'run_id':None,'status':'failed',
                             'failure_reason':str(exc) if isinstance(exc,ValueError) else type(exc).__name__,
                             'metrics':None,'duration_ms':None})
+        if progress:
+            progress({'batch_id':batch_id,'status':'running','total_count':len(sessions),
+                      'completed_items':len(results),'items':list(results)})
     batch={'batch_id':batch_id,'query':query,'mode':p.get('mode','live'),
            'quality_mode':batch_quality,'effective_quality_mode':batch_effective_quality,'created_at':now(),
-           'items':results,'completed_count':sum(r['status'] in ('completed','needs_review') for r in results),
+           'items':results,'total_count':len(sessions),'completed_count':sum(r['status'] in ('completed','needs_review') for r in results),
            'failed_count':sum(r['status'] in ('failed','needs_clarification') for r in results)}
     folder=DATA/'batches'; folder.mkdir(exist_ok=True)
     save_json(folder/f'{batch_id}.json',batch)
+    (folder/f'{batch_id}.csv').write_text(batch_csv(batch),encoding='utf-8')
     return batch
+
+def start_batch(p):
+    batch_id=uid()
+    with LOCK:
+        BATCHES[batch_id]={'batch_id':batch_id,'status':'running','total_count':len(p.get('session_ids',[])) if isinstance(p.get('session_ids'),list) else 0,
+                           'completed_items':0,'items':[]}
+    def progress(update):
+        with LOCK: BATCHES[batch_id]=update
+    def worker():
+        try:
+            result=run_batch(p,progress=progress,batch_id=batch_id)
+            with LOCK: BATCHES[batch_id]={**result,'status':'completed','completed_items':len(result['items'])}
+        except Exception as exc:
+            with LOCK: BATCHES[batch_id]={'batch_id':batch_id,'status':'failed','error':str(exc) if isinstance(exc,ValueError) else type(exc).__name__,
+                                         'total_count':BATCHES[batch_id]['total_count'],'completed_items':0,'items':[]}
+    threading.Thread(target=worker,daemon=True,name=f'geoscope-batch-{batch_id}').start()
+    return BATCHES[batch_id]
 
 def _run_task(s,p,allow_batch=False):
     query=str(p.get('query','')).strip()
@@ -312,6 +441,8 @@ def _run_task(s,p,allow_batch=False):
                 raise Clarification('请明确要提取的单一目标类别；当前不能提取所有物体的轮廓。')
             invert=resolve_invert(query,context) if dense_task else False
             side,scope_source=resolve_scope(query,context,p.get('scope'))
+            if roi and side!='all':
+                raise ValueError('矩形 ROI 与半幅范围不能同时选择；请清除矩形或改为全图条件。')
             if re.search(r'那个|那片|那块|这块',query):
                 raise Clarification('请明确目标类别与像素范围，或从已有结果版本继续；本次没有执行分割。')
             agent_turn=AgentTurn(query,image_path,context,side,scope_source,
@@ -404,8 +535,9 @@ def _run_task(s,p,allow_batch=False):
             result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','未记录')
             if plan.get('invert'):
                 mask=ImageOps.invert(mask)
+            full_mask=mask
             mask=constrain(mask,side,roi)
-            metrics=statistics(mask,side,roi); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
+            metrics=statistics(mask,side,roi,full_mask); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
             mask.save(folder/'mask.png'); overlay.save(folder/'overlay.png')
             status='completed' if metrics['pixel_area'] else 'needs_review'
@@ -430,6 +562,9 @@ def _run_task(s,p,allow_batch=False):
         if not trace or trace[-1]['state']!='failed': event('执行未完成',result['message'],'failed')
         feedback({'status':'error','message':result['message'],'artifacts_created':False})
     result['duration_ms']=round((time.perf_counter()-start)*1000,2)
+    if result.get('mask_url'):
+        result['report_url']=f'/api/report/{s["id"]}/{runid}'
+        (folder/'report.md').write_text(experiment_report(s,result),encoding='utf-8')
     save_json(folder/'result.json',{k:v for k,v in result.items() if k!='trace'}); save_json(folder/'run_log.json',trace)
     s['runs'].append(result); save_json(DATA/s['id']/'session.json',public_session(s)); return result
 
@@ -439,8 +574,25 @@ class Handler(SimpleHTTPRequestHandler):
         raw=json.dumps(value,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Cache-Control','no-store'); self.send_header('Content-Length',str(len(raw))); self.end_headers(); self.wfile.write(raw)
     def do_GET(self):
         path=self.path.split('?')[0]
-        if path=='/api/status': return self.json({**settings_status(),'samples':SAMPLES,'version':'0.3.0'})
+        if path=='/api/status': return self.json({**settings_status(),'samples':SAMPLES,'version':'0.7.0'})
         if path=='/api/sessions': return self.json({'sessions':session_index()})
+        if path.startswith('/api/batch/'):
+            bid=path.rsplit('/',1)[-1]
+            if not SID_RE.fullmatch(bid): return self.json({'error':'批次编号无效'},404)
+            with LOCK: batch=BATCHES.get(bid)
+            if batch is None:
+                file=DATA/'batches'/f'{bid}.json'
+                if file.is_file(): batch={**json.loads(file.read_text(encoding='utf-8')),'status':'completed'}
+            return self.json(batch) if batch else self.json({'error':'批次不存在'},404)
+        if path.startswith('/api/batch-export/'):
+            bid=path.rsplit('/',1)[-1]
+            if not SID_RE.fullmatch(bid): return self.send_error(404)
+            file=DATA/'batches'/f'{bid}.csv'
+            if not file.is_file(): return self.send_error(404)
+            raw=file.read_bytes(); self.send_response(200)
+            self.send_header('Content-Type','text/csv; charset=utf-8')
+            self.send_header('Content-Disposition',f'attachment; filename="geoscope_batch_{bid}.csv"')
+            self.send_header('Content-Length',str(len(raw))); self.end_headers(); return self.wfile.write(raw)
         if path.startswith('/api/session/'):
             sid=path.rsplit('/',1)[-1]; s=get_session(sid)
             return self.json(public_session(s)) if s else self.json({'error':'实验不存在或存储文件不完整'},404)
@@ -453,7 +605,17 @@ class Handler(SimpleHTTPRequestHandler):
             with zipfile.ZipFile(buf,'w',zipfile.ZIP_DEFLATED) as z:
                 z.write(DATA/sid/'original.png','original.png')
                 for name in ('mask.png','overlay.png','result.json','statistics.json','run_log.json'): z.write(folder/name,name)
+                if (folder/'report.md').is_file(): z.write(folder/'report.md','report.md')
             raw=buf.getvalue(); self.send_response(200); self.send_header('Content-Type','application/zip'); self.send_header('Content-Disposition',f'attachment; filename="geoscope_{rid}.zip"'); self.send_header('Content-Length',str(len(raw))); self.end_headers(); return self.wfile.write(raw)
+        if path.startswith('/api/report/'):
+            parts=path.split('/'); sid,rid=parts[-2:]
+            if len(parts)!=5 or not SID_RE.fullmatch(sid) or not SID_RE.fullmatch(rid): return self.send_error(404)
+            file=DATA/sid/rid/'report.md'
+            if not file.is_file(): return self.send_error(404)
+            raw=file.read_bytes(); self.send_response(200)
+            self.send_header('Content-Type','text/markdown; charset=utf-8')
+            self.send_header('Content-Disposition',f'attachment; filename="geoscope_{rid}_report.md"')
+            self.send_header('Content-Length',str(len(raw))); self.end_headers(); return self.wfile.write(raw)
         if path.startswith('/experiments/'):
             parts=path.strip('/').split('/')
             if len(parts) not in (3,4) or not SID_RE.fullmatch(parts[1]) or (len(parts)==4 and not SID_RE.fullmatch(parts[2])) or parts[-1] not in ('original.png','mask.png','overlay.png'): return self.send_error(404)
@@ -473,6 +635,7 @@ class Handler(SimpleHTTPRequestHandler):
                 if not s: raise ValueError('实验不存在，请重新选择影像')
                 return self.json(run_task(s,p))
             if self.path=='/api/batch': return self.json(run_batch(p))
+            if self.path=='/api/batch/start': return self.json(start_batch(p))
             return self.json({'error':'接口不存在'},404)
         except (ValueError,KeyError,Image.UnidentifiedImageError) as exc: return self.json({'error':str(exc)},400)
         except Exception: return self.json({'error':'无法处理影像或请求，请检查输入格式'},500)

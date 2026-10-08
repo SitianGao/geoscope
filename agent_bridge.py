@@ -185,8 +185,24 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False, ex
         mask_field = CLASSES[target]
     if expected_target is not None and target != expected_target:
         raise Clarification('RemoteAgent 工具目标与本次任务目标不一致，未执行分割。')
+    planner_tool_name = call.name
+    routing_policy = 'agent_selected'
+    # The deployed checkpoint behaves very differently for the two nominally
+    # equivalent building APIs. A real-image prompt sweep showed that
+    # semantic_seg(building) can collapse to a near-empty mask while the
+    # referring prompt remains usable. The Harness therefore owns this
+    # capability decision instead of allowing a stochastic Agent choice to
+    # change perception quality between runs.
+    if target == 'building':
+        request = {'task': 'referring_seg', 'text': PROMPTS[target]}
+        mask_field = None
+        actual_tool_name = 'referring_expression_segmentation'
+        routing_policy = 'verified_building_referring_prompt_v1'
+    else:
+        actual_tool_name = call.name
     return {'action': 'segment', 'target': target, 'side': side, 'invert': bool(invert), 'scope_source': scope_source,
-            'tool_name': call.name, 'service_request': request, 'mask_field': mask_field,
+            'tool_name': actual_tool_name, 'planner_tool_name': planner_tool_name,
+            'routing_policy': routing_policy, 'service_request': request, 'mask_field': mask_field,
             'planner_protocol': 'remoteagent', 'scope_rule': '整图目标分割后按像素半幅裁切；由 Harness 执行'}
 
 

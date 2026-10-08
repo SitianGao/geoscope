@@ -168,12 +168,14 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
             self.assertEqual(result['status'],'failed'); self.assertNotIn('mask_url',result)
             self.assertEqual(len(FakeAgentAndSAM.requests),1)
 
-    def test_single_class_semantic_tool_keeps_actual_service_task(self):
+    def test_building_semantic_choice_is_normalized_to_verified_referring_route(self):
         FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "wrong.png", ["building"])'
         result = self.run_task()
         self.assertEqual(result['status'],'completed')
-        self.assertEqual(FakeAgentAndSAM.requests[1][1]['task'],'semantic_seg')
-        self.assertEqual(FakeAgentAndSAM.requests[1][1]['classes'],['building'])
+        self.assertEqual(FakeAgentAndSAM.requests[1][1]['task'],'referring_seg')
+        self.assertEqual(FakeAgentAndSAM.requests[1][1]['text'],'all buildings')
+        self.assertEqual(result['task']['planner_tool_name'],'semantic_segmentation')
+        self.assertEqual(result['task']['routing_policy'],'verified_building_referring_prompt_v1')
 
     def test_aircraft_referring_prompt_matches_improved_fast_configuration(self):
         FakeAgentAndSAM.decision = (
@@ -236,10 +238,10 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertEqual(len([r for r in FakeAgentAndSAM.requests if r[0]=='/predict']),1)
         self.assertIn('"target": "building"',FakeAgentAndSAM.requests[3][1]['messages'][-1]['content'][0]['text'])
 
-    def test_switching_tool_task_does_not_reuse_other_task_mask(self):
+    def test_switching_target_does_not_reuse_other_target_mask(self):
         first = self.run_task()
-        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "x.png", ["building"])'
-        second = self.run_task('改成左侧',parent_run_id=first['id'])
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "x.png", ["road"])'
+        second = self.run_task('提取左侧道路',parent_run_id=first['id'])
         self.assertNotIn('reused_from_run_id',second)
         self.assertEqual(len([r for r in FakeAgentAndSAM.requests if r[0]=='/predict']),2)
 

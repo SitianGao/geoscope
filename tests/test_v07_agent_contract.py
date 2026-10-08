@@ -1,3 +1,5 @@
+import base64
+import io
 import tempfile
 import unittest
 from pathlib import Path
@@ -136,6 +138,37 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertEqual(result['service_metadata']['mode_parameters']['overlap'], 256)
         self.assertEqual(result['service_metadata']['full_mask_candidate_stats']['total_area_pixels'], 640000)
         self.assertEqual(result['metrics']['pixel_area'], 90000)
+
+    def test_building_uses_verified_referring_route_and_blocks_sparse_large_result(self):
+        payload = io.BytesIO()
+        Image.new('RGB', (2000, 1000), 'white').save(payload, format='PNG')
+        session = server.SESSIONS[server.new_session(
+            uploaded=base64.b64encode(payload.getvalue()).decode(), name='large-city.png')['id']]
+        sparse = Image.new('L', (2000, 1000), 0)
+        sparse.paste(255, (0, 0, 50, 50))
+        response = {'status': 'success', 'mask': server.image_b64(sparse), 'quality_mode': 'accurate'}
+        decision = 'T_call(semantic_segmentation, "ignored.png", ["building"])'
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value=decision), \
+             patch.object(server, 'post_json', return_value=response) as service, \
+             patch.dict(server.os.environ, {
+                 'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                 'GEO_AGENT_MODEL': 'TEST',
+                 'GEO_REMOTESAM_URL': 'http://default.invalid/predict',
+                 'GEO_REMOTESAM_BUILDING_URL': 'http://building.invalid/predict',
+             }):
+            result = server.run_task(session, {
+                'query': '高精度提取全图建筑', 'mode': 'live', 'quality_mode': 'accurate'})
+        called_url, called_payload = service.call_args.args
+        self.assertEqual(called_url, 'http://building.invalid/predict')
+        self.assertEqual(called_payload['task'], 'referring_seg')
+        self.assertEqual(called_payload['text'], 'all buildings')
+        self.assertEqual(result['task']['planner_tool_name'], 'semantic_segmentation')
+        self.assertEqual(result['task']['tool_name'], 'referring_expression_segmentation')
+        self.assertEqual(result['task']['routing_policy'], 'verified_building_referring_prompt_v1')
+        self.assertEqual(result['service_metadata']['route'], 'building_specialized')
+        self.assertEqual(result['status'], 'needs_review')
+        self.assertFalse(result['quality_guard']['display_recommended'])
+        self.assertIn('展示门槛', result['message'])
 
     def test_live_batch_calls_each_image_and_keeps_failure_isolated(self):
         sessions = [self.session] + [server.SESSIONS[server.new_session('airport')['id']] for _ in range(2)]

@@ -309,12 +309,46 @@ def binary_mask(mask):
     if values.issubset({0,255}): return mask
     raise ValueError('RemoteSAM须返回0/1或0/255二值蒙版，不能把概率图或多类标签直接计算为目标面积')
 
+def remotesam_route(target):
+    """Select a target-specific perception service without exposing its URL."""
+    key=f'GEO_REMOTESAM_{target.upper()}_URL'
+    specialized=os.environ.get(key,'').strip()
+    if specialized:
+        return specialized, f'{target}_specialized'
+    return os.environ.get('GEO_REMOTESAM_URL','').strip(), 'default'
+
+def remotesam_revision(target):
+    return (os.environ.get(f'GEO_REMOTESAM_{target.upper()}_REVISION','').strip()
+            or os.environ.get('GEO_REMOTESAM_REVISION','').strip())
+
+def quality_guard(target, metrics, full_mask, mode):
+    """Block automatic presentation of implausible live results.
+
+    This is a presentation-safety check, not an accuracy score. It preserves
+    the raw artifacts for audit and asks for a crop or specialized model.
+    """
+    w,h=full_mask.size
+    full_ratio=foreground_area(full_mask)/(w*h)
+    reasons=[]
+    if metrics['pixel_area']==0:
+        reasons.append('模型没有返回前景像素')
+    if (mode=='live' and target=='building' and max(w,h)>=1600
+            and full_ratio < float(os.environ.get('GEO_BUILDING_MIN_FULL_RATIO','0.005'))):
+        reasons.append(f'大尺度建筑影像的全图覆盖仅 {full_ratio*100:.2f}%，低于展示门槛')
+    return {
+        'decision':'blocked' if reasons else 'passed',
+        'display_recommended':not reasons,
+        'reasons':reasons,
+        'full_mask_area_ratio':full_ratio,
+        'policy':'presentation_guard_v1',
+    }
+
 def mask_cache_key(s,mode,target,service_request=None):
-    revision='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','')
+    revision='manual-polygons-v1' if mode=='demo' else remotesam_revision(target)
     if not revision: return None  # Unknown live model revision cannot be safely reused.
     value={'image':hashlib.sha256((DATA/s['id']/'original.png').read_bytes()).hexdigest(),
            'mode':mode,'target':target,'prompt':DESCRIPTIONS[target],'revision':revision,
-           'endpoint':os.environ.get('GEO_REMOTESAM_URL','') if mode=='live' else '',
+           'endpoint':remotesam_route(target)[0] if mode=='live' else '',
            'service_request':service_request}
     return hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()
 
@@ -534,7 +568,7 @@ def _run_task(s,p,allow_batch=False):
                 if target!=SAMPLES[s['sample']]['target']: raise ValueError(f'这个样例只提供{TARGETS[SAMPLES[s["sample"]]["target"]]}的演示标注，不能据此判断其他类别。')
                 mask=demo_mask(s['sample']); event('读取预置样例蒙版','近似人工多边形；未调用RemoteSAM',elapsed=(time.perf_counter()-t)*1000)
             else:
-                url=os.environ.get('GEO_REMOTESAM_URL','')
+                url,service_route=remotesam_route(target)
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
                 data=post_json(url,{**plan['service_request'],'image':image_b64(image)})
                 confirmed_quality=data.get('quality_mode')
@@ -552,6 +586,7 @@ def _run_task(s,p,allow_batch=False):
                     'model','timing_ms','quality','quality_mode','requested_quality_mode',
                     'parameters','service_version','mode_parameters',
                     'original_size','output_size','peak_vram_mb') if key in data}
+                result['service_metadata']['route']=service_route
                 if 'candidate_stats' in data:
                     result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
                 if confirmed_quality is None:
@@ -562,7 +597,7 @@ def _run_task(s,p,allow_batch=False):
             mask.save(folder/'full_mask.png')
             result['mask_cache_key']=cache_key
             result['full_mask_sha256']=hashlib.sha256((folder/'full_mask.png').read_bytes()).hexdigest()
-            result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','未记录')
+            result['provenance']['perception_revision']='manual-polygons-v1' if mode=='demo' else (remotesam_revision(target) or '未记录')
             if plan.get('invert'):
                 mask=ImageOps.invert(mask)
             full_mask=mask
@@ -570,15 +605,22 @@ def _run_task(s,p,allow_batch=False):
             metrics=statistics(mask,side,roi,full_mask); event('范围筛选与像素统计',f'{SIDES[side]}；整图分母 {image.width*image.height:,} px')
             overlay=image.copy(); tint=Image.new('RGB',image.size,(69,213,152)); colored=Image.blend(image,tint,.48); overlay.paste(colored,(0,0),mask)
             mask.save(folder/'mask.png'); overlay.save(folder/'overlay.png')
-            status='completed' if metrics['pixel_area'] else 'needs_review'
-            event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
+            guard=quality_guard(target,metrics,full_mask,mode)
+            status='completed' if guard['display_recommended'] else 'needs_review'
+            if guard['display_recommended']:
+                event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
+            else:
+                event('结果可信度门控','；'.join(guard['reasons'])+'；保留原始产物但不自动展示','warning')
             base=f'/experiments/{s["id"]}/{runid}'
-            result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
-              message=f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
+            normal_message=f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。')
+            blocked_message='结果未通过展示门槛：'+'；'.join(guard['reasons'])+'。系统已保留原始记录，请框选较小研究区或配置建筑专用模型。'
+            result.update(status=status,metrics=metrics,quality_guard=guard,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
+              message=normal_message if guard['display_recommended'] else blocked_message)
             s['context']={'target':target,'side':side,'invert':bool(plan.get('invert')),
                           'roi':roi,'quality_mode':quality_mode}; save_json(folder/'statistics.json',metrics)
             if mode=='live':
-                feedback({'status':'success','tool_name':plan['tool_name'],'metrics':metrics,
+                feedback({'status':'success' if guard['display_recommended'] else 'needs_review',
+                          'tool_name':plan['tool_name'],'metrics':metrics,'quality_guard':guard,
                           'scope_rule':plan['scope_rule'],'actual_service_request':plan['service_request'],
                           'artifact_ids':{'session_id':s['id'],'run_id':runid,'mask_url':result['mask_url']},
                           'reused_from_run_id':result.get('reused_from_run_id'),

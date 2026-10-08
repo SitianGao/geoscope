@@ -5,6 +5,20 @@ const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半�
 const qualityNames = {auto:'自动',fast:'快速',accurate:'高精度'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
+function sceneTarget(run){
+ const message=run?.message||'';
+ const mentioned=Object.entries(targetNames).find(([,label])=>message.includes(label));
+ return mentioned?.[0]||state.status?.samples?.[state.session?.sample]?.target||state.selected?.task?.target||null;
+}
+function addSceneNextActions(container,run){
+ const target=targetNames[sceneTarget(run)]||'目标';
+ const card=document.createElement('div');card.className='scene-next-actions';
+ card.innerHTML=`<div class="scene-next-heading"><span>下一步</span><strong>选择要提取的${escape(target)}</strong><small>不用重复输入，点击即可继续分析</small></div>`;
+ const choices=[['1',`提取全图${target}`,`提取全图${target}并计算面积占比`],['2',`只提左侧${target}`,`提取左侧${target}并计算面积占比`],['3',`只提右侧${target}`,`提取右侧${target}并计算面积占比`]];
+ const list=document.createElement('div');list.className='scene-choice-list';
+ for(const [number,label,prompt] of choices){const button=document.createElement('button');button.dataset.prompt=prompt;button.innerHTML=`<b>${number}</b><span>${escape(label)}</span>`;list.append(button);}
+ const custom=document.createElement('button');custom.className='scene-custom';custom.dataset.sceneCustom='true';custom.textContent='其他目标或更具体的条件…';list.append(custom);card.append(list);container.append(card);
+}
 const statusNames = {completed:'已生成',answered:'已回答',needs_clarification:'待确认',failed:'未完成',needs_review:'请检查结果',export_ready:'可导出'};
 const number = n => Number(n).toLocaleString('en-US');
 const escape = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -226,6 +240,7 @@ function addMessage(role,text,kind='',run=null,interactive=true){
   const chips=document.createElement('div');chips.className='followup-chips';const target=state.selected?.task?.target||state.status.samples[state.session.sample]?.target||'building';
   for(const side of ['左侧','右侧']){const b=document.createElement('button');b.textContent=side+targetNames[target];b.dataset.prompt='提取'+side+targetNames[target];chips.append(b);}d.append(chips);
  }
+ if(run?.status==='answered'&&interactive)addSceneNextActions(d,run);
  $('chat').append(d);$('chat').scrollTop=$('chat').scrollHeight;
 }
 function renderTrace(run){
@@ -291,6 +306,8 @@ document.addEventListener('click',e=>{
   if(action.dataset.reviewAction==='compare'){view('compare');document.querySelector('.image-panel').scrollIntoView({behavior:'smooth',block:'center'});}
   if(action.dataset.reviewAction==='rewrite'){$('query').placeholder='请写明正确目标和范围，例如：提取右侧建筑';$('query').focus();toast('请在输入框中写明正确的目标和范围');}
  }
+ const custom=e.target.closest('[data-scene-custom]');
+ if(custom){$('query').placeholder='例如：提取跑道附近的车辆';$('query').focus();$('query').scrollIntoView({behavior:'smooth',block:'center'});toast('请说明想提取的目标和范围');}
  const prompt=e.target.closest('[data-prompt]');if(prompt){if(prompt.dataset.quality)$('qualityMode').value=prompt.dataset.quality;run(prompt.dataset.prompt);}
  const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}
 });

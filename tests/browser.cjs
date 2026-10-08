@@ -12,7 +12,9 @@ const path = require('node:path');
  async function task(query){await page.locator('#query').fill(query);const response=page.waitForResponse(r=>r.url().endsWith('/api/run'));await page.locator('#sendBtn').click();const run=await(await response).json();await page.waitForFunction(()=>!document.getElementById('sendBtn').disabled);return run;}
  const scene=await task('这张影像主要是什么场景？');assert.equal(scene.status,'answered');assert.equal(scene.trace.length,3);
  assert.equal(await page.locator('#resultTitle').textContent(),'影像理解已完成');assert.ok((await page.locator('#answerText').textContent()).length>0);
- const right=await task('提取右侧建筑并计算面积占比');assert.equal(right.status,'completed');assert.ok(right.metrics.pixel_area>0);
+ const sceneChoices=page.locator('.scene-next-actions [data-prompt]');assert.equal(await sceneChoices.count(),3);
+ assert.deepEqual(await sceneChoices.allTextContents(),['1提取全图建筑','2只提左侧建筑','3只提右侧建筑']);
+ const rightResponse=page.waitForResponse(r=>r.url().endsWith('/api/run'));await sceneChoices.nth(2).click();const right=await(await rightResponse).json();await page.waitForFunction(()=>!document.getElementById('sendBtn').disabled);assert.equal(right.status,'completed');assert.ok(right.metrics.pixel_area>0);
  assert.equal(await page.locator('#ratioValue').textContent(),(right.metrics.area_ratio*100).toFixed(2));
  await page.screenshot({path:path.join(out,'02-result-desktop.png'),fullPage:true});
  const left=await task('改成左侧的');assert.equal(left.task.target,'building');assert.equal(left.task.side,'left');assert.notEqual(right.id,left.id);

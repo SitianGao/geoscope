@@ -137,6 +137,25 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertEqual(result['service_metadata']['full_mask_candidate_stats']['total_area_pixels'], 640000)
         self.assertEqual(result['metrics']['pixel_area'], 90000)
 
+    def test_building_detail_mode_falls_back_to_stable_whole_image(self):
+        urban = server.SESSIONS[server.new_session('urban')['id']]
+        mask = Image.new('L', (800, 600), 255)
+        response = {'status': 'success', 'masks': {'building': server.image_b64(mask)},
+                    'quality_mode': 'fast', 'mode_parameters': {'strategy': 'whole_image_argmax'}}
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value='T_call(semantic_segmentation, "ignored.png", ["building"])'), \
+             patch.object(server, 'post_json', return_value=response) as service, \
+             patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
+                                            'GEO_AGENT_MODEL': 'TEST', 'GEO_REMOTESAM_URL': 'http://example.invalid/predict'}):
+            result = server.run_task(urban, {'query': '高精度提取建筑', 'mode': 'live',
+                                             'quality_mode': 'accurate'})
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(result['task']['quality_mode'], 'accurate')
+        self.assertEqual(result['task']['effective_quality_mode'], 'fast')
+        self.assertEqual(result['task']['quality_adaptation']['reason_code'],
+                         'detail_mode_not_validated_for_target')
+        self.assertEqual(service.call_args.args[1]['quality_mode'], 'fast')
+        self.assertIn('自动使用稳定的整图模式', result['message'])
+
     def test_live_batch_calls_each_image_and_keeps_failure_isolated(self):
         sessions = [self.session] + [server.SESSIONS[server.new_session('airport')['id']] for _ in range(2)]
         mask = server.image_b64(Image.new('L', (800, 800), 255))

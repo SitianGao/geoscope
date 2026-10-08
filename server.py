@@ -19,7 +19,7 @@ from PIL import Image, ImageDraw, ImageOps
 from runtime_config import load_settings, settings_status
 from service_transport import request_json, inspect_services
 from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan
-from v07_contract import batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
+from v07_contract import adapt_quality_for_target, batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
 
 load_settings()
 
@@ -360,10 +360,14 @@ def run_batch(p, progress=None, batch_id=None):
     if p.get('quality_mode') is not None and (not isinstance(p['quality_mode'],str) or p['quality_mode'] not in ('fast','accurate','auto')):
         raise ValueError('非法 quality_mode')
     batch_quality,batch_effective_quality,_=resolve_quality(query,{},p.get('quality_mode'))
+    batch_target=target_intent(query)
     if not has_target_intent(query):
         inherited={s['context'].get('target') for s in sessions}
         if len(inherited)!=1 or None in inherited:
             raise Clarification('批量任务缺少所有影像共同的目标类别')
+        batch_target=next(iter(inherited))
+    batch_effective_quality,batch_quality_adaptation=adapt_quality_for_target(
+        batch_target,batch_quality,batch_effective_quality)
     batch_id=batch_id or uid()
     results=[]
     for index,s in enumerate(sessions,1):
@@ -387,6 +391,8 @@ def run_batch(p, progress=None, batch_id=None):
            'quality_mode':batch_quality,'effective_quality_mode':batch_effective_quality,'created_at':now(),
            'items':results,'total_count':len(sessions),'completed_count':sum(r['status'] in ('completed','needs_review') for r in results),
            'failed_count':sum(r['status'] in ('failed','needs_clarification') for r in results)}
+    if batch_quality_adaptation:
+        batch['quality_adaptation']=batch_quality_adaptation
     folder=DATA/'batches'; folder.mkdir(exist_ok=True)
     save_json(folder/f'{batch_id}.json',batch)
     (folder/f'{batch_id}.csv').write_text(batch_csv(batch),encoding='utf-8')
@@ -495,9 +501,17 @@ def _run_task(s,p,allow_batch=False):
                 raise ValueError(f'RemoteAgent 决策未通过校验（{decision.status}），未执行工具。')
         event('理解任务与选择路径',f'{result["provenance"]["planner"]} · {plan["action"]}',elapsed=(time.perf_counter()-t)*1000)
         if plan['action']=='segment':
+            if mode=='live':
+                effective_quality,quality_adaptation=adapt_quality_for_target(
+                    plan['target'],quality_mode,effective_quality)
+                result['task_options']['effective_quality_mode']=effective_quality
+                if quality_adaptation:
+                    result['task_options']['quality_adaptation']=quality_adaptation
             plan.update(roi=roi,roi_source=roi_source,quality_mode=quality_mode,
                         effective_quality_mode=effective_quality,quality_source=quality_source,
                         batch_id=p.get('batch_id'),item_id=p.get('item_id'))
+            if mode=='live' and quality_adaptation:
+                plan['quality_adaptation']=quality_adaptation
             if mode=='live':
                 plan['service_request']['quality_mode']=effective_quality
         result['task']=plan
@@ -573,8 +587,9 @@ def _run_task(s,p,allow_batch=False):
             status='completed' if metrics['pixel_area'] else 'needs_review'
             event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
             base=f'/experiments/{s["id"]}/{runid}'
+            quality_note=(' '+plan['quality_adaptation']['message']) if plan.get('quality_adaptation') else ''
             result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
-              message=f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。') if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。')
+              message=(f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。')+quality_note) if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。'+quality_note)
             s['context']={'target':target,'side':side,'invert':bool(plan.get('invert')),
                           'roi':roi,'quality_mode':quality_mode}; save_json(folder/'statistics.json',metrics)
             if mode=='live':

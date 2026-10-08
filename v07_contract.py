@@ -5,6 +5,7 @@ import re
 
 
 QUALITY_MODES = {'fast', 'accurate', 'auto'}
+DETAIL_ENHANCED_TARGETS = {'aircraft'}
 ROI_WORDS = re.compile(r'框选|框内|选区|研究区|矩形|\broi\b|selected region', re.I)
 BATCH_WORDS = re.compile(r'批量|整批|这一批|这些影像|所有影像|\bbatch\b|these images', re.I)
 TARGET_WORDS = {
@@ -75,6 +76,25 @@ def resolve_quality(query, context, selected=None):
     effective = ('accurate' if accurate else 'fast') if requested == 'auto' else requested
     source = 'explicit_selection' if selected else 'task_text' if found else 'selected_version_context' if context.get('quality_mode') else 'default'
     return requested, effective, source
+
+
+def adapt_quality_for_target(target, requested, effective):
+    """Keep the aircraft-tuned detail mode from degrading other targets.
+
+    The deployed ``accurate`` path uses a fixed tiled probability threshold
+    that has only been validated on the aircraft diagnostic set.  In
+    particular, building masks can collapse compared with the whole-image
+    path.  Preserve the user's requested mode for provenance, but send the
+    stable whole-image mode to RemoteSAM for unvalidated target categories.
+    """
+    if effective != 'accurate' or target in DETAIL_ENHANCED_TARGETS:
+        return effective, None
+    return 'fast', {
+        'requested_mode': requested,
+        'effective_mode': 'fast',
+        'reason_code': 'detail_mode_not_validated_for_target',
+        'message': '细节增强策略目前只在飞机目标上完成固定集验证；当前目标已自动使用稳定的整图模式，避免切片阈值造成结果退化。',
+    }
 
 
 def batch_requested(query):

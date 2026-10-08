@@ -2,7 +2,7 @@ const $ = id => document.getElementById(id);
 const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0,
  roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false,batch:null };
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
-const qualityNames = {auto:'自动',fast:'快速',accurate:'高精度'};
+const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
 function sceneTarget(run){
@@ -178,7 +178,7 @@ $('imageCanvas').addEventListener('mousemove',e=>{const r=e.target.getBoundingCl
 $('imageCanvas').addEventListener('mouseleave',()=>{$('coordinateLabel').textContent=`${state.session.width} × ${state.session.height} px`;});
 
 function reviewExplanation(){
- modal('为什么需要你确认？',`<p>系统已经完成了三项自动检查：蒙版尺寸与原图一致、分析范围符合要求、统计和结果文件成功生成。</p><h3>你需要确认什么</h3><p>请看绿色叠加区域，判断它是否圈中了你真正要找的目标，以及边界是否完整。这一步依赖人的场景判断，不能由文件检查代替。</p><h3>确认后会发生什么</h3><p>选择“符合预期”会把人工确认写入本次实验记录和导出的报告；选择“需要调整”可以高精度重跑、改变范围或重新描述目标。模型原始结果不会被覆盖。</p>`,'RESULT REVIEW');
+ modal('为什么需要你确认？',`<p>系统已经完成了三项自动检查：蒙版尺寸与原图一致、分析范围符合要求、统计和结果文件成功生成。</p><h3>你需要确认什么</h3><p>请看绿色叠加区域，判断它是否圈中了你真正要找的目标，以及边界是否完整。这一步依赖人的场景判断，不能由文件检查代替。</p><h3>确认后会发生什么</h3><p>选择“符合预期”会把人工确认写入本次实验记录和导出的报告；选择“需要调整”可以切换执行模式、改变范围或重新描述目标。模型原始结果不会被覆盖。</p>`,'RESULT REVIEW');
 }
 async function saveReview(decision){
  if(!state.selected||state.busy)return;
@@ -215,7 +215,10 @@ function renderReview(run){
 function showReviewAdjustments(run){
  const box=$('reviewAdjustments'),target=targetLabel(run);
  const scope=run.task.roi?'框选区域内的':run.task.side==='all'?'全图':sideNames[run.task.side];
- box.innerHTML=`<button data-quality="accurate" data-prompt="用高精度重新提取${escape(scope)}${escape(target)}">高精度重跑</button><button data-review-action="compare">对照原图检查</button><button data-review-action="rewrite">重新描述目标</button>${run.task.roi?'':`<button data-prompt="提取全图${escape(target)}">改为全图</button>`}`;
+ const modeAction=run.task.target==='aircraft'
+  ?`<button data-quality="accurate" data-prompt="用飞机细节增强重新提取${escape(scope)}${escape(target)}">飞机细节增强</button>`
+  :`<button data-quality="fast" data-prompt="用稳定整图模式重新提取${escape(scope)}${escape(target)}">稳定模式重跑</button>`;
+ box.innerHTML=`${modeAction}<button data-review-action="compare">对照原图检查</button><button data-review-action="rewrite">重新描述目标</button>${run.task.roi?'':`<button data-prompt="提取全图${escape(target)}">改为全图</button>`}`;
  box.hidden=false;
 }
 function addMessage(role,text,kind='',run=null,interactive=true){
@@ -230,8 +233,9 @@ function addMessage(role,text,kind='',run=null,interactive=true){
   const target=targetLabel(run),next=run.task.side==='left'?'右':'左';
   if(interactive){
    const chips=document.createElement('div');chips.className='followup-chips';chips.innerHTML='<span class="followup-label">接下来可以：</span>';
-   const actions=[[`改成${next}侧`,`改成${next}侧的${target}`],['提取全图','提取全图'+target],['高精度重跑',`用高精度重新提取${run.task.roi?'框选区域内的':sideNames[run.task.side]}${target}`]];
-   for(const [label,q] of actions){const btn=document.createElement('button');btn.textContent=label;btn.dataset.prompt=q;if(label==='高精度重跑')btn.dataset.quality='accurate';chips.append(btn);}
+   const enhanced=run.task.target==='aircraft';
+   const actions=[[`改成${next}侧`,`改成${next}侧的${target}`],['提取全图','提取全图'+target],[enhanced?'飞机细节增强':'稳定模式重跑',`${enhanced?'用飞机细节增强':'用稳定整图模式'}重新提取${run.task.roi?'框选区域内的':sideNames[run.task.side]}${target}`]];
+   for(const [label,q] of actions){const btn=document.createElement('button');btn.textContent=label;btn.dataset.prompt=q;if(label==='飞机细节增强')btn.dataset.quality='accurate';if(label==='稳定模式重跑')btn.dataset.quality='fast';chips.append(btn);}
    const explain=document.createElement('button');explain.textContent='解释这个结果';explain.dataset.reviewAction='explain';chips.append(explain);d.append(chips);
   }
   const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`V${run.version} · ${run.mode==='demo'?'预置标注演示':'真实服务返回'} · ${run.duration_ms} ms`;d.append(meta);
@@ -263,7 +267,7 @@ async function selectRun(run){
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
-  $('qualityValue').textContent=run.mode==='demo'?'预置演示':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
+  $('qualityValue').textContent=run.mode==='demo'?'预置演示':run.task?.quality_adaptation?'稳定整图（已防退化）':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
   $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
@@ -416,7 +420,7 @@ async function connections(){
  };
 }
 $('connectionBtn').onclick=connections;
-$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope v0.7 支持从自然语言任务到遥感分割结果的完整实验流程。</p><h3>建议体验顺序</h3><p>选择影像 → 框选研究区 → 选择快速或高精度模式 → 提取目标 → 查看候选区域与统计 → 下载实验报告。也可用“批量实验”处理多张影像。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、Harness校验、RemoteSAM分割、确定性几何统计、结果复核、上下文继承、版本恢复、批量运行和产物导出。</p><h3>当前边界</h3><p>演示模式使用预置标注，不代表真实模型精度；模型模式需要实际服务连通。候选区域按最终范围内的蒙版计算。像素面积不是地理面积，验证检查也不等于语义或边界正确。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
+$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope v0.7 支持从自然语言任务到遥感分割结果的完整实验流程。</p><h3>建议体验顺序</h3><p>选择影像 → 框选研究区 → 选择自动、稳定整图或飞机细节增强模式 → 提取目标 → 查看候选区域与统计 → 下载实验报告。也可用“批量实验”处理多张影像。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、Harness校验、RemoteSAM分割、确定性几何统计、结果复核、上下文继承、版本恢复、批量运行和产物导出。</p><h3>当前边界</h3><p>飞机细节增强模式只在固定飞机诊断集上完成验证；其他目标会自动采用稳定整图模式。演示模式使用预置标注，不代表真实模型精度；模型模式需要实际服务连通。候选区域按最终范围内的蒙版计算。像素面积不是地理面积，验证检查也不等于语义或边界正确。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
 
 async function init(){
  try{

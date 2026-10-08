@@ -5,6 +5,24 @@ const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半�
 const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
+function currentTarget(){
+ return state.selected?.task?.target||state.session?.context?.target||state.status?.samples?.[state.session?.sample]?.target||null;
+}
+function syncTargetUi(target=currentTarget(),preferredQuality=null){
+ const label=targetNames[target]||'目标';
+ const starter=$('starterList')?.querySelectorAll('button')?.[1];
+ if(starter){
+  starter.dataset.prompt=`提取右侧${label}并计算面积占比`;
+  starter.querySelector('span').innerHTML=`提取右侧${escape(label)}<small>目标提取 + 面积占比</small>`;
+ }
+ const select=$('qualityMode');
+ if(!select)return;
+ const previous=preferredQuality||select.value||'auto';
+ const options=[['auto',`自动（按${label}选择）`],['fast',`${label}稳定整图`]];
+ if(target==='aircraft')options.push(['accurate','飞机细节增强']);
+ select.innerHTML=options.map(([value,text])=>`<option value="${value}">${escape(text)}</option>`).join('');
+ select.value=options.some(([value])=>value===previous)?previous:'auto';
+}
 function sceneTarget(run){
  const message=run?.message||'';
  const mentioned=Object.entries(targetNames).find(([,label])=>message.includes(label));
@@ -50,9 +68,7 @@ async function showSession(session){
   if(session.runs.length){state.mode=session.runs.at(-1).mode;localStorage.setItem('geoscope-mode',state.mode);}
   clearTimeout(toastTimer);$('toast').hidden=true;
   $('chat').innerHTML=intro;
-  if(session.sample==='airport'){
-   const btn=$('starterList').querySelectorAll('button')[1];btn.dataset.prompt='提取右侧飞机并计算面积占比';btn.querySelector('span').innerHTML='提取右侧飞机<small>目标提取 + 面积占比</small>';
-  }
+  syncTargetUi(state.status?.samples?.[session.sample]?.target||session.context?.target||null,'auto');
   $('imageName').textContent=session.name;$('imageMeta').textContent=`RGB · ${session.width} × ${session.height} px · 像素坐标`;
   $('fileThumb').src=session.image_url;$('coordinateLabel').textContent=`${session.width} × ${session.height} px`;
   $('stageLabel').textContent=session.sample?'研究样区 / '+(session.sample==='urban'?'01':'02'):'用户上传影像';
@@ -263,7 +279,7 @@ async function selectRun(run){
   $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
   state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
-  $('qualityMode').value=run.task?.quality_mode||'auto';updateRoiUI();
+  syncTargetUi(run.task?.target,run.task?.quality_mode||'auto');updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';

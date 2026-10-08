@@ -146,10 +146,17 @@ def experiment_report(session, result):
     service=result.get('service_metadata') or {}
     decision=result.get('agent_decision') or {}
     call=decision.get('tool_call') or {}
+    review=result.get('human_review') or {}
+    review_label={
+        'accepted':'用户已确认目标类别与边界符合当前分析需要',
+        'needs_adjustment':'用户认为结果仍需调整',
+    }.get(review.get('decision'),'尚未进行人工确认')
     roi=options.get('roi')
     quality=options.get('effective_quality_mode') or '服务未确认'
     lines=[f'# GeoScope 实验报告：{session["name"]}', '',
-           f'- 实验编号：{result["id"]}',f'- 运行状态：{result["status"]}（语义与边界仍需人工复核）',
+           f'- 实验编号：{result["id"]}',f'- 运行状态：{result["status"]}',
+           f'- 人工确认：{review_label}',
+           *(([f'- 确认时间：{review["reviewed_at"]}'] if review.get('reviewed_at') else [])),
            f'- 输入影像：{session["width"]} × {session["height"]} 像素',
            f'- 数据来源：{session["source"]}',f'- 用户任务：{result["query"]}',
            f'- 运行来源：{"预置样例演示，非模型预测" if result["mode"]=="demo" else "真实模型服务返回"}',
@@ -262,6 +269,29 @@ def get_session(sid):
                 if not SID_RE.fullmatch(r.get('id','')) or r.get('session_id')!=sid: return None
             s['lock']=threading.Lock(); SESSIONS[sid]=s; return s
         except (OSError,ValueError,TypeError,AttributeError): return None
+
+def review_run(p):
+    """Persist a user's semantic/boundary review without changing model output."""
+    sid=p.get('session_id'); rid=p.get('run_id'); decision=p.get('decision')
+    if decision not in {'accepted','needs_adjustment'}:
+        raise ValueError('人工确认仅支持 accepted 或 needs_adjustment')
+    s=get_session(sid)
+    if not s: raise ValueError('实验不存在，请重新选择影像')
+    if not isinstance(rid,str) or not SID_RE.fullmatch(rid): raise ValueError('结果编号无效')
+    if not s['lock'].acquire(blocking=False): raise ValueError('当前实验仍在执行，请稍后再试')
+    try:
+        run=next((item for item in s['runs'] if item.get('id')==rid),None)
+        if not run or not run.get('mask_url'): raise ValueError('只能确认已生成蒙版的结果')
+        review={'decision':decision,'reviewed_at':now(),
+                'label':'符合预期' if decision=='accepted' else '需要调整'}
+        run['human_review']=review
+        folder=DATA/sid/rid
+        save_json(folder/'result.json',{k:v for k,v in run.items() if k!='trace'})
+        (folder/'report.md').write_text(experiment_report(s,run),encoding='utf-8')
+        save_json(DATA/sid/'session.json',public_session(s))
+        return {'session_id':sid,'run_id':rid,'human_review':review}
+    finally:
+        s['lock'].release()
 
 def session_index():
     items=[]
@@ -634,6 +664,7 @@ class Handler(SimpleHTTPRequestHandler):
                 s=get_session(p.get('session_id'))
                 if not s: raise ValueError('实验不存在，请重新选择影像')
                 return self.json(run_task(s,p))
+            if self.path=='/api/review': return self.json(review_run(p))
             if self.path=='/api/batch': return self.json(run_batch(p))
             if self.path=='/api/batch/start': return self.json(start_batch(p))
             return self.json({'error':'接口不存在'},404)

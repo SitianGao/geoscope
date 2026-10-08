@@ -37,6 +37,16 @@ class HarnessTests(unittest.TestCase):
         self.assertTrue(second['task']['inherited_target'])
         self.assertEqual(old,(server.DATA/self.s['id']/first['id']/'mask.png').read_bytes())
         self.assertNotEqual(old,(server.DATA/self.s['id']/second['id']/'mask.png').read_bytes())
+    def test_human_review_is_persisted_and_updates_report(self):
+        result=self.run_task('提取右侧建筑并计算面积占比')
+        response=server.review_run({'session_id':self.s['id'],'run_id':result['id'],'decision':'accepted'})
+        self.assertEqual(response['human_review']['decision'],'accepted')
+        stored=server.get_session(self.s['id'])['runs'][0]
+        self.assertEqual(stored['human_review']['label'],'符合预期')
+        report=(server.DATA/self.s['id']/result['id']/'report.md').read_text(encoding='utf-8')
+        self.assertIn('用户已确认目标类别与边界符合当前分析需要',report)
+        saved=(server.DATA/self.s['id']/result['id']/'result.json').read_text(encoding='utf-8')
+        self.assertIn('human_review',saved)
     def test_non_target_annotation_inverts_the_base_mask(self):
         positive=self.run_task('提取全图建筑')
         inverse=self.run_task('把非建筑的部分标注出来')

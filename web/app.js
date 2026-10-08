@@ -5,7 +5,7 @@ const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半�
 const qualityNames = {auto:'自动',fast:'快速',accurate:'高精度'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
-const statusNames = {completed:'待语义复核',answered:'已回答',needs_clarification:'待确认',failed:'未完成',needs_review:'待复核',export_ready:'可导出'};
+const statusNames = {completed:'已生成',answered:'已回答',needs_clarification:'待确认',failed:'未完成',needs_review:'请检查结果',export_ready:'可导出'};
 const number = n => Number(n).toLocaleString('en-US');
 const escape = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = name => `<svg><use href="#i-${name}"/></svg>`;
@@ -31,9 +31,9 @@ async function newExperiment(sample='urban',image=null,name=null){
 async function showSession(session){
   const original=await loadImage(session.image_url);
   state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1,roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false});
-  // Restore the mode that actually produced this experiment when the user has
-  // not explicitly saved a different preference.
-  if(session.runs.length&&!localStorage.getItem('geoscope-mode'))state.mode=session.runs.at(-1).mode;
+  // Keep the header and the next action consistent with the experiment that
+  // the user just opened. The mode can still be changed explicitly afterward.
+  if(session.runs.length){state.mode=session.runs.at(-1).mode;localStorage.setItem('geoscope-mode',state.mode);}
   clearTimeout(toastTimer);$('toast').hidden=true;
   $('chat').innerHTML=intro;
   if(session.sample==='airport'){
@@ -50,7 +50,8 @@ async function showSession(session){
   localStorage.setItem('geoscope-session',session.id);
   if(session.runs.length){
    $('chat').innerHTML='';
-   for(const r of session.runs){addMessage('user',r.query);addMessage('assistant',r.message,r.status==='failed'?'warning':'',r);}
+   const latest=session.runs.at(-1);
+   for(const r of session.runs){addMessage('user',r.query,'',null,r===latest);addMessage('assistant',r.message,r.status==='failed'?'warning':'',r,r===latest);}
    state.last=session.runs.at(-1);
    const remembered=localStorage.getItem('geoscope-selected-'+session.id);
    const selected=session.runs.find(r=>r.id===remembered&&r.mask_url)||[...session.runs].reverse().find(r=>r.mask_url);
@@ -70,7 +71,7 @@ function updateMode(){
  $('composerNote').textContent=state.mode==='demo'?'当前为流程演示，未调用模型':'上传影像将发送至你配置的模型服务';
 }
 function resetMetrics(){
- $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
+ $('answerCard').hidden=true;$('reviewCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
  $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
  $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';$('candidateValue').textContent='—';$('qualityValue').textContent='—';
  $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';
@@ -78,7 +79,7 @@ function resetMetrics(){
  $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
 }
 function renderAnswer(run){
- $('answerCard').hidden=false;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
+ $('answerCard').hidden=false;$('reviewCard').hidden=true;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
  $('resultEyebrow').textContent='IMAGE UNDERSTANDING';$('resultTitle').textContent='影像理解已完成';
  $('resultSubtitle').textContent='RemoteAgent 直接看图回答';$('answerText').textContent=run.message;
  $('resultStatus').textContent='已回答';$('resultStatus').className='result-badge success';
@@ -162,14 +163,63 @@ $('zoomIn').onclick=()=>{state.zoom=Math.min(3,state.zoom+.25);draw();};$('zoomO
 $('imageCanvas').addEventListener('mousemove',e=>{const r=e.target.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*e.target.width),y=Math.floor((e.clientY-r.top)/r.height*e.target.height);$('coordinateLabel').textContent=`X ${x} · Y ${y} px`;});
 $('imageCanvas').addEventListener('mouseleave',()=>{$('coordinateLabel').textContent=`${state.session.width} × ${state.session.height} px`;});
 
-function addMessage(role,text,kind='',run=null){
+function reviewExplanation(){
+ modal('为什么需要你确认？',`<p>系统已经完成了三项自动检查：蒙版尺寸与原图一致、分析范围符合要求、统计和结果文件成功生成。</p><h3>你需要确认什么</h3><p>请看绿色叠加区域，判断它是否圈中了你真正要找的目标，以及边界是否完整。这一步依赖人的场景判断，不能由文件检查代替。</p><h3>确认后会发生什么</h3><p>选择“符合预期”会把人工确认写入本次实验记录和导出的报告；选择“需要调整”可以高精度重跑、改变范围或重新描述目标。模型原始结果不会被覆盖。</p>`,'RESULT REVIEW');
+}
+async function saveReview(decision){
+ if(!state.selected||state.busy)return;
+ try{
+  const response=await api('/api/review',{session_id:state.session.id,run_id:state.selected.id,decision});
+  state.selected.human_review=response.human_review;
+  const stored=state.session.runs.find(item=>item.id===state.selected.id);if(stored)stored.human_review=response.human_review;
+  renderReview(state.selected);
+  toast(decision==='accepted'?'已记录你的确认，实验报告已更新':'已记录“需要调整”，请选择下一步');
+ }catch(e){toast(e.message);}
+}
+function renderReview(run){
+ const card=$('reviewCard');
+ if(run.mode==='demo'){card.hidden=true;$('resultStatus').textContent='演示结果';$('resultStatus').className='result-badge';return;}
+ card.hidden=false;card.className='review-card';$('reviewAdjustments').hidden=true;
+ const decision=run.human_review?.decision;
+ if(decision==='accepted'){
+  card.classList.add('confirmed');$('reviewTitle').textContent='你已确认这个结果符合当前分析需要';
+  $('reviewText').textContent='确认已写入实验记录和报告；模型原始结果与统计保持不变。';
+  $('reviewApprove').textContent='✓ 已人工确认';$('reviewApprove').disabled=true;$('reviewAdjust').textContent='重新判断';
+  $('resultStatus').textContent='已人工确认';$('resultStatus').className='result-badge success';
+  $('resultSubtitle').textContent=`V${run.version} · 模型输出 · 已由你确认`;
+ }else{
+  const adjusting=decision==='needs_adjustment';
+  if(adjusting)card.classList.add('adjusting');
+  $('reviewTitle').textContent=adjusting?'请选择希望怎样调整':'请看绿色叠加区域，再判断结果是否可用';
+  $('reviewText').textContent=adjusting?'可提高分割精度、改变分析范围，或重新说明要找的目标。':'检查两件事：圈中的是不是你要找的目标？目标边界是否完整？';
+  $('reviewApprove').textContent='✓ 符合预期';$('reviewApprove').disabled=false;$('reviewAdjust').textContent=adjusting?'收起调整选项':'需要调整';
+  $('resultStatus').textContent=run.status==='needs_review'?'请检查空结果':'请确认结果';$('resultStatus').className='result-badge review-needed';
+  $('resultSubtitle').textContent=`V${run.version} · 模型已生成结果 · 等待你的判断`;
+  if(adjusting)showReviewAdjustments(run);
+ }
+}
+function showReviewAdjustments(run){
+ const box=$('reviewAdjustments'),target=targetLabel(run);
+ const scope=run.task.roi?'框选区域内的':run.task.side==='all'?'全图':sideNames[run.task.side];
+ box.innerHTML=`<button data-quality="accurate" data-prompt="用高精度重新提取${escape(scope)}${escape(target)}">高精度重跑</button><button data-review-action="compare">对照原图检查</button><button data-review-action="rewrite">重新描述目标</button>${run.task.roi?'':`<button data-prompt="提取全图${escape(target)}">改为全图</button>`}`;
+ box.hidden=false;
+}
+function addMessage(role,text,kind='',run=null,interactive=true){
  const d=document.createElement('div');d.className=`message ${role} ${kind}`;
  d.innerHTML=`<div class="message-label"><span>${role==='user'?'YOU':'GEOSCOPE'}</span><span>${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="bubble"></div>`;
- d.querySelector('.bubble').textContent=text;
+ if(run?.mask_url&&role==='assistant'){
+  const ratio=(run.metrics.area_ratio*100).toFixed(2),scope=run.task.roi?'框选区域':sideNames[run.task.side];
+  d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'演示结果':'请在右侧查看叠加图并确认'}</p></div>`;
+  if(!interactive)d.classList.add('message-compact');
+ }else d.querySelector('.bubble').textContent=text;
  if(run?.mask_url){
   const target=targetLabel(run),next=run.task.side==='left'?'右':'左';
-  const chips=document.createElement('div');chips.className='followup-chips';
-  for(const q of [`改成${next}侧的${target}`,'提取全图'+target,'导出刚才的结果']){const btn=document.createElement('button');btn.textContent=q;btn.dataset.prompt=q;chips.append(btn);}d.append(chips);
+  if(interactive){
+   const chips=document.createElement('div');chips.className='followup-chips';chips.innerHTML='<span class="followup-label">接下来可以：</span>';
+   const actions=[[`改成${next}侧`,`改成${next}侧的${target}`],['提取全图','提取全图'+target],['高精度重跑',`用高精度重新提取${run.task.roi?'框选区域内的':sideNames[run.task.side]}${target}`]];
+   for(const [label,q] of actions){const btn=document.createElement('button');btn.textContent=label;btn.dataset.prompt=q;if(label==='高精度重跑')btn.dataset.quality='accurate';chips.append(btn);}
+   const explain=document.createElement('button');explain.textContent='解释这个结果';explain.dataset.reviewAction='explain';chips.append(explain);d.append(chips);
+  }
   const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`V${run.version} · ${run.mode==='demo'?'预置标注演示':'真实服务返回'} · ${run.duration_ms} ms`;d.append(meta);
  }
  if(run?.status==='needs_clarification'){
@@ -199,11 +249,11 @@ async function selectRun(run){
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
   $('qualityValue').textContent=run.mode==='demo'?'预置演示':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
-  $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型输出，需人工复核'}`;
-  $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');
+  $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
+  $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
   $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
-  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${sideNames[run.task.side]}`;
+  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${run.task.roi?'矩形研究区':sideNames[run.task.side]}`;
   $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){toast(e.message);}
 }
@@ -213,6 +263,8 @@ async function run(query,simulateFailure=false){
  state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;$('busyOverlay').hidden=false;$('query').value='';
  if($('starterList'))$('starterList').remove();
  const welcome=$('chat').querySelector('.assistant-intro');if(welcome)welcome.remove();
+ $('chat').querySelectorAll('.followup-chips').forEach(chips=>chips.remove());
+ $('chat').querySelectorAll('.message.assistant').forEach(message=>message.classList.add('message-compact'));
  addMessage('user',query);const parent=state.selected?.id||null;
  try{
   const payload={session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,simulate_failure:simulateFailure,
@@ -231,7 +283,23 @@ async function run(query,simulateFailure=false){
 }
 $('taskForm').onsubmit=e=>{e.preventDefault();run($('query').value);};
 $('query').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();run($('query').value);}};
-document.addEventListener('click',e=>{const experiment=e.target.closest('[data-session]');if(experiment)openExperiment(experiment.dataset.session);const prompt=e.target.closest('[data-prompt]');if(prompt)run(prompt.dataset.prompt);const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}});
+document.addEventListener('click',e=>{
+ const experiment=e.target.closest('[data-session]');if(experiment)openExperiment(experiment.dataset.session);
+ const action=e.target.closest('[data-review-action]');
+ if(action){
+  if(action.dataset.reviewAction==='explain')reviewExplanation();
+  if(action.dataset.reviewAction==='compare'){view('compare');document.querySelector('.image-panel').scrollIntoView({behavior:'smooth',block:'center'});}
+  if(action.dataset.reviewAction==='rewrite'){$('query').placeholder='请写明正确目标和范围，例如：提取右侧建筑';$('query').focus();toast('请在输入框中写明正确的目标和范围');}
+ }
+ const prompt=e.target.closest('[data-prompt]');if(prompt){if(prompt.dataset.quality)$('qualityMode').value=prompt.dataset.quality;run(prompt.dataset.prompt);}
+ const v=e.target.closest('[data-run]');if(v&&!state.busy){const r=state.session.runs.find(x=>x.id===v.dataset.run);if(r?.mask_url){selectRun(r);closeModal();}}
+});
+$('reviewApprove').onclick=()=>saveReview('accepted');
+$('reviewAdjust').onclick=()=>{
+ if(state.selected?.human_review?.decision==='needs_adjustment'&&!$('reviewAdjustments').hidden){$('reviewAdjustments').hidden=true;$('reviewAdjust').textContent='需要调整';return;}
+ saveReview('needs_adjustment');
+};
+$('reviewHelp').onclick=reviewExplanation;
 function download(url){const a=document.createElement('a');a.href=url;a.download='';document.body.append(a);a.click();a.remove();}
 $('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('实验包已开始下载，包含影像、蒙版、统计、日志和报告');}};
 $('reportBtn').onclick=()=>{if(state.selected?.report_url)download(state.selected.report_url);};

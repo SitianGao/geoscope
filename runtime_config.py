@@ -25,16 +25,11 @@ def load_settings(path=None):
 
 
 def settings_status():
-    target_services = {
-        target: bool(os.environ.get(f'GEO_REMOTESAM_{target.upper()}_URL'))
-        for target in ('building', 'aircraft', 'road', 'water', 'tree', 'ship')
-    }
     return {
         'agent_configured': bool(os.environ.get('GEO_AGENT_BASE_URL') and os.environ.get('GEO_AGENT_MODEL')),
         'sam_configured': bool(os.environ.get('GEO_REMOTESAM_URL')),
         'agent_model': os.environ.get('GEO_AGENT_MODEL', ''),
         'agent_protocol': 'remoteagent',
         'service_proxy_mode': os.environ.get('GEO_SERVICE_PROXY_MODE', 'direct'),
-        'target_services': target_services,
         'note': '工作台已接入 RemoteAgent 规划和工具反馈接口；配置不等于真实模型已验收。',
     }

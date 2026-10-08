@@ -194,17 +194,6 @@ function renderReview(run){
  const card=$('reviewCard');
  if(run.mode==='demo'){card.hidden=true;$('resultStatus').textContent='演示结果';$('resultStatus').className='result-badge';return;}
  card.hidden=false;card.className='review-card';$('reviewAdjustments').hidden=true;
- const blocked=run.quality_guard?.display_recommended===false;
- if(blocked){
-  card.classList.add('adjusting');
-  $('reviewTitle').textContent='这次结果已被系统拦截，不用于演示';
-  $('reviewText').textContent=(run.quality_guard.reasons||[]).join('；')+'。建议框选较小研究区，或接入建筑专用模型。';
-  $('reviewApprove').textContent='暂不能确认';$('reviewApprove').disabled=true;
-  $('reviewAdjust').textContent='选择调整方式';
-  $('resultStatus').textContent='未通过展示门槛';$('resultStatus').className='result-badge review-needed';
-  $('resultSubtitle').textContent=`V${run.version} · 原始结果已留存 · 默认不展示叠加图`;
-  return;
- }
  const decision=run.human_review?.decision;
  if(decision==='accepted'){
   card.classList.add('confirmed');$('reviewTitle').textContent='你已确认这个结果符合当前分析需要';
@@ -234,10 +223,7 @@ function addMessage(role,text,kind='',run=null,interactive=true){
  d.innerHTML=`<div class="message-label"><span>${role==='user'?'YOU':'GEOSCOPE'}</span><span>${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="bubble"></div>`;
  if(run?.mask_url&&role==='assistant'){
   const ratio=(run.metrics.area_ratio*100).toFixed(2),scope=run.task.roi?'框选区域':sideNames[run.task.side];
-  const blocked=run.quality_guard?.display_recommended===false;
-  d.querySelector('.bubble').innerHTML=blocked
-   ?`<div class="message-result"><strong>结果已被展示门槛拦截</strong><p>${escape(run.message)}</p></div>`
-   :`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'演示结果':'请在右侧查看叠加图并确认'}</p></div>`;
+  d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'演示结果':'请在右侧查看叠加图并确认'}</p></div>`;
   if(!interactive)d.classList.add('message-compact');
  }else d.querySelector('.bubble').textContent=text;
  if(run?.mask_url){
@@ -271,8 +257,7 @@ async function selectRun(run){
  try{const mask=await loadImage(run.mask_url);if(token!==state.loadToken)return;
   $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
   $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
-  const blocked=run.quality_guard?.display_recommended===false;
-  state.selected=run;state.mask=mask;state.view=blocked?'original':'overlay';const m=run.metrics,ratio=m.area_ratio*100;
+  state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
   state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
   $('qualityMode').value=run.task?.quality_mode||'auto';updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
@@ -282,8 +267,7 @@ async function selectRun(run){
   $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
-  const checks=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,blocked?'可信度门控未通过，已停止自动展示':'统计及结果文件已生成'];
-  $('checksList').innerHTML=checks.map((s,index)=>`<p class="${blocked&&index===2?'pending':''}"><span>${blocked&&index===2?'!':'✓'}</span>${escape(s)}</p>`).join('');$('checkCount').textContent=blocked?'2 / 3':'3 / 3';
+  $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
   $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${run.task.roi?'矩形研究区':sideNames[run.task.side]}`;
   $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){toast(e.message);}

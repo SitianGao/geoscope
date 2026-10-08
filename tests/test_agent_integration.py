@@ -87,7 +87,8 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         content = first[1]['messages'][-1]['content']
         self.assertTrue(content[1]['image_url']['url'].startswith('data:image/png;base64,'))
         self.assertEqual(result['agent_decision']['tool_call']['arguments']['image_path'],str((server.DATA/self.session['id']/'original.png').resolve()))
-        self.assertEqual(sam[1]['text'],'all buildings')
+        self.assertEqual(sam[1]['classes'],['building'])
+        self.assertEqual(result['task']['routing_policy'],'stable_building_semantic_v1')
         self.assertEqual(result['tool_feedback']['metrics']['pixel_area'],42)
         self.assertEqual(result['agent_feedback']['status'],'completed')
         feedback_text = final[1]['messages'][-1]['content']
@@ -236,12 +237,12 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertEqual(len([r for r in FakeAgentAndSAM.requests if r[0]=='/predict']),1)
         self.assertIn('"target": "building"',FakeAgentAndSAM.requests[3][1]['messages'][-1]['content'][0]['text'])
 
-    def test_switching_tool_task_does_not_reuse_other_task_mask(self):
+    def test_building_route_reuses_same_verified_service_mask(self):
         first = self.run_task()
         FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "x.png", ["building"])'
         second = self.run_task('改成左侧',parent_run_id=first['id'])
-        self.assertNotIn('reused_from_run_id',second)
-        self.assertEqual(len([r for r in FakeAgentAndSAM.requests if r[0]=='/predict']),2)
+        self.assertEqual(second['reused_from_run_id'],first['id'])
+        self.assertEqual(len([r for r in FakeAgentAndSAM.requests if r[0]=='/predict']),1)
 
     def test_export_is_local_and_preserves_decision_evidence(self):
         first = self.run_task()

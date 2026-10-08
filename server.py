@@ -558,7 +558,7 @@ def _run_task(s,p,allow_batch=False):
                     result['task_options']['effective_quality_mode']=None
                     plan['effective_quality_mode']=None
                     plan['quality_confirmation']='legacy_service_unconfirmed'
-                encoded=data.get('masks',{}).get(plan['mask_field']) if plan.get('mask_field') else data.get('mask')
+                encoded=(data.get('masks',{}).get(plan['mask_field']) or data.get('mask')) if plan.get('mask_field') else data.get('mask')
                 if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
                 mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
                 if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')

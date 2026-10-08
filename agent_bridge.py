@@ -185,8 +185,24 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False, ex
         mask_field = CLASSES[target]
     if expected_target is not None and target != expected_target:
         raise Clarification('RemoteAgent 工具目标与本次任务目标不一致，未执行分割。')
+    planner_tool_name = call.name
+    routing_policy = 'agent_selected'
+    # The same building request can otherwise alternate between the semantic
+    # and referring APIs as the planner samples a new decision.  On the fixed
+    # urban sample the semantic whole-image path is the stable route, while the
+    # referring path only returns a partial set of roofs.  The Harness owns
+    # this capability choice so repeated wording cannot silently change the
+    # perception algorithm.
+    if target == 'building':
+        request = {'task': 'semantic_seg', 'classes': [CLASSES[target]]}
+        mask_field = CLASSES[target]
+        actual_tool_name = 'semantic_segmentation'
+        routing_policy = 'stable_building_semantic_v1'
+    else:
+        actual_tool_name = call.name
     return {'action': 'segment', 'target': target, 'side': side, 'invert': bool(invert), 'scope_source': scope_source,
-            'tool_name': call.name, 'service_request': request, 'mask_field': mask_field,
+            'tool_name': actual_tool_name, 'planner_tool_name': planner_tool_name,
+            'routing_policy': routing_policy, 'service_request': request, 'mask_field': mask_field,
             'planner_protocol': 'remoteagent', 'scope_rule': '整图目标分割后按像素半幅裁切；由 Harness 执行'}
 
 

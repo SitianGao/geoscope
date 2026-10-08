@@ -142,7 +142,7 @@ class V07AgentContractTests(unittest.TestCase):
         mask = Image.new('L', (800, 600), 255)
         response = {'status': 'success', 'masks': {'building': server.image_b64(mask)},
                     'quality_mode': 'fast', 'mode_parameters': {'strategy': 'whole_image_argmax'}}
-        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value='T_call(semantic_segmentation, "ignored.png", ["building"])'), \
+        with patch('agent_bridge.WorkbenchAgent._run_llm', return_value='T_call(referring_expression_segmentation, "ignored.png", "all buildings")'), \
              patch.object(server, 'post_json', return_value=response) as service, \
              patch.dict(server.os.environ, {'GEO_AGENT_BASE_URL': 'http://example.invalid/v1',
                                             'GEO_AGENT_MODEL': 'TEST', 'GEO_REMOTESAM_URL': 'http://example.invalid/predict'}):
@@ -154,6 +154,9 @@ class V07AgentContractTests(unittest.TestCase):
         self.assertEqual(result['task']['quality_adaptation']['reason_code'],
                          'detail_mode_not_validated_for_target')
         self.assertEqual(service.call_args.args[1]['quality_mode'], 'fast')
+        self.assertEqual(service.call_args.args[1]['task'], 'semantic_seg')
+        self.assertEqual(result['task']['planner_tool_name'], 'referring_expression_segmentation')
+        self.assertEqual(result['task']['routing_policy'], 'stable_building_semantic_v1')
         self.assertIn('自动使用稳定的整图模式', result['message'])
 
     def test_live_batch_calls_each_image_and_keeps_failure_isolated(self):

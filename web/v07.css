@@ -8,17 +8,17 @@
 .review-copy strong{display:block;font-size:11px;font-weight:600;color:#355b49}
 .review-copy p{font-size:9px;line-height:1.65;color:#7b8d7e;margin-top:3px}
 .review-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}
-.scene-next-actions{margin:10px 0 2px;border:1px solid #d4e1d7;border-radius:10px;background:#f8fbf7;padding:10px}
-.scene-next-heading{display:grid;grid-template-columns:auto 1fr;gap:2px 7px;align-items:center;margin-bottom:8px}
-.scene-next-heading>span{grid-row:1/3;border-radius:999px;background:#dfeee4;color:#226246;font:700 10px/24px var(--mono);height:24px;width:24px;text-align:center}
-.scene-next-heading strong{font-size:11px;color:#244d3c}
-.scene-next-heading small{font-size:9px;color:#7b8d83}
-.scene-choice-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-.scene-choice-list button{display:flex;align-items:center;gap:6px;min-width:0;border:1px solid #d1ded3;border-radius:7px;background:#fff;color:#315f4a;padding:7px 8px;text-align:left;font-size:9px}
+.scene-next-actions{margin:12px 0 3px;border:1px solid #d4e1d7;border-radius:10px;background:#f8fbf7;padding:12px}
+.scene-next-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px;margin-bottom:10px}
+.scene-next-heading>span{display:inline-flex;border-radius:999px;background:#dfeee4;color:#226246;padding:4px 8px;font:700 8px var(--mono);letter-spacing:.6px}
+.scene-next-heading strong{font-size:12px;line-height:1.45;color:#244d3c}
+.scene-next-heading small{font-size:9px;line-height:1.55;color:#7b8d83}
+.scene-choice-list{display:grid;grid-template-columns:1fr;gap:6px}
+.scene-choice-list button{display:flex;align-items:center;gap:9px;width:100%;min-height:38px;border:1px solid #d1ded3;border-radius:7px;background:#fff;color:#315f4a;padding:8px 10px;text-align:left;font-size:10px;line-height:1.4}
 .scene-choice-list button:hover{border-color:#729a81;background:#eef6f0}
-.scene-choice-list button b{flex:0 0 18px;border-radius:50%;background:#e7f1e9;color:#2f7152;font:700 9px/18px var(--mono);text-align:center}
-.scene-choice-list button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.scene-choice-list .scene-custom{grid-column:1/-1;justify-content:center;border-style:dashed;color:#61786c;background:transparent}
+.scene-choice-list button b{flex:0 0 22px;border-radius:50%;background:#e7f1e9;color:#2f7152;font:700 9px/22px var(--mono);text-align:center}
+.scene-choice-list button span{white-space:normal}
+.scene-choice-list .scene-custom{justify-content:center;min-height:34px;margin-top:2px;border-style:dashed;color:#61786c;background:transparent;font-size:9px}
 .review-actions button,.review-adjustments button{border-radius:6px;padding:6px 9px;font-size:9px}
 .review-approve{border:1px solid #39785e;background:#39785e;color:#fff}
 .review-adjust{border:1px solid #d9e5d9;background:#fff;color:#526e5d}
@@ -56,4 +56,4 @@
 .batch-item{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px;border:1px solid #e7ede6;border-radius:7px}
 .batch-item span{font:10px Consolas,monospace;color:#54745e}.batch-item b{font-weight:500;color:#49775b;font-size:10px}
 .batch-item small{color:#7b8f7d}.batch-item button{grid-column:2;border:0;background:none;color:#38765d;font-size:10px;padding:0;text-align:right}
-@media(max-width:760px){.roi-toolbar{flex-wrap:wrap}.roi-toolbar span{width:100%;margin:0}.artifact-actions{grid-template-columns:1fr 1fr}.artifact-actions .text-button{grid-column:1/-1;justify-content:flex-start}.review-actions button{flex:1}.review-help{flex-basis:100%!important;text-align:left}.review-adjustments button{flex:1}.scene-choice-list{grid-template-columns:1fr}.scene-choice-list .scene-custom{grid-column:auto}.scene-choice-list button span{white-space:normal}}
+@media(max-width:760px){.roi-toolbar{flex-wrap:wrap}.roi-toolbar span{width:100%;margin:0}.artifact-actions{grid-template-columns:1fr 1fr}.artifact-actions .text-button{grid-column:1/-1;justify-content:flex-start}.review-actions button{flex:1}.review-help{flex-basis:100%!important;text-align:left}.review-adjustments button{flex:1}}

@@ -10,5 +10,5 @@ if errorlevel 1 (
   exit /b 1
 )
 echo.
-echo 安装完成。接下来请双击“一键启动评审版.bat”。
+echo 安装完成。接下来请双击“启动Demo.bat”。
 pause

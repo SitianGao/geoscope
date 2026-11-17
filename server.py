@@ -38,9 +38,9 @@ SAMPLES = {
  'urban': {'name': '街区建筑研究样区', 'file': 'urban.png', 'target': 'building', 'size': [800,600],
   'source': '本地 RemoteAgent / SM3Det 仓库 tools/cam/5428.tif；原始影像来源与发布许可需在正式参赛前进一步核对。',
   'scene': '这是一幅包含建筑、道路和集中绿地的城市街区航拍样例。可以提取建筑区域，比较影像两侧的覆盖占比。此说明为样例预置文本，并非模型看图结果。'},
- 'airport': {'name': '机场目标研究样区', 'file': 'airport.jpg', 'target': 'aircraft', 'size': [800,800],
-  'source': '本地 RemoteSAM 官方仓库 assets/demo.jpg；仅作为原型样例，正式发布前核对影像许可。',
-  'scene': '这幅预置样例展示停机坪上的两架飞机及周边车辆。可以提取左侧或右侧飞机并计算像素覆盖。此说明为样例预置文本，并非模型看图结果。'},
+ 'airport': {'name': 'JFK 机场航站区飞机研究样区', 'file': 'airport.jpg', 'target': 'aircraft', 'size': [800,800],
+  'source': 'Wikimedia Commons：JFK Terminal 5 aerial view，作者 Quintin Soloviev，CC BY 4.0；为适配演示已裁剪缩放。https://commons.wikimedia.org/wiki/File:JFK_Terminal_5_aerial_view.jpg',
+  'scene': '这幅预置样例展示大型航站区、停机坪、跑道与多架不同位置的客机。可以提取全图、左侧或右侧飞机并计算像素覆盖。此说明为样例预置文本，并非模型看图结果。'},
 }
 
 def uid(): return uuid.uuid4().hex[:12]
@@ -53,7 +53,9 @@ def image_b64(image):
     b=io.BytesIO(); image.save(b,format='PNG'); return base64.b64encode(b.getvalue()).decode()
 
 def demo_mask(sample):
-    """Human-authored approximate polygons, not ground truth or model predictions."""
+    """Fixed interaction masks for sample walkthroughs; never evaluation ground truth."""
+    if sample=='airport':
+        return Image.open(WEB/'assets'/'airport_mask.png').convert('L')
     mask=Image.new('L',tuple(SAMPLES[sample]['size']),0); d=ImageDraw.Draw(mask)
     if sample=='urban':
         polys=[[(0,0),(99,0),(85,31),(3,12)],[(117,0),(164,0),(191,9),(157,90),(111,71),(96,60)],
@@ -68,9 +70,6 @@ def demo_mask(sample):
           [(628,443),(674,458),(639,518),(598,500)],[(681,381),(716,394),(690,439),(655,426)],
           [(736,435),(800,455),(800,481),(719,460)],[(706,484),(794,513),(782,537),(693,510)],
           [(431,532),(530,557),(512,600),(384,582)],[(659,535),(758,567),(746,592),(642,562)]]
-    else:
-        polys=[[(226,429),(235,442),(245,511),(382,521),(382,542),(249,555),(241,620),(285,641),(284,653),(235,649),(227,658),(217,649),(169,653),(169,639),(213,620),(211,557),(72,541),(72,524),(211,514),(214,450)],
-               [(615,428),(624,443),(635,513),(762,524),(760,544),(632,557),(621,620),(665,639),(662,653),(614,650),(607,659),(598,650),(550,653),(548,637),(591,620),(590,556),(454,542),(454,521),(595,512),(602,447)]]
     for p in polys: d.polygon(p,fill=255)
     return mask
 
@@ -546,7 +545,7 @@ def _run_task(s,p,allow_batch=False):
             elif mode=='demo':
                 if not s['sample']: raise ValueError('上传影像没有预置标注。请选择模型模式，或返回内置样例体验流程。')
                 if target!=SAMPLES[s['sample']]['target']: raise ValueError(f'这个样例只提供{TARGETS[SAMPLES[s["sample"]]["target"]]}的演示标注，不能据此判断其他类别。')
-                mask=demo_mask(s['sample']); event('读取预置样例蒙版','近似人工多边形；未调用RemoteSAM',elapsed=(time.perf_counter()-t)*1000)
+                mask=demo_mask(s['sample']); event('读取预置样例蒙版','固定交互演示蒙版；本次未调用RemoteSAM',elapsed=(time.perf_counter()-t)*1000)
             else:
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')

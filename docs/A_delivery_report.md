@@ -71,4 +71,4 @@ git diff --check
 
 停止新启动入口后运行原 `python server.py` 即回到原路由集合；不用删除任何旧数据。新产物位于 `experiments/national_artifacts/`、`experiments/national_events/` 与 `outputs/`。不修改旧会话 ID、缓存键、蒙版格式和模型权重。无需把新功能合并进 server.py 才能审查；队长可选择独立启动或自行审核挂载。
 
-本地提交 hash 会在实现提交完成后记录；不会自动推送或合并。权重、虚拟环境、索引与原始图库均排除提交；交付源码、合同、测试及小体积真实性证据。
+实现与验收证据提交：`d93ff4a`（`feat: add verified analysis tools and real RemoteCLIP retrieval`）。本报告随后补记该实现提交编号。所有提交仅在本地开发分支，未推送或合并。权重、虚拟环境、索引与原始图库均排除提交；交付源码、合同、测试及小体积真实性证据。

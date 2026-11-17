@@ -1,5 +1,5 @@
 {
-  "_说明": "国赛 A0-A5 消融实验配置。status 只有真实运行后才允许改为 completed；A0-A2 基线来自已提交结果文件的离线复算（verified_offline）。",
+  "_说明": "国赛 A0-A5 消融实验配置。A0-A2 基线来自已提交结果文件的离线复算（verified_offline）；A3-A5 已在历史诊断集真实运行（completed_historical_diagnostic），但尚未完成开发验证集或独立测试集验证。",
   "dataset_roles": {
     "historical_diagnostic": "省赛固定诊断集 20 图（10 WHU 建筑 + 10 iSAID 飞机），用于与省赛工作保持连续；不是独立测试集",
     "dev_validation": "参数选择集：AFR 权重 α/β/γ、融合系数 λ、阈值、预算比例只能在此集上选择",
@@ -32,21 +32,50 @@
       "name": "A1 + 自适应区域选择（λ=1，局部替换，无融合）",
       "method": "GeoScope-AFR 区域难度估计 + 预算贪心选择 + 局部推理直接替换选中区域；预算 B1=25% 与 B2=50% 区域数各跑一次，记录请求数",
       "config": {"budgets": [0.25, 0.5], "lam": 1.0, "threshold": 0.5, "upscale": true},
-      "status": "not_run",
+      "status": "completed_historical_diagnostic",
+      "validation_scope": "historical_diagnostic",
+      "threshold_validated": false,
+      "results": {
+        "source": "evaluation/national_final/results/lab_runs/20261117_ablation/results/ablation_summary.json",
+        "budget_0.25": {"iou": 0.310539, "dice": 0.414967, "request_count": 6.8},
+        "budget_0.5": {"iou": 0.288382, "dice": 0.393823, "request_count": 12.7},
+        "exploratory_budget_candidate": 0.25
+      },
       "depends_on": "GPU 服务 + 数据集根目录"
     },
     "A4": {
       "name": "A3 + 跨尺度融合",
       "method": "P_f=(1-λ)P0+λ·P_local；λ 只在开发验证集上扫 {0.3, 0.5, 0.7} 选参，选定后固定",
       "config": {"budgets": [0.25, 0.5], "lam_sweep": [0.3, 0.5, 0.7], "threshold": 0.5, "upscale": true},
-      "status": "not_run",
+      "status": "completed_historical_diagnostic",
+      "validation_scope": "historical_diagnostic",
+      "threshold_validated": false,
+      "results": {
+        "source": "evaluation/national_final/results/lab_runs/20261117_ablation/results/ablation_summary.json",
+        "budget": 0.25,
+        "lam_0.3": {"iou": 0.259224, "dice": 0.342080},
+        "lam_0.5": {"iou": 0.278479, "dice": 0.379269},
+        "lam_0.7": {"iou": 0.319149, "dice": 0.425082},
+        "exploratory_lam_candidate": 0.7
+      },
       "depends_on": "A3"
     },
     "A5": {
       "name": "A4 + 一致性诊断与可信复核",
       "method": "整图/局部预测分歧图、待复核区域、分歧区域与 GT 误差区域的定位对照（困难区域错误发现率）",
       "config": {"review_ratio_threshold": 0.05},
-      "status": "not_run",
+      "status": "completed_historical_diagnostic",
+      "validation_scope": "historical_diagnostic",
+      "threshold_validated": false,
+      "results": {
+        "source": "evaluation/national_final/results/lab_runs/20261117_ablation/results/ablation_summary.json",
+        "budget": 0.25,
+        "lam": 0.7,
+        "iou": 0.319149,
+        "dice": 0.425082,
+        "difficult_region_error_discovery": 0.318397,
+        "disagreement_error_precision": 0.261528
+      },
       "depends_on": "A4"
     }
   },
@@ -57,7 +86,7 @@
     "peak_vram_mb": "RemoteSAM 服务返回的 CUDA 进程峰值已分配显存；同一服务进程内为高水位指标"
   },
   "honesty_rules": [
-    "只有真实运行并落盘结果后才允许把 status 改为 completed",
+    "只有真实运行并落盘结果后才允许把 status 改为 completed_historical_diagnostic 或 completed；二者必须注明数据角色",
     "A3-A5 在开发验证集选参；历史诊断集上的参数选择不能标注为独立测试集验证",
     "分歧诊断指标不是分割准确率；候选连通区域不是实例计数",
     "λ/阈值未经开发验证集确认前 threshold_validated=false，不得宣称已优化"

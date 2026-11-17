@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-11-17T21:55:00+08:00",
+  "scope": "environment_and_real_inference_smoke_only",
+  "not_ablation_evidence": true,
+  "host": "10.199.139.30",
+  "gpu_index": 0,
+  "service_stopped_after_smoke": true,
+  "gpu_memory_after_stop_mb": {"gpu0": 37, "gpu1": 5},
+  "environment_after_fix": {
+    "torch": "2.4.1+cu121",
+    "cuda_runtime": "12.1",
+    "cudnn": "9.1.0",
+    "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+  },
+  "remotesam_runs": [
+    {
+      "name": "smoke_cudnn_fixed",
+      "status": "success",
+      "inference_ms": 1206.4,
+      "total_ms": 1261.97,
+      "peak_vram_mb": 1838.0,
+      "foreground_pixels": 5795,
+      "mask_sha256": "a8d07b455d47c1bf26eb2663f2be938649f08801917eac12cccf17b2b332d6d9",
+      "probability_sha256": "3793d2a03437f381d7759b9bf727f2d4f2eddd82a55abbfb11e784143aab35b9"
+    },
+    {
+      "name": "smoke_cudnn_fixed_repeat",
+      "status": "success",
+      "inference_ms": 147.31,
+      "total_ms": 173.48,
+      "peak_vram_mb": 1839.94,
+      "foreground_pixels": 5795,
+      "mask_sha256": "a8d07b455d47c1bf26eb2663f2be938649f08801917eac12cccf17b2b332d6d9",
+      "probability_sha256": "3793d2a03437f381d7759b9bf727f2d4f2eddd82a55abbfb11e784143aab35b9"
+    }
+  ],
+  "afr_smoke": {
+    "status": "success",
+    "source_image_note": "existing real smoke image resized to 1600x1600 for tile-path coverage",
+    "grid_regions": 4,
+    "selected_regions": 1,
+    "request_count": 2,
+    "local_success_count": 1,
+    "fallback_count": 0,
+    "disagreement_available": true,
+    "review_region_count": 0,
+    "client_wall_ms": 1314.25,
+    "local_service_total_ms": 191.22,
+    "config_sha256": "797e3cd199323f72c1c6dff8b2e0dd8c93ba51c2def5478b640e5187ed49ef82",
+    "mask_sha256": "d74dc28fa925222925ea94f3344987d82bd1a19bfc5492f2a15d21a6a27400a9",
+    "probability_map_sha256": "928c9860a8e87d142a9253e8d993240b9cc7d2dab4c12ab56b0e473459e1e48b",
+    "disagreement_sha256": "4eca5e09390e09fa4a3a4fda9b5fae71cbf1f53bbccc99f15d9b4cb17e1bbed1"
+  },
+  "honesty_notes": [
+    "No ground truth was available for these smoke runs.",
+    "These results prove execution only and must not be reported as A3/A4/A5 accuracy or improvement.",
+    "Disagreement is prediction disagreement, not an error probability."
+  ]
+}

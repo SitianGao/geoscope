@@ -50,7 +50,12 @@
       "depends_on": "A4"
     }
   },
-  "metrics": ["iou", "dice", "precision", "recall", "mean_service_inference_ms", "request_count", "peak_vram_mb", "difficult_region_error_discovery"],
+  "metrics": ["iou", "dice", "precision", "recall", "mean_service_inference_ms", "request_count", "peak_vram_mb", "difficult_region_error_discovery", "disagreement_error_precision"],
+  "metric_definitions": {
+    "difficult_region_error_discovery": "最终融合预测的错误像素中，被整图/局部分歧像素覆盖的比例；无错误像素时记 null，不计入均值",
+    "disagreement_error_precision": "整图/局部分歧像素中，同时属于最终融合预测错误像素的比例；无分歧像素时记 null，不计入均值",
+    "peak_vram_mb": "RemoteSAM 服务返回的 CUDA 进程峰值已分配显存；同一服务进程内为高水位指标"
+  },
   "honesty_rules": [
     "只有真实运行并落盘结果后才允许把 status 改为 completed",
     "A3-A5 在开发验证集选参；历史诊断集上的参数选择不能标注为独立测试集验证",

@@ -61,7 +61,7 @@ def region_disagreement_stats(m_whole, m_local, region: Region) -> dict:
 
 
 def composite_disagreement(width: int, height: int, items) -> Optional[np.ndarray]:
-    """把各区域分歧图合成为全图 uint8 0/255（按 index 顺序写入，无重叠写入冲突）。
+    """把各区域分歧图合成为全图 uint8 0/255（重叠区取逐像素最大值）。
 
     items: [(region_index, region, d_mask_uint8)]。无区域时返回 None。
     """
@@ -69,7 +69,14 @@ def composite_disagreement(width: int, height: int, items) -> Optional[np.ndarra
         return None
     canvas = np.zeros((height, width), dtype=np.uint8)
     for _, region, d_mask in items:
-        canvas[region.y:region.y + region.h, region.x:region.x + region.w] = d_mask
+        d_mask = np.asarray(d_mask, dtype=np.uint8)
+        if d_mask.shape != (region.h, region.w):
+            raise ValueError(
+                f'区域 {region.index} 分歧图尺寸 {d_mask.shape} 与区域 '
+                f'{(region.h, region.w)} 不一致')
+        target = canvas[region.y:region.y + region.h,
+                        region.x:region.x + region.w]
+        np.maximum(target, d_mask, out=target)
     return canvas
 
 

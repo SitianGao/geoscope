@@ -273,6 +273,16 @@ class ConsistencyTests(unittest.TestCase):
         self.assertIn('不是错误概率', review['notice'])
         self.assertIn('不是错误概率', DISAGREEMENT_NOTICE)
 
+    def test_composite_overlap_preserves_prior_disagreement(self):
+        first = Region(0, 0, 4, 4, 0)
+        second = Region(2, 0, 4, 4, 1)
+        d1 = np.full((4, 4), 255, dtype=np.uint8)
+        d2 = np.zeros((4, 4), dtype=np.uint8)
+        canvas = composite_disagreement(
+            6, 4, [(0, first, d1), (1, second, d2)])
+        self.assertTrue((canvas[:, :4] == 255).all())
+        self.assertTrue((canvas[:, 4:] == 0).all())
+
 
 if __name__ == '__main__':
     unittest.main()

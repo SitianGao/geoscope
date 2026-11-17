@@ -45,12 +45,43 @@ source .venv/bin/activate
 - **分支 A（镜像可达）**：
   ```bash
   uv pip install torch==2.4.1 --index-url https://download.pytorch.org/whl/cu121
-  uv pip install -r geoscope-v07-integration/services/remotesam/upstream/requirements.txt
+  # 服务只装最小推理依赖；不要改用包含训练/评测全家桶的 requirements.txt
+  uv pip install -r geoscope-v07-integration/services/remotesam/upstream/requirements-service.txt \
+    --index-url https://pypi.tuna.tsinghua.edu.cn/simple
+  uv pip check
   ```
 - **分支 B（外网不通）**：在 Windows 本机下载 wheel
   （torch 2.4.1+cu121 from download.pytorch.org + 其余包用
   `pip download -d wheels/ -r requirements.txt`），`scp -r wheels/` 上传，
   再 `uv pip install wheels/*.whl`。禁止在实验室机器装 curl/conda。
+
+### 2.2 cuDNN 初始化失败排查（2026-11-17 已验证）
+
+`torch.cuda.is_available()==True` 但卷积报 `CUDNN_STATUS_NOT_INITIALIZED` 时，
+先不要直接判断为驱动过旧。当前服务器驱动 525.89.02 满足 cuDNN 9.1 +
+CUDA 12.x 的最低要求。先检查是否混装 CUDA 主版本：
+
+```bash
+uv pip list --python .venv/bin/python | grep -E 'nvidia-.*cu13|^nvidia-(cublas|cuda-|cufft|curand|cusolver|cusparse|nvjitlink|nvtx) '
+grep -E 'CUDNN_(MAJOR|MINOR|PATCHLEVEL)' \
+  .venv/lib/python3.10/site-packages/nvidia/cudnn/include/cudnn_version.h
+.venv/bin/python -c "import torch; print(torch.__version__, torch.version.cuda, torch.backends.cudnn.version())"
+```
+
+已确认的故障根因是同一 venv 同时存在 `nvidia-cudnn-cu12` 与
+`nvidia-cudnn-cu13`。这些包会写入相同的 `nvidia/cudnn/` 目录，cu13 文件可
+覆盖 cu12。**同一个 venv 禁止混装 cu11/cu12/cu13 NVIDIA 运行库。**修复后本机
+验证组合为 `torch 2.4.1+cu121 / CUDA 12.1 / cuDNN 9.1.0`；最小卷积命令：
+
+```bash
+CUDA_VISIBLE_DEVICES=0 .venv/bin/python -c \
+  "import torch,torch.nn.functional as F; x=torch.randn(1,3,64,64,device='cuda:0'); w=torch.randn(8,3,3,3,device='cuda:0'); print(F.conv2d(x,w).shape)"
+```
+
+若必须修复，先保存 `uv pip freeze`，只清理反向依赖为空的错误主版本包，再按
+`importlib.metadata.requires('torch')` 列出的精确版本重装；不要在未查依赖时
+批量删除系统 CUDA。临时兜底仍可在进程启动前设置
+`torch.backends.cudnn.enabled=False`，但只用于冒烟，不作为最终实验环境。
 
 ## 3. 启动 RemoteSAM 服务（GPU 0）
 

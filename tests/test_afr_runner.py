@@ -34,6 +34,7 @@ def _response(prob, quality_mode='fast'):
     return {'status': 'success', 'quality_mode': quality_mode, 'mask': _prob_png(prob >= 0.5),
             'probability_map': _prob_png(prob),
             'timing_ms': {'inference': 1.0, 'total': 2.0},
+            'peak_vram_mb': 128.0,
             'model': {'name': 'FAKE-REMOTESAM'}, 'requested_quality_mode': quality_mode}
 
 
@@ -100,6 +101,9 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result.metadata['request_count'], 2)
         self.assertEqual(len(transport.calls), 2)
         self.assertEqual(result.metadata['local_success_count'], 1)
+        self.assertEqual(result.metadata['local_service_inference_ms_total'], 1.0)
+        self.assertEqual(result.metadata['local_service_ms_total'], 2.0)
+        self.assertEqual(result.metadata['peak_vram_mb'], 128.0)
         # 选中区域被融合（lam=0.5 → 0.5*0.4 与 0.5*0.95 混合）
         selected = result.selection[0].region
         fused_slice = result.probability[selected.y:selected.y + selected.h,

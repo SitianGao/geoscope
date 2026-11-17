@@ -43,11 +43,14 @@ BASE_FIELDS = ['protocol_version', 'experiment_id', 'strategy', 'prompt', 'scale
                'failure_code', 'failure_detail', 'request_count', 'output_width',
                'output_height', 'binary_valid', 'empty_mask',
                'prediction_foreground_pixels', 'ground_truth_foreground_pixels',
-               'tp', 'fp', 'fn', 'iou', 'dice', 'client_wall_ms',
+               'tp', 'fp', 'fn', 'iou', 'dice', 'precision', 'recall',
+               'client_wall_ms',
                'service_inference_ms', 'service_total_ms', 'peak_vram_mb',
                'service_version', 'checkpoint_sha256']
 EXTRA_FIELDS = ['budget_fraction', 'selected_regions', 'grid_regions',
                 'fallback_regions', 'disagreement_mean_ratio', 'review_region_count',
+                'error_pixels', 'disagreement_pixels', 'discovered_error_pixels',
+                'difficult_region_error_discovery', 'disagreement_error_precision',
                 'algorithm', 'algorithm_version', 'config_sha256', 'lam', 'threshold']
 FIELDS = BASE_FIELDS + EXTRA_FIELDS
 
@@ -64,16 +67,69 @@ def score(pred: np.ndarray, gt: np.ndarray) -> dict:
     fn = int(np.logical_and(~pred_b, gt_b).sum())
     iou = tp / (tp + fp + fn) if (tp + fp + fn) else 0.0
     dice = 2 * tp / (2 * tp + fp + fn) if (2 * tp + fp + fn) else 0.0
-    return {'tp': tp, 'fp': fp, 'fn': fn, 'iou': iou, 'dice': dice}
+    precision = tp / (tp + fp) if (tp + fp) else None
+    recall = tp / (tp + fn) if (tp + fn) else None
+    return {'tp': tp, 'fp': fp, 'fn': fn, 'iou': iou, 'dice': dice,
+            'precision': precision, 'recall': recall}
 
 
-def run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
-            experiment: str, outdir: Path, timeout: int) -> dict:
+def diagnostic_score(pred: np.ndarray, gt: np.ndarray,
+                     disagreement: np.ndarray | None) -> dict:
+    """量化 A5 分歧图对最终预测错误像素的定位能力。
+
+    difficult_region_error_discovery = |error ∩ disagreement| / |error|。
+    该值依赖真值，只是错误定位召回率，不是分割准确率或错误概率；当最终
+    预测没有错误像素时记为 None，避免用 1.0 人为抬高均值。
+    """
+    pred_b = np.asarray(pred) > 0
+    gt_b = np.asarray(gt) > 0
+    if pred_b.shape != gt_b.shape:
+        raise ValueError(f'预测/真值尺寸不一致：{pred_b.shape} != {gt_b.shape}')
+    error = np.logical_xor(pred_b, gt_b)
+    if disagreement is None:
+        disagreement_b = np.zeros_like(error, dtype=bool)
+    else:
+        disagreement_b = np.asarray(disagreement) > 0
+        if disagreement_b.shape != error.shape:
+            raise ValueError(
+                f'分歧图/真值尺寸不一致：{disagreement_b.shape} != {error.shape}')
+    error_pixels = int(error.sum())
+    disagreement_pixels = int(disagreement_b.sum())
+    discovered = int(np.logical_and(error, disagreement_b).sum())
+    return {
+        'error_pixels': error_pixels,
+        'disagreement_pixels': disagreement_pixels,
+        'discovered_error_pixels': discovered,
+        'difficult_region_error_discovery': (
+            discovered / error_pixels if error_pixels else None),
+        'disagreement_error_precision': (
+            discovered / disagreement_pixels if disagreement_pixels else None),
+    }
+
+
+def mean_metric(rows: list[dict], key: str):
+    """对成功行的可用有限数值求均值；全缺失时返回 None。"""
+    values = []
+    for row in rows:
+        value = row.get(key)
+        if value in ('', None):
+            continue
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            continue
+        if np.isfinite(number):
+            values.append(number)
+    return round(float(np.mean(values)), 6) if values else None
+
+
+def _run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
+             experiment: str, outdir: Path, timeout: int) -> dict:
     image_path = data_root / row['image_path']
     gt_path = data_root / row['ground_truth_path']
     result = {field: '' for field in FIELDS}
     result.update({
-        'protocol_version': 'national-a' + experiment,
+        'protocol_version': f'national-{experiment.lower()}-v1',
         'experiment_id': f'{experiment.lower()}_adaptive_focus_refinement',
         'strategy': 'adaptive_focus_refinement',
         'prompt': 'all planes',
@@ -121,11 +177,19 @@ def run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
         'ground_truth_foreground_pixels': int(row.get('ground_truth_foreground_pixels', '') or int((gt > 0).sum())),
         'tp': metrics['tp'], 'fp': metrics['fp'], 'fn': metrics['fn'],
         'iou': round(metrics['iou'], 6), 'dice': round(metrics['dice'], 6),
-        'service_inference_ms': round(afr.metadata['local_service_ms_total']
+        'precision': (round(metrics['precision'], 6)
+                      if metrics['precision'] is not None else ''),
+        'recall': (round(metrics['recall'], 6)
+                   if metrics['recall'] is not None else ''),
+        'service_inference_ms': round(afr.metadata['local_service_inference_ms_total']
                                       + float(afr.metadata['p0_service'].get('timing_ms', {}).get('inference', 0.0)), 2),
         'service_total_ms': round(afr.metadata['local_service_ms_total']
                                   + float(afr.metadata['p0_service'].get('timing_ms', {}).get('total', 0.0)), 2),
-        'service_version': afr.metadata['p0_service'].get('service_version', ''),
+        'peak_vram_mb': (round(float(afr.metadata['peak_vram_mb']), 2)
+                         if afr.metadata.get('peak_vram_mb') is not None else ''),
+        'service_version': (afr.metadata['p0_service'].get('service_version')
+                            or afr.metadata['p0_service'].get('model', {}).get(
+                                'service_version', '')),
         'checkpoint_sha256': afr.metadata['p0_service'].get('model', {}).get('checkpoint_sha256', '')
         if isinstance(afr.metadata['p0_service'].get('model'), dict) else '',
         'selected_regions': afr.metadata['selected_regions'],
@@ -136,6 +200,13 @@ def run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
         'review_region_count': afr.review['review_region_count'],
         'config_sha256': afr.metadata['config_sha256'],
     })
+    if experiment == 'A5':
+        diagnostic = diagnostic_score(pred, gt, afr.disagreement)
+        result.update({
+            key: ((round(value, 6) if isinstance(value, float) else value)
+                  if value is not None else '')
+            for key, value in diagnostic.items()
+        })
     image_out = outdir / row['image_id']
     image_out.mkdir(parents=True, exist_ok=True)
     Image.fromarray(pred, 'L').save(image_out / 'mask.png')
@@ -148,6 +219,41 @@ def run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
          'fallback_records': afr.fallback_records}, ensure_ascii=False, indent=2),
         encoding='utf-8')
     return result
+
+
+def run_one(row: dict, data_root: Path, base_url: str, config: AFRConfig,
+            experiment: str, outdir: Path, timeout: int) -> dict:
+    """运行单图并隔离所有行级失败，确保坏样本不会终止整批实验。"""
+    started = time.perf_counter()
+    try:
+        return _run_one(row, data_root, base_url, config, experiment, outdir,
+                        timeout)
+    except Exception as exc:
+        result = {field: '' for field in FIELDS}
+        result.update({
+            'protocol_version': f'national-{experiment.lower()}-v1',
+            'experiment_id': f'{experiment.lower()}_adaptive_focus_refinement',
+            'strategy': 'adaptive_focus_refinement',
+            'prompt': 'all planes',
+            'scale': 1.0,
+            'tile_size': config.tile_size,
+            'overlap': config.overlap,
+            'probability_threshold': config.threshold,
+            'image_id': row.get('image_id', ''),
+            'dataset': row.get('dataset', ''),
+            'width': row.get('width', ''),
+            'height': row.get('height', ''),
+            'status': 'failed',
+            'failure_code': type(exc).__name__,
+            'failure_detail': str(exc)[:300],
+            'client_wall_ms': round((time.perf_counter() - started) * 1000, 2),
+            'budget_fraction': config.budget.fraction,
+            'lam': config.lam,
+            'threshold': config.threshold,
+            'algorithm': ALGORITHM,
+            'algorithm_version': VERSION,
+        })
+        return result
 
 
 def main():
@@ -166,6 +272,8 @@ def main():
     parser.add_argument('--results-csv', required=True)
     parser.add_argument('--summary-json', required=True)
     args = parser.parse_args()
+    if args.experiment == 'A3' and not np.isclose(args.lam, 1.0):
+        parser.error('A3 定义为局部直接替换，必须使用 --lam 1.0')
 
     with open(args.manifest, encoding='utf-8', newline='') as f:
         rows = [r for r in csv.DictReader(f)
@@ -207,18 +315,23 @@ def main():
         'rows_succeeded': len(succeeded),
         'status': ('completed' if len(succeeded) == len(results)
                    else 'partial' if succeeded else 'failed_all'),
-        'mean_iou': round(float(np.mean([float(r['iou']) for r in succeeded])), 6) if succeeded else None,
-        'mean_dice': round(float(np.mean([float(r['dice']) for r in succeeded])), 6) if succeeded else None,
-        'mean_precision': round(float(np.mean([r['tp'] / (r['tp'] + r['fp']) for r in succeeded
-                                               if r['tp'] + r['fp'] > 0])), 6) if succeeded else None,
-        'mean_recall': round(float(np.mean([r['tp'] / (r['tp'] + r['fn']) for r in succeeded
-                                            if r['tp'] + r['fn'] > 0])), 6) if succeeded else None,
-        'mean_request_count': round(float(np.mean([r['request_count'] for r in succeeded])), 2) if succeeded else None,
-        'mean_client_wall_ms': round(float(np.mean([r['client_wall_ms'] for r in succeeded])), 2) if succeeded else None,
+        'mean_iou': mean_metric(succeeded, 'iou'),
+        'mean_dice': mean_metric(succeeded, 'dice'),
+        'mean_precision': mean_metric(succeeded, 'precision'),
+        'mean_recall': mean_metric(succeeded, 'recall'),
+        'mean_request_count': mean_metric(succeeded, 'request_count'),
+        'mean_client_wall_ms': mean_metric(succeeded, 'client_wall_ms'),
+        'mean_service_inference_ms': mean_metric(succeeded, 'service_inference_ms'),
+        'mean_peak_vram_mb': mean_metric(succeeded, 'peak_vram_mb'),
+        'mean_difficult_region_error_discovery': mean_metric(
+            succeeded, 'difficult_region_error_discovery'),
+        'mean_disagreement_error_precision': mean_metric(
+            succeeded, 'disagreement_error_precision'),
         'threshold_validated': False,
         'honesty_notes': [
             '本实验为探索性验证；参数选择必须在开发验证集完成，历史诊断集结果不可标注为独立测试验证',
             'disagreement 是整图与局部预测的分歧，不是错误概率；候选连通区域不是实例计数',
+            'difficult_region_error_discovery 是分歧像素覆盖最终预测错误像素的召回率，依赖真值，不是分割准确率',
             'threshold/λ 未在开发验证集确认前 threshold_validated=false',
         ],
         'generated_at': time.strftime('%Y-%m-%dT%H:%M:%S%z'),

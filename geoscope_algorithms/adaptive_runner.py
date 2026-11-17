@@ -117,6 +117,17 @@ def _p0_service_metadata(response: dict) -> dict:
     return meta
 
 
+def _nonnegative_metric(value) -> Optional[float]:
+    """把服务指标规范为有限非负浮点数；缺失/非法值返回 None。"""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not np.isfinite(number) or number < 0.0:
+        return None
+    return number
+
+
 def run_adaptive(image, base_service_request: dict, transport: Callable[[dict], dict],
                  config: AFRConfig) -> AFRResult:
     """执行 GeoScope-AFR 主链路。失败语义见模块 docstring。"""
@@ -154,7 +165,12 @@ def run_adaptive(image, base_service_request: dict, transport: Callable[[dict], 
     # ---- 4. 局部精细推理（按区域 index 顺序，确定性） ----
     local_results: dict = {}
     fallback_records: list = []
+    local_service_inference_ms_total = 0.0
     local_service_ms_total = 0.0
+    peak_vram_values = []
+    p0_peak_vram = _nonnegative_metric(whole_response.get('peak_vram_mb'))
+    if p0_peak_vram is not None:
+        peak_vram_values.append(p0_peak_vram)
     for score in sorted(selection, key=lambda s: s.region.index):
         region = score.region
         request, meta = build_local_request(image, region, base_service_request,
@@ -171,9 +187,19 @@ def run_adaptive(image, base_service_request: dict, transport: Callable[[dict], 
                 'error': local.error,
                 'action': 'whole_image_probability_kept',
             })
-        elif local.service_metadata and local.service_metadata.get('timing_ms'):
-            local_service_ms_total += float(
-                local.service_metadata['timing_ms'].get('total', 0.0))
+        elif local.service_metadata:
+            timing = local.service_metadata.get('timing_ms')
+            if isinstance(timing, dict):
+                inference_ms = _nonnegative_metric(timing.get('inference'))
+                total_ms = _nonnegative_metric(timing.get('total'))
+                if inference_ms is not None:
+                    local_service_inference_ms_total += inference_ms
+                if total_ms is not None:
+                    local_service_ms_total += total_ms
+            local_peak_vram = _nonnegative_metric(
+                local.service_metadata.get('peak_vram_mb'))
+            if local_peak_vram is not None:
+                peak_vram_values.append(local_peak_vram)
 
     # ---- 5. 跨尺度融合 ----
     probability = fuse(p0, local_results, regions, config.lam, config.lam_per_region)
@@ -205,7 +231,9 @@ def run_adaptive(image, base_service_request: dict, transport: Callable[[dict], 
         'request_count': 1 + len(selection),
         'local_success_count': sum(1 for li in local_results.values() if li.status == 'success'),
         'fallback_count': len(fallback_records),
+        'local_service_inference_ms_total': local_service_inference_ms_total,
         'local_service_ms_total': local_service_ms_total,
+        'peak_vram_mb': max(peak_vram_values) if peak_vram_values else None,
         'threshold_validated': False,
         'disagreement_available': disagreement is not None,
         'disagreement_notice': DISAGREEMENT_NOTICE,

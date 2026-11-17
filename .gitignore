@@ -4,6 +4,7 @@ evaluation/images/
 .env
 test-results/
 .venv/
+.venv-remoteclip/
 venv/
 node_modules/
 .env.*

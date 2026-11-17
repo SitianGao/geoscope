@@ -1,0 +1,461 @@
+{
+  "tools": {
+    "region_statistics": {
+      "available": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "connected_region_analysis": {
+      "available": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "min_area_pixels": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "mask_compare": {
+      "available": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "base_result_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "base_result_id",
+          "target"
+        ]
+      }
+    },
+    "spatial_relation_analysis": {
+      "available": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          },
+          "base_result_id": {
+            "type": "string"
+          },
+          "near_distance_pixels": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "base_result_id",
+          "target"
+        ]
+      }
+    },
+    "report_generation": {
+      "available": true,
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "adaptive_refinement": {
+      "available": false,
+      "reason": "Captain AFR adapter not supplied",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "geo_measurement": {
+      "available": false,
+      "reason": "Georeferencing and unit validation not supplied",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "semantic_segmentation": {
+      "available": false,
+      "legacy_endpoint": "/api/run",
+      "reason": "Use existing validated Agent/Harness route; not directly executed by this registry",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    },
+    "referring_expression_segmentation": {
+      "available": false,
+      "legacy_endpoint": "/api/run",
+      "reason": "Use existing validated Agent/Harness route; not directly executed by this registry",
+      "input_schema": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "image_id": {
+            "type": "string"
+          },
+          "result_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "scope": {
+            "enum": [
+              "all",
+              "left_half",
+              "right_half",
+              "top_half",
+              "bottom_half",
+              "roi"
+            ]
+          },
+          "roi": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        },
+        "required": [
+          "image_id",
+          "result_id",
+          "target"
+        ]
+      }
+    }
+  },
+  "plan": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "task",
+      "image_id",
+      "result_id",
+      "target",
+      "steps"
+    ],
+    "properties": {
+      "task": {
+        "enum": [
+          "region_comparison",
+          "region_analysis"
+        ]
+      },
+      "image_id": {
+        "type": "string"
+      },
+      "result_id": {
+        "type": "string"
+      },
+      "target": {
+        "type": "string"
+      },
+      "scope": {
+        "enum": [
+          "all",
+          "left_half",
+          "right_half",
+          "top_half",
+          "bottom_half",
+          "roi"
+        ]
+      },
+      "roi": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        },
+        "minItems": 4,
+        "maxItems": 4
+      },
+      "reference_version": {
+        "type": "string"
+      },
+      "steps": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 16,
+        "items": {
+          "type": "string",
+          "enum": [
+            "get_segmentation",
+            "apply_scope",
+            "region_statistics",
+            "connected_region_analysis",
+            "compare_versions",
+            "report_generation"
+          ]
+        }
+      }
+    }
+  }
+}

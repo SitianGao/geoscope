@@ -1,0 +1,122 @@
+{
+  "evidence_source": "actual failure on demo input",
+  "response": {
+    "status": "failed",
+    "failed_step": 4,
+    "events": [
+      {
+        "step": 1,
+        "tool": "get_segmentation",
+        "status": "completed",
+        "duration_ms": 5.537,
+        "output": {
+          "image_id": "bb3737051566",
+          "result_id": "5c2f5e6ad755",
+          "target": "building",
+          "full_mask_sha256": "91f0f199bed12d6856a4638b971c95151424db1c6c7ed6342d8ef5c902eaaf80",
+          "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 2,
+        "tool": "apply_scope",
+        "status": "completed",
+        "duration_ms": 1.281,
+        "output": {
+          "scope": "left_half",
+          "roi": null
+        }
+      },
+      {
+        "step": 3,
+        "tool": "region_statistics",
+        "status": "completed",
+        "duration_ms": 3.376,
+        "output": {
+          "target_pixels_in_scope": 32951,
+          "image_pixels": 480000,
+          "scope_pixels": 240000,
+          "ratio_of_full_image": 0.06864791666666667,
+          "ratio_within_scope": 0.13729583333333334,
+          "scope": "left_half",
+          "roi": null,
+          "width": 800,
+          "height": 600,
+          "unit": "pixel",
+          "mask_hash": "42dd026b9f3368085f5e4e7ad02aa619371bb7ad293e4d0c5f80da8fcc414cba",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+          "image_id": "bb3737051566",
+          "result_id": "5c2f5e6ad755",
+          "target": "building",
+          "full_mask_sha256": "91f0f199bed12d6856a4638b971c95151424db1c6c7ed6342d8ef5c902eaaf80",
+          "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 4,
+        "tool": "compare_versions",
+        "status": "failed",
+        "error": {
+          "code": "missing_dependency",
+          "message": "Result does not belong to this image or has no mask"
+        }
+      }
+    ],
+    "artifacts": {
+      "get_segmentation": {
+        "image_id": "bb3737051566",
+        "result_id": "5c2f5e6ad755",
+        "target": "building",
+        "full_mask_sha256": "91f0f199bed12d6856a4638b971c95151424db1c6c7ed6342d8ef5c902eaaf80",
+        "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "apply_scope": {
+        "scope": "left_half",
+        "roi": null
+      },
+      "region_statistics": {
+        "target_pixels_in_scope": 32951,
+        "image_pixels": 480000,
+        "scope_pixels": 240000,
+        "ratio_of_full_image": 0.06864791666666667,
+        "ratio_within_scope": 0.13729583333333334,
+        "scope": "left_half",
+        "roi": null,
+        "width": 800,
+        "height": 600,
+        "unit": "pixel",
+        "mask_hash": "42dd026b9f3368085f5e4e7ad02aa619371bb7ad293e4d0c5f80da8fcc414cba",
+        "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+        "image_id": "bb3737051566",
+        "result_id": "5c2f5e6ad755",
+        "target": "building",
+        "full_mask_sha256": "91f0f199bed12d6856a4638b971c95151424db1c6c7ed6342d8ef5c902eaaf80",
+        "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      }
+    },
+    "error": {
+      "code": "missing_dependency",
+      "message": "Result does not belong to this image or has no mask"
+    }
+  }
+}

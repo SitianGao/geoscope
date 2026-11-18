@@ -1,100 +1,48 @@
-# 队员 A 交付报告
+# 队员 A 最终交付报告
 
-## 2026-11-18 最终服务器集成状态（优先于早期记录）
+日期：2026-11-18。分支：`feature/national-tools-clip`，已推送到 GitHub，供队长审查和联调；不自动合并 main。快速接管见 [A_captain_handoff.md](A_captain_handoff.md)。
 
-已将队长 `feature/national-algorithms@c1ef225` 和 B 的 `feature/national-workbench@8e022c2` 合入 A 分支，保留两方提交及代码归属。Git smart HTTP 仍不可达，通过官方提交清单与精确快照恢复提交对象并校验 tip tree/commit SHA 后正常合并，无重写队友提交。main 未变动。
+## 交付范围与团队集成
 
-用户明确要求运行在服务器；最终三模型、推理、测试和浏览器验收均在实验室服务器执行。A 使用独立代码/uv 环境，不修改队长既有代码目录或 SAM 环境，权重只读引用或从用户已有副本复制；仅 GPU0，GPU1 未使用。
+已合入队长算法 c1ef225 和 B 工作台 8e022c2，保留原提交归属。A 实现统计/差异/受控计划/CLIP 服务，并适配双方真实接口，没有重写队长 AFR 策略或 B 前端。基线 2cb8da8 保留标签 baseline/national-before-a-20261117。
 
-实际已完成：
+- region_statistics：目标面积、整图与范围两种分母；严格 ROI、奇数半幅和空集处理。
+- connected_region_analysis：8 邻域候选区域、过滤与分布；不将连通域数称作实例数。
+- mask_compare：同图同目标、无隐式 resize，交并差与预测一致性、差异图和版本绑定。
+- registry/VerifiedPlan：schema/白名单/依赖预检，实际前序产物传递、事件与步骤持久化、失败保留产物和明确失败步骤。
+- spatial_relation_analysis、确定性 JSON report_generation；地理测量明确不可用。
+- adaptive_refinement：调用队长原 Harness/run_task，parent/result ID 明确，保留原算法和回退行为。
+- RemoteCLIP：可信权重 SHA256、配套预处理/tokenizer、真实图文编码、原图哈希/模型版本绑定索引、归一化余弦 top-k、候选回到平台 session；不提供固定排序回退。
+- A/B 兼容：target_result_id 参数、数组注册表、候选缩略图与就绪字段、run.tool_execution.steps。修复概率/分歧图 404，导出加入真实存在的 AFR 附件。
 
-- A/B 接口兼容：target_result_id 比较参数、数组工具注册表、CLIP 就绪字段与候选缩略图、绑定版本中的 tool_execution.steps。B 前端代码未由 A 改写。
-- AFR 包装调用队长原 Harness/run_task，生成新结果版本并保留 parent；不改变 AFR 策略、预算和权重。修复集成入口对分歧图/概率图的 404；导出包含真实存在的 AFR 附件。
-- 真实 RemoteCLIP ViT-B-32：复用服务器原权重，SHA256=`60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4`；OpenCLIP 2.24.0 / Torch 2.4.1+cu121 / cuda:0。修复旧 OpenCLIP transform repr 中的随机地址，保证 embedding_version 跨重启稳定。图库包含城市、机场及队长已有 P1529 真图，均先绑定平台 image_id 和原图哈希。
-- 找回用户已有 RemoteAgent 四分片权重并复制到服务器；校验 729 个张量和 16,584,333,312 字节张量数据。ModelScope 页面已实际核对，仓库为申请制 AIMGroup/RemoteAgent，页面提交 3a0698c4、总大小 16.60GB；没有绕过下载权限。
-- 旧 vLLM 环境已不在服务器，新增可选 Transformers serving 适配器，匹配权重 config 的 4.57.1，保留原 RemoteAgent 模型与 Harness。使用保存的 slow processor、BF16/SDPA、16K 上下文；原 vLLM 路径不改。详情见 services/remoteagent/OPENAI_RUNTIME.md。
-- 真实全链路：CLIP 候选选择 → RemoteAgent → RemoteSAM fast → AFR 新版本 → VerifiedPlan → 版本差异复算 → 分歧图 → 实验包导出。机场样例与 4000×4000 的 P1529 均有服务器记录，后者实际产生局部推理及诊断产物。未使用 mock 或 demo 掩码作为这些记录的模型输入。
-- P1529 实际 image_id=`2b2acb90b45d`，最终 base_result_id=`1e9614581f1c`，AFR result_id=`37cfda0a9fc3`。服务器真实 Chrome 显示对应步骤、差异和分歧图，并断言浏览器逐像素复算与后端完全一致。证据见 docs/evidence/server/。
+启动入口为 national_server.py；旧 server.py 启动仍保留。服务管理 scripts/manage_server.py 支持幂等启动、健康状态和只结束本部署进程的停止；端口冲突不接管他人进程。接口合同、机器 schema、请求响应样例、模型说明、测试和来源记录齐备。
 
-最终服务器回归 **155 项全部通过，无跳过（23.301 秒）**。P1529 实际选中 6 个局部区域、产生 6 个待复核区域，Agent 最终反馈 completed、无 feedback_warning。实际导出包括原图、最终/完整蒙版、叠图、result/statistics/run_log/report，以及 afr.json、概率图、分歧图。它们全部绑定同一原图和明确的 base/target 版本。
+## 服务器真实验证
 
-本轮实现与服务器验收提交：`af7c294`。Git 完整对象检查通过（已补齐队友中间提交的树对象）；后续只补充文档及忽略服务器私有环境/权重路径。
+用户要求后续运行在服务器，最终模型/测试/浏览器验收均在服务器执行。使用 A 的独立目录和独立 uv 环境，只读复用既有 PyTorch/SAM 环境与权重；仅 GPU0，GPU1 未使用。实际私有目录配置保存在服务器 outputs/server_runtime.json，不提交凭据或私有部署配置。
 
-`docs/evidence/server/real_disagreement.png`、`real_version_compare.png`、`real_afr_steps.png` 为服务器真实 Chrome 对真实模型产物生成的截图；早期 `verifiedplan_workbench.png` 仍为明确 demo 输入的工程验收，不能与真实 P1529 证据混用。
+RemoteCLIP 为 ViT-B-32，权重 SHA256=`60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4`，OpenCLIP 2.24.0、Torch 2.4.1+cu121、cuda:0。图库为已绑定的城市/机场/P1529 三幅真实影像。修复 Python 3.10 哈希兼容，以及旧 OpenCLIP transform repr 随机地址影响 embedding 版本的问题；受控重启后版本稳定，重复查询一致。
 
-原始失败日志保留：开始的缺依赖、Transformers 版本不匹配，以及 8K 反馈超限均已修复并重验。不得用这些早期日志或早期“待联调”段落代替最终状态；旧记录保留用于追溯。本次只是工程闭环验证，没有新增精度提升结论或独立泛化实验。
+用户原 RemoteAgent 四分片权重已复制至服务器并校验：729 个张量、16,584,333,312 字节数据。已实际读取 ModelScope 申请制 AIMGroup/RemoteAgent 的文件页，页面提交 3a0698c4，16.60GB；未绕过下载权限。旧 vLLM 环境已不存在，因此新增可选 Transformers serving，使用同一官方权重、匹配 config 的 Transformers 4.57.1、保存的 slow processor、BF16/SDPA、16K 上下文。原 Harness/解析路径不改；不宣称与 vLLM 性能一致。SHA256 和来源见 agent_inventory.json。
 
-服务器地址、登录及实际私有部署路径不写入公开合同；运行进程与 PID、日志均在 A 的独立部署目录 outputs 中。当前服务保持运行。远端 B/队长分支未被推送改写；A 的新提交仍待队长审查合并。
+真实链路已完成：CLIP 检索候选→RemoteAgent→RemoteSAM fast→AFR 新版本→VerifiedPlan→统计/比较→分歧图→导出。P1529 为 4000×4000 真实影像，image_id=`2b2acb90b45d`，base=`1e9614581f1c`，AFR=`37cfda0a9fc3`。实际执行 6 个局部区域，产生 6 个待复核区域；Agent 反馈 completed，无反馈告警。服务器真实 Chrome 显示步骤、对照与分歧图，浏览器逐像素差异与后端一致，导出附件完整。
 
-日期：2026-11-17。开发分支：`feature/national-tools-clip`。基线：`2cb8da8b1293882e24bdf75f2ce70628a96a934a`，保留标签 `baseline/national-before-a-20261117`。
+原始请求响应、索引/权重 manifest、真实截图和测试日志位于 docs/evidence/server/。早期依赖/版本失败及 8K 超限记录保留用于审计，均已修复；早期 demo 工程证据有明确标注，不作为真实模型证据。
 
-## 已实现
+## 测试与复现
 
-- P0：双分母研究区统计、严格 ROI 校验、8 邻域候选连通域/过滤/分布、同图同目标版本交并差及可下载差异图。
-- 注册表、严格字段/schema 校验、影像/版本/目标绑定、全蒙版 SHA256 和最终蒙版重算校验；禁止任意文件路径、未知工具和未知参数。
-- VerifiedPlan：整计划依赖预检、手动结构化执行、实际前序蒙版传递、逐步事件、失败步骤号与保留产物、重复执行不串版本。全部新 POST 请求和执行响应保存到 `experiments/national_events/`。
-- P1：像素坐标空间关系、确定性 JSON 报告；AFR 仅保留可读的未就绪能力，等待队长模块。地理测量未实现并明确不可用。
-- RemoteCLIP：可信权重校验、官方 OpenCLIP 预处理/tokenizer、真实图文编码、哈希与版本绑定的持久索引、归一化余弦 top-k、候选回到旧 session API、失效索引/服务断开/OOM 错误处理。
-- 独立 `national_server.py` 新入口复用原工作台，原主程序和前端文件均不修改。
+最终服务器 **159 项测试全部通过，无跳过（23.112 秒）**，包含真实权重测试及 4 项生命周期保护测试；原始输出 docs/evidence/server/tests_server_all.txt。部分单元测试使用显式 test doubles，与真实全链路/浏览器证据分开。受控停止/启动和四服务健康检查均通过。
 
-## 工程与复现
+完整命令和固定版本操作顺序见 A_captain_handoff.md。重新推理会生成新 ID，应保存新的证据文件名，不覆盖固定验收记录。编译/格式检查、Git 对象完整性检查及权重/凭据排除检查已完成。
 
-Git smart HTTP 端点多次连接失败，使用官方 codeload 源码和官方 API 提交信息恢复**精确的浅仓库**，逐一核验 Git tree SHA 与 commit SHA；不是新建一个不相关的初始提交。保留原 origin，Git connectivity 检查通过。完整历史未下载；网络恢复后可 `git fetch --unshallow origin`。
+## 边界与回退
 
-基础依赖仍只有原 requirements.txt 的 Pillow。模型依赖隔离在 `.venv-remoteclip/`；安装版本快照见 `services/remoteclip/requirements-tested.txt`。CPU 可执行真实推理，无需 GPU；CUDA 部署需安装匹配 PyTorch。
+没有新增自然语言计划生成器，手动结构化计划已可运行；地理面积测量保持不可用。预测一致性不是准确率，候选连通域不是实例数；不把本次工程验收当作独立精度评测或泛化提升。新 scope 与已保存最终蒙版相交，不能恢复旧 ROI 裁掉的目标；当前原图哈希也不能反证历史原图从未被外部替换。
 
-启动工具：`python national_server.py`，默认本机 4180。CLIP 的权重下载、图库创建、服务启动及环境变量配置见 [RemoteCLIP README](../services/remoteclip/README.md)。接口与字段详见 [合同](../contracts/api_contract_national.md)，机器可读 schema 为 `contracts/national_schema.json`，与运行注册表一致。
+需要回退 A 入口时运行原 server.py；旧会话/缓存/ID/蒙版格式不变。服务管理 stop 仅作用于本部署 PID、匹配命令和工作目录，不修改模型/队友目录。当前四项服务保持就绪。
 
-纯计算/主链路回归：
+## 版本与审核
 
-```powershell
-python -m unittest discover -s tests -v
-python scripts/national_evidence.py
-python -m compileall -q geoscope_tools services/remoteclip national_server.py
-git diff --check
-```
+主要服务器集成提交 af7c294，部署文档提交 6c5c2ab；本次收尾再补齐生命周期接管、最新测试和交接说明。早期 Git smart HTTP 不可达时使用官方精确快照和 commit/tree SHA 恢复，随后补齐中间提交树，git fsck 检查通过；没有重写队友提交。当前 GitHub 推送正常。
 
-原版基线 69 项全部通过。开发后回归 95 项：94 项通过、1 项真实权重测试明确跳过（未设置权重时）。完整记录：`docs/evidence/tests_all.txt`。新增覆盖 ROI 算术、非法 ROI、奇数半幅、空/满蒙版、连通域裁剪分裂、交并差、跨影像/目标拒绝、损坏/缺失文件、非法工具/schema、执行依赖/失败隔离、重复执行、旧 HTTP/导出兼容及 CLIP 空状态。显式 fake 模型测试只证明工程行为，不代表真实 RemoteAgent/RemoteSAM 推理通过。
-
-最终在隔离环境设置真实 RN50 权重后，完整 **95 项测试全部通过，无跳过**（22.899 秒）；见 `docs/evidence/tests_real_weights.txt`。此前的跳过记录保留用于审计，不代表最终验收状态。编译检查和 Git whitespace 检查通过。
-
-## 真实 RemoteCLIP 证据
-
-已实际下载 408,397,807 字节官方 RN50 权重；通过镜像传输，SHA256 与官方 LFS 指针完全相同：`11657d33a87fc197e19a7654a76a632415ebea42feb8a61025ef389f8990c0f9`。运行于 CPU，OpenCLIP 4.2.2 / PyTorch 2.15.0+cpu。真实服务启动日志、模型预处理/tokenizer、索引 manifest、两次查询与候选选择响应均在 `docs/evidence/`。
-
-查询 `airport with airplanes`：机场样例 `8e1939ccc3e1` 排名 1，余弦相似度 `0.24212190508842468`；城市样例 `b273fa9ac2d6` 排名 2，余弦相似度 `0.13405519723892212`。两次实际查询排序和分数完全相同。首项通过旧 `/api/session/8e1939ccc3e1` 打开且 ID 一致。这只证明检索与选择可运行，不代表普遍检索精度、目标存在概率或像素分割完成。
-
-本次 embedding_version：`6165b7a2d369dce42a0dba628aed21c01e8ca1c5ea64343225384a9a12b25932`；index_version：`c2f38e9e37fc8546e653566317754937bbf0dba850bf748810703fef9db758a0`。
-
-在当前本地图库上复现（脚本会自动启停临时服务，不留下后台进程）：
-
-```powershell
-.venv-remoteclip/Scripts/python.exe scripts/run_remoteclip_acceptance.py
-```
-
-真实权重全测试：设置 `REMOTECLIP_TEST_WEIGHTS=weights/RemoteCLIP-RN50.pt`、`REMOTECLIP_TEST_SHA256` 为上述哈希、`REMOTECLIP_TEST_ARCH=RN50`，再用 `.venv-remoteclip/Scripts/python.exe -m unittest discover -s tests -v`。新机器先按照 RemoteCLIP README 创建图库；重新创建的 session ID 和索引版本会变化，应以新实际输出为准。
-
-## 验收对照与边界
-
-| 编号 | 证据/状态 |
-|---|---|
-| A01 | 原有 69 项回归，新增 HTTP 验证 session/run/export；本机未连接真实 Agent/SAM |
-| A02–A07 | statistics/regions/compare/planner/http 测试与 contracts 样例 |
-| A08–A09 | demo_plan.json、demo_failed_step.json；结构化步骤及第 4 步失败、前序产物保留 |
-| A10 | CPU 真实 RN50 推理和归一化检索通过，remoteclip_startup.txt / remoteclip_real_query.json |
-| A11 | 真实检索候选已经原 session API 打开；后续真实分割需外部 Agent/SAM 服务 |
-| A12 | 实际 HTTP 503 not_ready 负例；旧主链路回归通过 |
-| A13 | 工具重复执行断言及真实 CLIP 两次查询精确一致 |
-| A14 | provenance、模型/索引版本、原始 JSON、环境版本与源码 |
-
-尚未完成/依赖外部：队长 AFR 核心适配器；有地理参考的真实面积测量；B 前端接入；队长合并签收；真实 Agent/SAM 在目标部署环境下的全链路重跑。VerifiedPlan 消费显式选定的已有分割版本；自然语言生成新计划不在本次后端实现内。前端选择 CLIP 候选可直接使用返回的 session_url 及 image_id 调用旧 API。
-
-无真值标签时只输出预测一致性，不宣称精度提升。候选连通域不是实例数；像素单位不转平方米。新工具对已保存最终蒙版继续限制范围，不能恢复旧 ROI 裁掉的目标。历史 session 未保存原图历史哈希；报告中的 image_sha256 是当前原图的哈希，不能反证历史原图未被外部更换。
-
-已核查失败例：越界/空/非法 ROI，概率蒙版，影像与版本不匹配，目标不匹配，全蒙版校验失败、最终蒙版损坏、文件缺失，非法工具/参数，依赖顺序错误，比较步骤缺版本，CLIP 未配置/索引缺失/图片变化。GPU OOM 有明确错误处理，本机 CPU 环境未实际制造 GPU OOM。
-
-## 回退与交付
-
-停止新启动入口后运行原 `python server.py` 即回到原路由集合；不用删除任何旧数据。新产物位于 `experiments/national_artifacts/`、`experiments/national_events/` 与 `outputs/`。不修改旧会话 ID、缓存键、蒙版格式和模型权重。无需把新功能合并进 server.py 才能审查；队长可选择独立启动或自行审核挂载。
-
-实现与验收证据提交：`d93ff4a`（`feat: add verified analysis tools and real RemoteCLIP retrieval`）。本报告随后补记该实现提交编号。所有提交仅在本地开发分支，未推送或合并。权重、虚拟环境、索引与原始图库均排除提交；交付源码、合同、测试及小体积真实性证据。
+后续仅需队长审查 PR 并决定合并主线。权重、虚拟环境、索引、原始图库、.env 和服务器私有配置均不在 Git。

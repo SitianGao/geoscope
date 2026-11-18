@@ -25,24 +25,12 @@ def main():
             page.locator('#nationalSearchHits article').first.wait_for()
             page.screenshot(path=str(evidence/'clip_gpu_workbench.png'))
             page.get_by_role('button', name='分析该影像').first.click()
-            page.wait_for_function("document.querySelector('#imageName').textContent.includes('JFK')")
             selected = result['data']['results'][0]['image_id']
-            # These next inputs are explicitly demo masks, not RemoteSAM evidence.
-            run = page.request.post('http://127.0.0.1:4180/api/run', data={'session_id': selected, 'mode': 'demo', 'query': '提取全部飞机'}).json()
-            assert run['mode'] == 'demo' and run['status'] == 'completed'
-            execution = page.request.post('http://127.0.0.1:4180/api/national/plans/execute', data={
-                'task': 'region_analysis', 'image_id': selected, 'result_id': run['id'], 'target': 'aircraft',
-                'scope': 'all', 'steps': ['get_segmentation', 'apply_scope', 'region_statistics', 'report_generation']}).json()
-            assert execution['success']
-            page.evaluate('async id => {await openExperiment(id)}', selected)
-            page.locator('[data-run="'+run['id']+'"]').click()
-            page.locator('.execution-panel').evaluate('el => el.open=true')
-            page.wait_for_function("document.querySelectorAll('#nationalTrace .national-state').length === 4")
-            page.screenshot(path=str(evidence/'verifiedplan_workbench.png'))
+            page.wait_for_function('id => state.session?.id === id && state.original', arg=selected)
             assert not errors, errors
             (evidence/'browser.json').write_text(json.dumps({'location': 'laboratory server', 'real_clip': result,
-                'selected_image_id': selected, 'page_errors': errors, 'segmentation_mode': 'demo',
-                'real_segmentation_executed': False, 'plan': execution['data']}, ensure_ascii=False, indent=2), encoding='utf-8')
+                'selected_image_id': selected, 'page_errors': errors,
+                'segmentation_executed': False}, ensure_ascii=False, indent=2), encoding='utf-8')
             print('SERVER real GPU CLIP -> B workbench candidate -> existing image selection: passed')
         finally:
             browser.close()

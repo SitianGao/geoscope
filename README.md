@@ -1,5 +1,7 @@
 # 观域 GeoScope：遥感实验工作台初稿
 
+> **2026-11-18 国赛联调入口：** [队员 A 最终交接](docs/A_captain_handoff.md) · [接口合同](contracts/api_contract_national.md) · [服务器真实验收证据](docs/evidence/server/)。国赛后端使用 `national_server.py`；服务器接管使用 `scripts/manage_server.py`，页面为 `/?workbench=national`。旧 `server.py` 启动流程仍保留。
+
 ## 团队协作入口
 
 这是三人团队的独立协作仓库，对应 https://github.com/SitianGao/geoscope 。从此目录运行和提交代码，不要在上一级“科研-Remote系列”目录提交整个资料库。

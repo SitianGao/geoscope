@@ -85,28 +85,28 @@ test_missing_and_non_finite_values_are_ignored (test_national_ablation.MeanMetri
 test_missing_input_becomes_failure_row (test_national_ablation.RowIsolationTests) ... ok
 test_empty_rule_and_dimensions (test_national_compare.CompareTests) ... ok
 test_recomputable_diff (test_national_compare.CompareTests) ... ok
-test_afr_artifacts_and_missing_live_services (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:08:15] "GET /experiments/75f9113b3c32/cc5b1fe3ca98/disagreement.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "GET /experiments/75f9113b3c32/cc5b1fe3ca98/probability_map.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "GET /api/export/75f9113b3c32/cc5b1fe3ca98 HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/tools/adaptive-refinement HTTP/1.1" 503 -
+test_afr_artifacts_and_missing_live_services (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:20:46] "GET /experiments/e56a6278d81d/4f82670c05ca/disagreement.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "GET /experiments/e56a6278d81d/4f82670c05ca/probability_map.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "GET /api/export/e56a6278d81d/4f82670c05ca HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/tools/adaptive-refinement HTTP/1.1" 503 -
 ok
-test_errors_are_structured_and_clip_is_not_faked (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:08:15] "GET /api/national/retrieval/status HTTP/1.1" 503 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "POST /api/national/tools/shell HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 11:08:15] "GET /api/national/tools/registry HTTP/1.1" 200 -
+test_errors_are_structured_and_clip_is_not_faked (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:20:46] "GET /api/national/retrieval/status HTTP/1.1" 503 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "POST /api/national/tools/shell HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 11:20:46] "GET /api/national/tools/registry HTTP/1.1" 200 -
 ok
-test_legacy_upload_run_export_and_new_plan (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/session HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/run HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/national/tools/region-statistics HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "GET /api/national/artifacts/0e78e1e00e1b64efefcadff280b26c47573f6b85aa1a36b6d7773abfbc2088f9.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "POST /api/national/plans/execute HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "GET /api/session/9d6f153179f1 HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 11:08:16] "GET /api/export/9d6f153179f1/98d5a170af0c HTTP/1.1" 200 -
+test_legacy_upload_run_export_and_new_plan (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/session HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/run HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/national/tools/region-statistics HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "GET /api/national/artifacts/0e78e1e00e1b64efefcadff280b26c47573f6b85aa1a36b6d7773abfbc2088f9.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "POST /api/national/plans/execute HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "GET /api/session/dc3f106e4250 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 11:20:47] "GET /api/export/dc3f106e4250/89367768ec4c HTTP/1.1" 200 -
 ok
 test_actual_saved_artifacts_and_repeat (test_national_planner.PlannerTests) ... ok
 test_different_image_comparison_rejected (test_national_planner.PlannerTests) ... ok
@@ -156,6 +156,10 @@ test_adaptive_orchestration_failure_falls_back (test_server_adaptive.ServerAdapt
 test_adaptive_run_completes_with_artifacts (test_server_adaptive.ServerAdaptiveTests) ... ok
 test_building_target_gated_to_fast (test_server_adaptive.ServerAdaptiveTests) ... ok
 test_fast_path_unchanged (test_server_adaptive.ServerAdaptiveTests) ... ok
+test_only_gpu_zero_is_selected (test_server_lifecycle.LifecycleTests) ... ok
+test_owned_child_is_idempotent_and_stops (test_server_lifecycle.LifecycleTests) ... ok
+test_start_preserves_occupied_ports (test_server_lifecycle.LifecycleTests) ... ok
+test_stop_never_signals_an_unrelated_pid (test_server_lifecycle.LifecycleTests) ... ok
 test_agent_record_redacts_service_address_and_token (test_v07_agent_contract.V07AgentContractTests) ... ok
 test_agent_target_must_match_explicit_and_inherited_target (test_v07_agent_contract.V07AgentContractTests) ... ok
 test_auto_mode_keeps_legacy_result_without_claiming_actual_mode (test_v07_agent_contract.V07AgentContractTests) ... ok
@@ -189,6 +193,6 @@ test_service_probe_does_not_infer_and_requires_true_readiness (test_workbench_in
 test_unknown_revision_and_force_do_not_reuse (test_workbench_integration.IntegrationTests) ... ok
 
 ----------------------------------------------------------------------
-Ran 155 tests in 23.301s
+Ran 159 tests in 23.112s
 
 OK

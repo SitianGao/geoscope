@@ -1,0 +1,32 @@
+{
+  "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a",
+  "images": [
+    {
+      "image_id": "ed1a790d481e",
+      "image_sha256": "42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1"
+    },
+    {
+      "image_id": "4153d56d5a77",
+      "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f"
+    },
+    {
+      "image_id": "2b2acb90b45d",
+      "image_sha256": "17b8f6365e352b523ea77dfaf7dba849ea401d430e4d6ebac14bd3b15539dec2"
+    }
+  ],
+  "vectors_sha256": "5fc3f289d78dcedc75b3c06ded61e6608205ed49a5899ec29d838fda2919972d",
+  "model_info": {
+    "model": "RemoteCLIP",
+    "architecture": "ViT-B-32",
+    "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+    "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+    "weight_repository": "chendelong/RemoteCLIP",
+    "device": "cuda:0",
+    "open_clip_version": "2.24.0",
+    "torch_version": "2.4.1+cu121",
+    "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+    "tokenizer": "SimpleTokenizer",
+    "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+  },
+  "index_version": "194e8dda55d5846dd0241bb6bbee4cf08c746d611e3a162fcf42da97c10be419"
+}

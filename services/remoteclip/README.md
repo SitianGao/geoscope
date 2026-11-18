@@ -1,5 +1,13 @@
 # RemoteCLIP 真实检索服务
 
+2026-11-18 集成后可用一条命令启动真实 CLIP 和 B 工作台（已安装隔离环境及可信权重时）：
+
+```powershell
+.venv-remoteclip/Scripts/python.exe scripts/start_national.py
+```
+
+打开 `http://127.0.0.1:4180/?workbench=national`。自动创建缺失的样例图库，重建索引；Ctrl+C 停止两个服务。已有自定义图库可通过 `--gallery` 指定。Agent/SAM 仍读取现有 `.env`，不会由 CLIP 脚本替代。`scripts/run_remoteclip_acceptance.py --browser` 可自动启停临时端口服务并验收真实页面，不拦截网络响应；需设置 `PLAYWRIGHT_PATH` 指向已安装的 playwright 包。
+
 上游：[RemoteCLIP 官方项目](https://github.com/ChenDelong1999/RemoteCLIP)、[官方权重](https://huggingface.co/chendelong/RemoteCLIP)。网络结构、训练和权重属于上游；本项目提供服务、影像绑定、索引、检索和溯源。
 
 从仓库根目录运行（PowerShell）：

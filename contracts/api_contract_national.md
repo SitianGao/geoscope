@@ -1,5 +1,19 @@
 # GeoScope National API v1（队员 A 实现合同，待集成审查）
 
+## 2026-11-18 联调补充（优先于下方早期说明）
+
+已合入队长 `c1ef225` 和 B `8e022c2`，原始算法及 B 前端原样保留。现在 `national_server.py` 复用队长版 server。推荐使用 `scripts/start_national.py` 一起启动真实 CLIP 与工作台。
+
+- `tools/registry.data.tools` 为 B 所需的 `{name,available,reason,input_schema,...}` 数组；旧名称映射移至 `data.tools_by_name`。动态报告 AFR 适配器与 CLIP 配置状态；CLIP 真实模型/索引就绪情况仍以 retrieval/status 为准。
+- `tools/mask-compare` 额外兼容 B 的 `{image_id,base_result_id,target_result_id}`。仅从该影像已保存的目标版本推导 target；仍验证两个版本目标一致，不允许越过绑定。旧 result_id/target 形式继续支持；两种结果 ID 矛盾时拒绝。
+- `retrieval/status.data` 补充 model、index_size、max_top_k；候选补充真实 session 的 name、thumbnail_url。B 页面直接消费统一响应 data。
+- `plans/execute` 将实际执行事件保存到对应 run 的 `tool_execution={image_id,result_id,status,failed_step,steps}`，steps 含实际 inputs/outputs；保存 session/result JSON。B 重开版本即可展示步骤。会话忙时拒绝，不覆盖已有结果或蒙版。
+- `tools/adaptive-refinement` 已接队长原 run_task/Harness，通过明确的 parent_run_id、新结果 ID、live/adaptive/force_perception 参数运行。调用前检查已有版本、范围及真实 Agent/SAM 配置；不改算法策略。AFR 回退时保留服务器结果历史并返回 not_ready，绝不冒充 AFR 完成。真实部署运行仍需服务地址。
+- 新入口允许读取绑定 run 的 `disagreement.png`、`probability_map.png`，修复原 handler 静态文件白名单产生的 404。无绑定版本/无文件仍返回 404；不开放任意文件。
+- 新入口的原 `/api/export/{sid}/{rid}` 保留旧文件并按实际存在情况补入 full_mask、afr.json、probability_map.png 和 disagreement.png，均从该绑定结果目录取出。
+
+实际真实 CLIP→B 页面选图→明确 demo 分割→VerifiedPlan 步骤展示已通过无网络拦截的浏览器验收，证据见 docs/evidence/team_live_browser.txt。未把 demo 分割写作真实 SAM 推理。
+
 实际基线为仓库根目录 v0.7，不存在 `geoscope-v07-integration/` 子目录。通过 `python national_server.py` 启用全部新增入口；`python server.py` 原行为不变。原有 `server.py`、`agent_bridge.py`、`v07_contract.py`、`web/`、RemoteSAM 和队长算法目录均未修改。本合同记录已实现协议，不代表队长已签收。
 
 ## 统一响应

@@ -95,3 +95,44 @@ class Backend:
                               base_result_id=args['base_result_id'], target_result_id=args['result_id'],
                               base_provenance=base['provenance'], scope=scope, roi=roi)
         return {**output, **current['provenance']}
+
+    def save_execution(self, args, result):
+        s = self.server
+        session = s.get_session(args['image_id'])
+        run = next((r for r in session['runs'] if r['id'] == args['result_id']), None)
+        if not run:
+            return
+        execution = {'image_id': args['image_id'], 'result_id': args['result_id'],
+                     'status': result['status'], 'failed_step': result['failed_step'],
+                     'steps': [{**event, 'inputs': {k: v for k, v in args.items() if k != 'steps'},
+                                'outputs': {'result_id': args['result_id'], **event.get('output', {})}}
+                               for event in result['events']]}
+        run['tool_execution'] = execution
+        s.save_json(self.safe_path(args['image_id'], args['result_id'], 'result.json'), {k: v for k, v in run.items() if k != 'trace'})
+        s.save_json(self.safe_path(args['image_id'], 'session.json'), s.public_session(session))
+
+    def refine(self, args):
+        from .registry import validate, REGISTRY
+        validate(args, REGISTRY['adaptive_refinement']['input_schema'])
+        self.load(args['image_id'], args['result_id'], args['target'])
+        s = self.server
+        if not callable(getattr(s, 'run_adaptive_pipeline', None)):
+            raise ToolError('missing_dependency', 'Captain AFR adapter is unavailable')
+        import os
+        if not os.environ.get('GEO_REMOTESAM_URL') or not os.environ.get('GEO_AGENT_BASE_URL'):
+            raise ToolError('service_unavailable', 'Real Agent and RemoteSAM must be configured for AFR')
+        session = s.get_session(args['image_id'])
+        parent = next(r for r in session['runs'] if r['id'] == args['result_id'])
+        aliases = {'all': 'all', 'left_half': 'left', 'right_half': 'right', 'top_half': 'top', 'bottom_half': 'bottom', 'roi': 'all'}
+        scope = args.get('scope')
+        roi = ({'xyxy': args['roi'], 'source': 'drawn', 'image_size': [session['width'], session['height']]}
+               if scope == 'roi' and 'roi' in args else parent.get('task_options', {}).get('roi') if scope is None else None)
+        if scope is not None:
+            from .statistics import scope_mask
+            scope_mask((session['width'], session['height']), scope, args.get('roi'))
+        result = s.run_task(session, {'parent_run_id': args['result_id'], 'query': '提取'+s.TARGETS[args['target']],
+                            'mode': 'live', 'quality_mode': 'adaptive', 'force_perception': True,
+                            'scope': aliases[scope] if scope else parent['task']['side'], 'roi': roi})
+        if result.get('afr', {}).get('status') != 'completed' or not result.get('mask_url'):
+            raise ToolError('service_unavailable', 'AFR did not complete; any fallback result remains in session history: '+result['id'])
+        return {'image_id': args['image_id'], 'result_id': result['id'], 'parent_result_id': args['result_id'], 'run': result}

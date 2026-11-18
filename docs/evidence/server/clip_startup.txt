@@ -1,0 +1,14 @@
+{"event": "model_load_failed", "error": "ModuleNotFoundError: No module named 'wcwidth'"}
+127.0.0.1 - - [18/Nov/2026 10:29:55] "GET /ready HTTP/1.1" 200 -
+{"event": "model_loaded", "model": "RemoteCLIP", "architecture": "ViT-B-32", "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4", "upstream": "https://github.com/ChenDelong1999/RemoteCLIP", "weight_repository": "chendelong/RemoteCLIP", "device": "cuda:0", "open_clip_version": "2.24.0", "torch_version": "2.4.1+cu121", "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb at 0x7f06b1345090>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)", "tokenizer": "SimpleTokenizer", "embedding_version": "4904f167bff62cbe151b7e1af244bdd722bc0b1e67f6f4079ed5760ddf0053a2"}
+{"event": "model_loaded", "model": "RemoteCLIP", "architecture": "ViT-B-32", "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4", "upstream": "https://github.com/ChenDelong1999/RemoteCLIP", "weight_repository": "chendelong/RemoteCLIP", "device": "cuda:0", "open_clip_version": "2.24.0", "torch_version": "2.4.1+cu121", "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)", "tokenizer": "SimpleTokenizer", "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"}
+127.0.0.1 - - [18/Nov/2026 10:31:04] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:31:04] "POST /search HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:31:04] "POST /search HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:35:28] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:36:44] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:36:44] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:38:32] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:38:32] "POST /search HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:39:19] "GET /ready HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 10:39:20] "POST /search HTTP/1.1" 200 -

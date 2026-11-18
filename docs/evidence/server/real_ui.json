@@ -1,0 +1,21 @@
+{
+  "image_id": "2b2acb90b45d",
+  "base_result_id": "1e9614581f1c",
+  "target_result_id": "37cfda0a9fc3",
+  "actual_model_results": true,
+  "browser_compare_matches_backend": true,
+  "export_members": [
+    "original.png",
+    "mask.png",
+    "full_mask.png",
+    "overlay.png",
+    "result.json",
+    "statistics.json",
+    "run_log.json",
+    "report.md",
+    "afr.json",
+    "probability_map.png",
+    "disagreement.png"
+  ],
+  "page_errors": []
+}

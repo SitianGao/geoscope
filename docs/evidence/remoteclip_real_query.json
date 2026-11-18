@@ -1,8 +1,8 @@
 {
-  "recorded_at": "2026-11-17T11:21:14.216340+00:00",
+  "recorded_at": "2026-11-18T02:24:20.653993+00:00",
   "status": {
     "success": true,
-    "request_id": "a8540639de124006a945c7d8fc1fa3b5",
+    "request_id": "2bc6cd2689a349f9bd0ee2b4e3b43576",
     "image_id": null,
     "result_id": null,
     "status": "completed",
@@ -24,7 +24,10 @@
       },
       "index_ready": true,
       "index_version": "c2f38e9e37fc8546e653566317754937bbf0dba850bf748810703fef9db758a0",
-      "image_count": 2
+      "image_count": 2,
+      "model": "RemoteCLIP",
+      "index_size": 2,
+      "max_top_k": 100
     },
     "error": null,
     "meta": {
@@ -35,7 +38,7 @@
   },
   "first_query": {
     "success": true,
-    "request_id": "c932c9288e0a4fcf84d6f0df209db466",
+    "request_id": "ccfcb3e5877b49fbbc7529acb92a1f44",
     "image_id": null,
     "result_id": null,
     "status": "completed",
@@ -63,14 +66,18 @@
           "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
           "rank": 1,
           "similarity": 0.24212190508842468,
-          "session_url": "/api/session/8e1939ccc3e1"
+          "session_url": "/api/session/8e1939ccc3e1",
+          "thumbnail_url": "/experiments/8e1939ccc3e1/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
         },
         {
           "image_id": "b273fa9ac2d6",
           "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
           "rank": 2,
           "similarity": 0.13405519723892212,
-          "session_url": "/api/session/b273fa9ac2d6"
+          "session_url": "/api/session/b273fa9ac2d6",
+          "thumbnail_url": "/experiments/b273fa9ac2d6/original.png",
+          "name": "街区建筑研究样区"
         }
       ],
       "status": "completed",
@@ -86,7 +93,7 @@
   },
   "repeat_query": {
     "success": true,
-    "request_id": "b865d4ea4ff44b5a94d66e5370e63a45",
+    "request_id": "dd7253f00efb453d9e8bb11933d6e5aa",
     "image_id": null,
     "result_id": null,
     "status": "completed",
@@ -114,14 +121,18 @@
           "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
           "rank": 1,
           "similarity": 0.24212190508842468,
-          "session_url": "/api/session/8e1939ccc3e1"
+          "session_url": "/api/session/8e1939ccc3e1",
+          "thumbnail_url": "/experiments/8e1939ccc3e1/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
         },
         {
           "image_id": "b273fa9ac2d6",
           "image_sha256": "f067e773544d44d3601fdade477f672d7bdaae456cf228fed393292070f75dc3",
           "rank": 2,
           "similarity": 0.13405519723892212,
-          "session_url": "/api/session/b273fa9ac2d6"
+          "session_url": "/api/session/b273fa9ac2d6",
+          "thumbnail_url": "/experiments/b273fa9ac2d6/original.png",
+          "name": "街区建筑研究样区"
         }
       ],
       "status": "completed",

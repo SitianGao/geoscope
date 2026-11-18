@@ -1,0 +1,233 @@
+{
+  "location": "laboratory server",
+  "real_clip": {
+    "success": true,
+    "request_id": "1d11f89f79f94991b8de7a185409c69c",
+    "image_id": null,
+    "result_id": null,
+    "status": "completed",
+    "data": {
+      "query": "airport with airplanes",
+      "model": "RemoteCLIP",
+      "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a",
+      "index_version": "92cca98094c1643b7751d1e0eeab7a23d5b75a1069d6a01906b3ebf94e8ec02a",
+      "model_info": {
+        "model": "RemoteCLIP",
+        "architecture": "ViT-B-32",
+        "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+        "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+        "weight_repository": "chendelong/RemoteCLIP",
+        "device": "cuda:0",
+        "open_clip_version": "2.24.0",
+        "torch_version": "2.4.1+cu121",
+        "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+        "tokenizer": "SimpleTokenizer",
+        "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+      },
+      "results": [
+        {
+          "image_id": "4153d56d5a77",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "rank": 1,
+          "similarity": 0.24395349621772766,
+          "session_url": "/api/session/4153d56d5a77",
+          "thumbnail_url": "/experiments/4153d56d5a77/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
+        },
+        {
+          "image_id": "ed1a790d481e",
+          "image_sha256": "42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1",
+          "rank": 2,
+          "similarity": 0.22121994197368622,
+          "session_url": "/api/session/ed1a790d481e",
+          "thumbnail_url": "/experiments/ed1a790d481e/original.png",
+          "name": "街区建筑研究样区"
+        }
+      ],
+      "status": "completed",
+      "real_execution": true,
+      "notice": "Normalized embedding cosine similarity is not probability or pixel localization"
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "selected_image_id": "4153d56d5a77",
+  "page_errors": [],
+  "segmentation_mode": "demo",
+  "real_segmentation_executed": false,
+  "plan": {
+    "status": "completed",
+    "failed_step": null,
+    "events": [
+      {
+        "step": 1,
+        "tool": "get_segmentation",
+        "status": "completed",
+        "duration_ms": 3.717,
+        "output": {
+          "image_id": "4153d56d5a77",
+          "result_id": "f723edde8bef",
+          "target": "aircraft",
+          "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 2,
+        "tool": "apply_scope",
+        "status": "completed",
+        "duration_ms": 0.462,
+        "output": {
+          "scope": "all",
+          "roi": null
+        }
+      },
+      {
+        "step": 3,
+        "tool": "region_statistics",
+        "status": "completed",
+        "duration_ms": 1.139,
+        "output": {
+          "target_pixels_in_scope": 5651,
+          "image_pixels": 640000,
+          "scope_pixels": 640000,
+          "ratio_of_full_image": 0.0088296875,
+          "ratio_within_scope": 0.0088296875,
+          "scope": "all",
+          "roi": null,
+          "width": 800,
+          "height": 800,
+          "unit": "pixel",
+          "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+          "image_id": "4153d56d5a77",
+          "result_id": "f723edde8bef",
+          "target": "aircraft",
+          "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 4,
+        "tool": "report_generation",
+        "status": "completed",
+        "duration_ms": 1.728,
+        "output": {
+          "statistics": {
+            "target_pixels_in_scope": 5651,
+            "image_pixels": 640000,
+            "scope_pixels": 640000,
+            "ratio_of_full_image": 0.0088296875,
+            "ratio_within_scope": 0.0088296875,
+            "scope": "all",
+            "roi": null,
+            "width": 800,
+            "height": 800,
+            "unit": "pixel",
+            "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+            "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+          },
+          "report": "{\n  \"image_id\": \"4153d56d5a77\",\n  \"result_id\": \"f723edde8bef\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54\",\n  \"image_sha256\": \"47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f\",\n  \"model_execution\": false,\n  \"source_mode\": \"demo\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5651,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 640000,\n  \"ratio_of_full_image\": 0.0088296875,\n  \"ratio_within_scope\": 0.0088296875,\n  \"scope\": \"all\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+          "format": "application/json",
+          "source": "deterministic_computation",
+          "image_id": "4153d56d5a77",
+          "result_id": "f723edde8bef",
+          "target": "aircraft",
+          "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      }
+    ],
+    "artifacts": {
+      "get_segmentation": {
+        "image_id": "4153d56d5a77",
+        "result_id": "f723edde8bef",
+        "target": "aircraft",
+        "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+        "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "apply_scope": {
+        "scope": "all",
+        "roi": null
+      },
+      "region_statistics": {
+        "target_pixels_in_scope": 5651,
+        "image_pixels": 640000,
+        "scope_pixels": 640000,
+        "ratio_of_full_image": 0.0088296875,
+        "ratio_within_scope": 0.0088296875,
+        "scope": "all",
+        "roi": null,
+        "width": 800,
+        "height": 800,
+        "unit": "pixel",
+        "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+        "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+        "image_id": "4153d56d5a77",
+        "result_id": "f723edde8bef",
+        "target": "aircraft",
+        "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+        "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "report_generation": {
+        "statistics": {
+          "target_pixels_in_scope": 5651,
+          "image_pixels": 640000,
+          "scope_pixels": 640000,
+          "ratio_of_full_image": 0.0088296875,
+          "ratio_within_scope": 0.0088296875,
+          "scope": "all",
+          "roi": null,
+          "width": 800,
+          "height": 800,
+          "unit": "pixel",
+          "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+        },
+        "report": "{\n  \"image_id\": \"4153d56d5a77\",\n  \"result_id\": \"f723edde8bef\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54\",\n  \"image_sha256\": \"47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f\",\n  \"model_execution\": false,\n  \"source_mode\": \"demo\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5651,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 640000,\n  \"ratio_of_full_image\": 0.0088296875,\n  \"ratio_within_scope\": 0.0088296875,\n  \"scope\": \"all\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+        "format": "application/json",
+        "source": "deterministic_computation",
+        "image_id": "4153d56d5a77",
+        "result_id": "f723edde8bef",
+        "target": "aircraft",
+        "full_mask_sha256": "1e973d9efeb3c707b63fd288bf69ef1558f58722b3abab8eebc57d2b55057b54",
+        "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      }
+    },
+    "error": null
+  }
+}

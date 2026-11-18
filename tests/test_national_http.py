@@ -44,9 +44,14 @@ class NationalHTTPTests(unittest.TestCase):
         _, comparison = self.request('/api/national/tools/mask-compare', {**args, 'base_result_id': run['id']})
         code, png = self.request(comparison['data']['diff_mask_ref'])
         self.assertEqual(code, 200); self.assertTrue(png.startswith(b'\x89PNG'))
+        _, compatible = self.request('/api/national/tools/mask-compare', {'image_id': session['id'], 'base_result_id': run['id'], 'target_result_id': run['id']})
+        self.assertTrue(compatible['success']); self.assertEqual(compatible['data']['target_result_id'], run['id'])
         plan = {**args, 'task': 'region_analysis', 'scope': 'left_half', 'steps': ['get_segmentation', 'apply_scope', 'region_statistics']}
         _, response = self.request('/api/national/plans/execute', plan)
         self.assertTrue(response['success']); self.assertEqual(len(response['data']['events']), 3)
+        _, updated = self.request('/api/session/'+session['id'])
+        self.assertEqual(updated['runs'][0]['tool_execution']['result_id'], run['id'])
+        self.assertEqual(len(updated['runs'][0]['tool_execution']['steps']), 3)
         code, archive = self.request(run['export_url'])
         self.assertEqual(code, 200); self.assertTrue(archive.startswith(b'PK'))
 
@@ -61,4 +66,23 @@ class NationalHTTPTests(unittest.TestCase):
         code, result = self.request('/api/national/tools/shell', {})
         self.assertEqual(result['error']['code'], 'unsupported_tool')
         _, registry = self.request('/api/national/tools/registry')
-        self.assertFalse(registry['data']['tools']['adaptive_refinement']['available'])
+        self.assertTrue(registry['data']['tools_by_name']['adaptive_refinement']['available'])
+        self.assertTrue(any(t['name'] == 'semantic_image_retrieval' for t in registry['data']['tools']))
+
+    def test_afr_artifacts_and_missing_live_services(self):
+        from PIL import Image
+        session = server.new_session('urban')
+        run = server.run_task(server.get_session(session['id']), {'mode': 'demo', 'query': '提取建筑'})
+        for name in ('disagreement', 'probability_map'):
+            Image.new('L', (800, 600), 0).save(server.DATA/session['id']/run['id']/(name+'.png'))
+            code, data = self.request(f'/experiments/{session["id"]}/{run["id"]}/{name}.png')
+            self.assertEqual(code, 200); self.assertTrue(data.startswith(b'\x89PNG'))
+        import zipfile, io
+        code, archive = self.request(run['export_url'])
+        with zipfile.ZipFile(io.BytesIO(archive)) as package:
+            self.assertIn('disagreement.png', package.namelist())
+            self.assertIn('probability_map.png', package.namelist())
+        with patch.dict('os.environ', {'GEO_REMOTESAM_URL': '', 'GEO_AGENT_BASE_URL': ''}):
+            code, data = self.request('/api/national/tools/adaptive-refinement', {'image_id': session['id'], 'result_id': run['id'], 'target': 'building'})
+            self.assertEqual(code, 503); self.assertEqual(data['status'], 'not_ready')
+        self.assertEqual(len(server.get_session(session['id'])['runs']), 1)

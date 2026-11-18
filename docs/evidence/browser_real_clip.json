@@ -1,0 +1,178 @@
+{
+  "actual_clip": true,
+  "segmentation_mode": "demo",
+  "image_id": "8e1939ccc3e1",
+  "result_id": "795998bbc937",
+  "plan": {
+    "status": "completed",
+    "failed_step": null,
+    "events": [
+      {
+        "step": 1,
+        "tool": "get_segmentation",
+        "status": "completed",
+        "duration_ms": 10.23,
+        "output": {
+          "image_id": "8e1939ccc3e1",
+          "result_id": "795998bbc937",
+          "target": "aircraft",
+          "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+          "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 2,
+        "tool": "apply_scope",
+        "status": "completed",
+        "duration_ms": 1.577,
+        "output": {
+          "scope": "all",
+          "roi": null
+        }
+      },
+      {
+        "step": 3,
+        "tool": "region_statistics",
+        "status": "completed",
+        "duration_ms": 4.721,
+        "output": {
+          "target_pixels_in_scope": 5651,
+          "image_pixels": 640000,
+          "scope_pixels": 640000,
+          "ratio_of_full_image": 0.0088296875,
+          "ratio_within_scope": 0.0088296875,
+          "scope": "all",
+          "roi": null,
+          "width": 800,
+          "height": 800,
+          "unit": "pixel",
+          "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+          "image_id": "8e1939ccc3e1",
+          "result_id": "795998bbc937",
+          "target": "aircraft",
+          "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+          "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      {
+        "step": 4,
+        "tool": "report_generation",
+        "status": "completed",
+        "duration_ms": 4.764,
+        "output": {
+          "statistics": {
+            "target_pixels_in_scope": 5651,
+            "image_pixels": 640000,
+            "scope_pixels": 640000,
+            "ratio_of_full_image": 0.0088296875,
+            "ratio_within_scope": 0.0088296875,
+            "scope": "all",
+            "roi": null,
+            "width": 800,
+            "height": 800,
+            "unit": "pixel",
+            "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+            "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+          },
+          "report": "{\n  \"image_id\": \"8e1939ccc3e1\",\n  \"result_id\": \"795998bbc937\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934\",\n  \"image_sha256\": \"79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07\",\n  \"model_execution\": false,\n  \"source_mode\": \"demo\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5651,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 640000,\n  \"ratio_of_full_image\": 0.0088296875,\n  \"ratio_within_scope\": 0.0088296875,\n  \"scope\": \"all\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+          "format": "application/json",
+          "source": "deterministic_computation",
+          "image_id": "8e1939ccc3e1",
+          "result_id": "795998bbc937",
+          "target": "aircraft",
+          "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+          "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+          "model_execution": false,
+          "source_mode": "demo",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      }
+    ],
+    "artifacts": {
+      "get_segmentation": {
+        "image_id": "8e1939ccc3e1",
+        "result_id": "795998bbc937",
+        "target": "aircraft",
+        "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+        "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "apply_scope": {
+        "scope": "all",
+        "roi": null
+      },
+      "region_statistics": {
+        "target_pixels_in_scope": 5651,
+        "image_pixels": 640000,
+        "scope_pixels": 640000,
+        "ratio_of_full_image": 0.0088296875,
+        "ratio_within_scope": 0.0088296875,
+        "scope": "all",
+        "roi": null,
+        "width": 800,
+        "height": 800,
+        "unit": "pixel",
+        "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+        "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+        "image_id": "8e1939ccc3e1",
+        "result_id": "795998bbc937",
+        "target": "aircraft",
+        "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+        "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "report_generation": {
+        "statistics": {
+          "target_pixels_in_scope": 5651,
+          "image_pixels": 640000,
+          "scope_pixels": 640000,
+          "ratio_of_full_image": 0.0088296875,
+          "ratio_within_scope": 0.0088296875,
+          "scope": "all",
+          "roi": null,
+          "width": 800,
+          "height": 800,
+          "unit": "pixel",
+          "mask_hash": "3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+        },
+        "report": "{\n  \"image_id\": \"8e1939ccc3e1\",\n  \"result_id\": \"795998bbc937\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934\",\n  \"image_sha256\": \"79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07\",\n  \"model_execution\": false,\n  \"source_mode\": \"demo\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5651,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 640000,\n  \"ratio_of_full_image\": 0.0088296875,\n  \"ratio_within_scope\": 0.0088296875,\n  \"scope\": \"all\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"3cf322d24e34a287fe9d30d0c2bff87e792175ce3617a02cee25b5e3bad8ac15\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+        "format": "application/json",
+        "source": "deterministic_computation",
+        "image_id": "8e1939ccc3e1",
+        "result_id": "795998bbc937",
+        "target": "aircraft",
+        "full_mask_sha256": "af5199e417438393073868fd0315e5b8c3bf6b98998e9818197001d26b65e934",
+        "image_sha256": "79f79e3a86f9f99e8eaa0359a8ddff30449643131ddd3c9c1d581dfe1d8fce07",
+        "model_execution": false,
+        "source_mode": "demo",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      }
+    },
+    "error": null
+  },
+  "errors": []
+}

@@ -1,6 +1,6 @@
 open-clip-torch>=2.24,<5
-torch>=2.6
-torchvision>=0.21
+torch>=2.4
+torchvision>=0.19
 numpy>=1.24
 Pillow>=10
 huggingface-hub>=0.27

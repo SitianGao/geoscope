@@ -18,6 +18,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', default='weights/RemoteCLIP-RN50.pt')
     parser.add_argument('--sha256', default='11657d33a87fc197e19a7654a76a632415ebea42feb8a61025ef389f8990c0f9')
+    parser.add_argument('--browser', action='store_true', help='Run actual B UI against the real CLIP service')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
     with socket.socket() as sock:
@@ -45,6 +46,9 @@ def main():
                 time.sleep(.5)
             else: raise RuntimeError(f'Model readiness timeout: {state}')
             subprocess.run([sys.executable, 'scripts/remoteclip_evidence.py', '--platform', f'http://127.0.0.1:{server.server_port}'], cwd=root, check=True)
+            if args.browser:
+                env = dict(os.environ, GEO_TEST_BASE_URL=f'http://127.0.0.1:{server.server_port}')
+                subprocess.run(['node', 'tests/national_live_clip.cjs'], cwd=root, env=env, check=True)
         finally:
             process.terminate()
             try: process.wait(timeout=10)

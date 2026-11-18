@@ -1,5 +1,29 @@
 # 队员 A 交付报告
 
+## 2026-11-18 最终服务器集成状态（优先于早期记录）
+
+已将队长 `feature/national-algorithms@c1ef225` 和 B 的 `feature/national-workbench@8e022c2` 合入 A 分支，保留两方提交及代码归属。Git smart HTTP 仍不可达，通过官方提交清单与精确快照恢复提交对象并校验 tip tree/commit SHA 后正常合并，无重写队友提交。main 未变动。
+
+用户明确要求运行在服务器；最终三模型、推理、测试和浏览器验收均在实验室服务器执行。A 使用独立代码/uv 环境，不修改队长既有代码目录或 SAM 环境，权重只读引用或从用户已有副本复制；仅 GPU0，GPU1 未使用。
+
+实际已完成：
+
+- A/B 接口兼容：target_result_id 比较参数、数组工具注册表、CLIP 就绪字段与候选缩略图、绑定版本中的 tool_execution.steps。B 前端代码未由 A 改写。
+- AFR 包装调用队长原 Harness/run_task，生成新结果版本并保留 parent；不改变 AFR 策略、预算和权重。修复集成入口对分歧图/概率图的 404；导出包含真实存在的 AFR 附件。
+- 真实 RemoteCLIP ViT-B-32：复用服务器原权重，SHA256=`60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4`；OpenCLIP 2.24.0 / Torch 2.4.1+cu121 / cuda:0。修复旧 OpenCLIP transform repr 中的随机地址，保证 embedding_version 跨重启稳定。图库包含城市、机场及队长已有 P1529 真图，均先绑定平台 image_id 和原图哈希。
+- 找回用户已有 RemoteAgent 四分片权重并复制到服务器；校验 729 个张量和 16,584,333,312 字节张量数据。ModelScope 页面已实际核对，仓库为申请制 AIMGroup/RemoteAgent，页面提交 3a0698c4、总大小 16.60GB；没有绕过下载权限。
+- 旧 vLLM 环境已不在服务器，新增可选 Transformers serving 适配器，匹配权重 config 的 4.57.1，保留原 RemoteAgent 模型与 Harness。使用保存的 slow processor、BF16/SDPA、16K 上下文；原 vLLM 路径不改。详情见 services/remoteagent/OPENAI_RUNTIME.md。
+- 真实全链路：CLIP 候选选择 → RemoteAgent → RemoteSAM fast → AFR 新版本 → VerifiedPlan → 版本差异复算 → 分歧图 → 实验包导出。机场样例与 4000×4000 的 P1529 均有服务器记录，后者实际产生局部推理及诊断产物。未使用 mock 或 demo 掩码作为这些记录的模型输入。
+- P1529 实际 image_id=`2b2acb90b45d`，最终 base_result_id=`1e9614581f1c`，AFR result_id=`37cfda0a9fc3`。服务器真实 Chrome 显示对应步骤、差异和分歧图，并断言浏览器逐像素复算与后端完全一致。证据见 docs/evidence/server/。
+
+最终服务器回归 **155 项全部通过，无跳过（23.301 秒）**。P1529 实际选中 6 个局部区域、产生 6 个待复核区域，Agent 最终反馈 completed、无 feedback_warning。实际导出包括原图、最终/完整蒙版、叠图、result/statistics/run_log/report，以及 afr.json、概率图、分歧图。它们全部绑定同一原图和明确的 base/target 版本。
+
+`docs/evidence/server/real_disagreement.png`、`real_version_compare.png`、`real_afr_steps.png` 为服务器真实 Chrome 对真实模型产物生成的截图；早期 `verifiedplan_workbench.png` 仍为明确 demo 输入的工程验收，不能与真实 P1529 证据混用。
+
+原始失败日志保留：开始的缺依赖、Transformers 版本不匹配，以及 8K 反馈超限均已修复并重验。不得用这些早期日志或早期“待联调”段落代替最终状态；旧记录保留用于追溯。本次只是工程闭环验证，没有新增精度提升结论或独立泛化实验。
+
+服务器地址、登录及实际私有部署路径不写入公开合同；运行进程与 PID、日志均在 A 的独立部署目录 outputs 中。当前服务保持运行。远端 B/队长分支未被推送改写；A 的新提交仍待队长审查合并。
+
 日期：2026-11-17。开发分支：`feature/national-tools-clip`。基线：`2cb8da8b1293882e24bdf75f2ce70628a96a934a`，保留标签 `baseline/national-before-a-20261117`。
 
 ## 已实现

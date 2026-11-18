@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="860" viewBox="0 0 1600 860"><rect width="100%" height="100%" fill="white"/>
+<polyline points="361,250 439,250" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="439,250 427.0,245.0 427.0,255.0" fill="#526A77"/>
+<polyline points="761,250 839,250" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="839,250 827.0,245.0 827.0,255.0" fill="#526A77"/>
+<polyline points="1161,250 1239,250" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1239,250 1227.0,245.0 1227.0,255.0" fill="#526A77"/>
+<polyline points="200,311 200,434" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="200,434 205.0,422.0 195.0,422.0" fill="#526A77"/>
+<polyline points="361,505 439,505" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="439,505 427.0,500.0 427.0,510.0" fill="#526A77"/>
+<polyline points="761,505 839,505" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="839,505 827.0,500.0 827.0,510.0" fill="#526A77"/>
+<polyline points="1161,505 1239,505" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1239,505 1227.0,500.0 1227.0,510.0" fill="#526A77"/>
+<polyline points="1400,434 1400,311" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1400,311 1395.0,323.0 1405.0,323.0" fill="#526A77"/>
+<text x="800.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="700" fill="#243B47">RemoteSAM-270K：类别扩展与属性扩展共同构建语义覆盖</text>
+<text x="800.0" y="120.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#243B47">训练数据：约 27 万组“影像—文本—蒙版”三元组</text>
+<rect x="40" y="190" width="320" height="120" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="200.0" y="232.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">多源遥感数据整合</text>
+<text x="200.0" y="268.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">影像、检测与分割标注</text>
+<rect x="440" y="190" width="320" height="120" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="600.0" y="232.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">统一标注格式</text>
+<text x="600.0" y="268.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">检测标注转换为蒙版</text>
+<rect x="840" y="190" width="320" height="120" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="1000.0" y="232.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">广义指代表达配对</text>
+<text x="1000.0" y="268.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">单目标 · 多目标 · 无目标</text>
+<rect x="1240" y="190" width="320" height="120" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="1400.0" y="232.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">RemoteSAM-270K</text>
+<text x="1400.0" y="268.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">统一的指代分割训练数据</text>
+<rect x="40" y="435" width="320" height="145" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="200.0" y="490.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">局部影像与详细描述</text>
+<text x="200.0" y="524.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">Qwen2-VL 生成属性信息</text>
+<rect x="440" y="435" width="320" height="145" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="600.0" y="489.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">拆分为指代表达</text>
+<text x="600.0" y="525.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">单类别目标与相关属性</text>
+<rect x="840" y="435" width="320" height="145" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="1000.0" y="489.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">混合教师模型</text>
+<text x="1000.0" y="525.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">生成候选伪蒙版</text>
+<rect x="1240" y="435" width="320" height="145" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="1400.0" y="490.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">SigLIP2 语义相似度筛选</text>
+<text x="1400.0" y="524.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">迭代保留高质量样本</text>
+<rect x="40" y="680" width="460" height="110" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="270.0" y="717.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">类别范围</text>
+<text x="270.0" y="753.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">297 类目标</text>
+<rect x="570" y="680" width="460" height="110" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="800.0" y="717.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">属性表达</text>
+<text x="800.0" y="753.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">16 类细粒度属性</text>
+<rect x="1100" y="680" width="460" height="110" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="1330.0" y="717.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">语义覆盖评价参照</text>
+<text x="1330.0" y="753.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">RSVocab-1K 层级词表</text></svg>

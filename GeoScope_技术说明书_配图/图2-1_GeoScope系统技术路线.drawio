@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="24.7.17">
+  <diagram id="图2-1_GeoScope系统技术路线" name="图2-1_GeoScope系统技术路线">
+    <mxGraphModel page="1" pageWidth="1600" pageHeight="770" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e0" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="391" y="185" />
+            <mxPoint as="targetPoint" x="429" y="185" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="781" y="185" />
+            <mxPoint as="targetPoint" x="819" y="185" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1171" y="185" />
+            <mxPoint as="targetPoint" x="1209" y="185" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="605" y="241" />
+            <mxPoint as="targetPoint" x="605" y="284" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="995" y="241" />
+            <mxPoint as="targetPoint" x="995" y="284" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1385" y="241" />
+            <mxPoint as="targetPoint" x="1385" y="444" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1209" y="500" />
+            <mxPoint as="targetPoint" x="1171" y="500" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="819" y="500" />
+            <mxPoint as="targetPoint" x="781" y="500" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="429" y="500" />
+            <mxPoint as="targetPoint" x="391" y="500" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n0" vertex="1" parent="1" value="GeoScope：从自然语言意图到可复核的遥感分析结果" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;strokeWidth=1.5;fontSize=32;fontStyle=1;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="22" width="1520" height="50" />
+        </mxCell>
+        <mxCell id="n1" vertex="1" parent="1" value="影像与自然语言任务&lt;br&gt;目标 · 范围 · 执行模式" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="130" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n2" vertex="1" parent="1" value="RemoteAgent&lt;br&gt;意图理解与任务规划" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="430" y="130" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n3" vertex="1" parent="1" value="GeoScope Harness&lt;br&gt;工具 · 目标 · 参数校验" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="820" y="130" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n4" vertex="1" parent="1" value="RemoteSAM&lt;br&gt;文本引导的像素级分割" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1210" y="130" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n5" vertex="1" parent="1" value="场景问答&lt;br&gt;生成直接回答" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="430" y="285" width="350" height="85" />
+        </mxCell>
+        <mxCell id="n6" vertex="1" parent="1" value="条件不足或调用不合法&lt;br&gt;澄清或拒绝，并保存原因" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FCF2E6;strokeColor=#A47A40;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="820" y="285" width="350" height="85" />
+        </mxCell>
+        <mxCell id="n7" vertex="1" parent="1" value="返回蒙版校验&lt;br&gt;尺寸 · 编码 · 实际模式" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1210" y="445" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n8" vertex="1" parent="1" value="空间筛选与统计&lt;br&gt;像素面积 · 整图覆盖比例" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="820" y="445" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n9" vertex="1" parent="1" value="实验版本与结果保存&lt;br&gt;参数 · 产物 · 日志关联" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="430" y="445" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n10" vertex="1" parent="1" value="可视化复核与导出&lt;br&gt;原图 · 叠加 · 对比 · 批量" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="445" width="350" height="110" />
+        </mxCell>
+        <mxCell id="n11" vertex="1" parent="1" value="研究基础：RemoteAgent 与 RemoteSAM&lt;br&gt;提供任务认知和遥感视觉感知能力" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="630" width="740" height="90" />
+        </mxCell>
+        <mxCell id="n12" vertex="1" parent="1" value="作品实现：执行约束、统计与连续实验管理&lt;br&gt;实现模型能力到可用分析流程的衔接" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="820" y="630" width="740" height="90" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

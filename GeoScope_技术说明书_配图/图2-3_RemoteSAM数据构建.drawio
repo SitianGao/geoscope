@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="24.7.17">
+  <diagram id="图2-3_RemoteSAM数据构建" name="图2-3_RemoteSAM数据构建">
+    <mxGraphModel page="1" pageWidth="1600" pageHeight="860" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e0" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="361" y="250" />
+            <mxPoint as="targetPoint" x="439" y="250" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="761" y="250" />
+            <mxPoint as="targetPoint" x="839" y="250" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1161" y="250" />
+            <mxPoint as="targetPoint" x="1239" y="250" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="200" y="311" />
+            <mxPoint as="targetPoint" x="200" y="434" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="361" y="505" />
+            <mxPoint as="targetPoint" x="439" y="505" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="761" y="505" />
+            <mxPoint as="targetPoint" x="839" y="505" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1161" y="505" />
+            <mxPoint as="targetPoint" x="1239" y="505" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1400" y="434" />
+            <mxPoint as="targetPoint" x="1400" y="311" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n0" vertex="1" parent="1" value="RemoteSAM-270K：类别扩展与属性扩展共同构建语义覆盖" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;strokeWidth=1.5;fontSize=32;fontStyle=1;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="22" width="1520" height="50" />
+        </mxCell>
+        <mxCell id="n1" vertex="1" parent="1" value="训练数据：约 27 万组“影像—文本—蒙版”三元组" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;strokeWidth=1.5;fontSize=24;fontStyle=1;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="100" width="1520" height="40" />
+        </mxCell>
+        <mxCell id="n2" vertex="1" parent="1" value="多源遥感数据整合&lt;br&gt;影像、检测与分割标注" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="190" width="320" height="120" />
+        </mxCell>
+        <mxCell id="n3" vertex="1" parent="1" value="统一标注格式&lt;br&gt;检测标注转换为蒙版" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="440" y="190" width="320" height="120" />
+        </mxCell>
+        <mxCell id="n4" vertex="1" parent="1" value="广义指代表达配对&lt;br&gt;单目标 · 多目标 · 无目标" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="840" y="190" width="320" height="120" />
+        </mxCell>
+        <mxCell id="n5" vertex="1" parent="1" value="RemoteSAM-270K&lt;br&gt;统一的指代分割训练数据" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1240" y="190" width="320" height="120" />
+        </mxCell>
+        <mxCell id="n6" vertex="1" parent="1" value="局部影像与详细描述&lt;br&gt;Qwen2-VL 生成属性信息" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=22;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="435" width="320" height="145" />
+        </mxCell>
+        <mxCell id="n7" vertex="1" parent="1" value="拆分为指代表达&lt;br&gt;单类别目标与相关属性" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="440" y="435" width="320" height="145" />
+        </mxCell>
+        <mxCell id="n8" vertex="1" parent="1" value="混合教师模型&lt;br&gt;生成候选伪蒙版" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="840" y="435" width="320" height="145" />
+        </mxCell>
+        <mxCell id="n9" vertex="1" parent="1" value="SigLIP2 语义相似度筛选&lt;br&gt;迭代保留高质量样本" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FCF2E6;strokeColor=#A47A40;strokeWidth=1.5;fontSize=22;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1240" y="435" width="320" height="145" />
+        </mxCell>
+        <mxCell id="n10" vertex="1" parent="1" value="类别范围&lt;br&gt;297 类目标" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="680" width="460" height="110" />
+        </mxCell>
+        <mxCell id="n11" vertex="1" parent="1" value="属性表达&lt;br&gt;16 类细粒度属性" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="570" y="680" width="460" height="110" />
+        </mxCell>
+        <mxCell id="n12" vertex="1" parent="1" value="语义覆盖评价参照&lt;br&gt;RSVocab-1K 层级词表" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1100" y="680" width="460" height="110" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

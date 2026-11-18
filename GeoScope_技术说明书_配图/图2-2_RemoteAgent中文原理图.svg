@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1050" viewBox="0 0 1600 1050"><rect width="100%" height="100%" fill="white"/>
+<polyline points="261,225 309,225" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="309,225 297.0,220.0 297.0,230.0" fill="#526A77"/>
+<polyline points="571,225 619,225" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="619,225 607.0,220.0 607.0,230.0" fill="#526A77"/>
+<polyline points="871,225 919,225" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="919,225 907.0,220.0 907.0,230.0" fill="#526A77"/>
+<polyline points="571,410 619,410" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="619,410 607.0,405.0 607.0,415.0" fill="#526A77"/>
+<polyline points="745,281 745,359" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="745,359 750.0,347.0 740.0,347.0" fill="#526A77"/>
+<polyline points="871,410 919,410" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="919,410 907.0,405.0 907.0,415.0" fill="#526A77"/>
+<polyline points="1480,281 1480,359" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1480,359 1485.0,347.0 1475.0,347.0" fill="#526A77"/>
+<polyline points="1389,410 1321,410" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1321,410 1333.0,415.0 1333.0,405.0" fill="#526A77"/>
+<polyline points="301,760 359,760" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="359,760 347.0,755.0 347.0,765.0" fill="#526A77"/>
+<polyline points="611,760 669,760" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="669,760 657.0,755.0 657.0,765.0" fill="#526A77"/>
+<polyline points="871,740 905,740 905,675 939,675" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="939,675 927.0,670.0 927.0,680.0" fill="#526A77"/>
+<polyline points="871,780 905,780 905,915 939,915" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="939,915 927.0,910.0 927.0,920.0" fill="#526A77"/>
+<polyline points="1221,915 1289,915" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1289,915 1277.0,910.0 1277.0,920.0" fill="#526A77"/>
+<text x="800.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="700" fill="#243B47">RemoteAgent：基于强化学习的任务认知与能力感知路由</text>
+<text x="800.0" y="110.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#243B47">训练阶段：多任务奖励与策略优化</text>
+<rect x="40" y="170" width="220" height="110" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="150.0" y="207.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">遥感影像</text>
+<text x="150.0" y="243.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">模糊自然语言请求</text>
+<rect x="310" y="170" width="260" height="110" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="440.0" y="207.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">策略模型</text>
+<text x="440.0" y="243.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">生成多组候选回答</text>
+<rect x="620" y="170" width="250" height="110" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="745.0" y="207.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">结构化输出</text>
+<text x="745.0" y="243.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">坐标 · 数值 · 文本</text>
+<rect x="920" y="170" width="640" height="110" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="1240.0" y="207.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">统一多任务奖励</text>
+<text x="1240.0" y="243.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">坐标匹配 · 数值误差 · 标签覆盖</text>
+<rect x="310" y="360" width="260" height="100" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="440.0" y="392.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">冻结的参考模型</text>
+<text x="440.0" y="428.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">保留基础能力参照</text>
+<rect x="620" y="360" width="250" height="100" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="745.0" y="392.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">KL 正则约束</text>
+<text x="745.0" y="428.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">限制策略偏移</text>
+<rect x="920" y="360" width="400" height="100" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="1120.0" y="392.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">组相对策略优化（GRPO）</text>
+<text x="1120.0" y="428.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">优化输出的功能正确性</text>
+<rect x="1390" y="360" width="170" height="100" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="1475.0" y="392.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">组内标准化</text>
+<text x="1475.0" y="428.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">相对优势</text>
+<text x="800.0" y="545.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#243B47">推理阶段：根据输出粒度决定内部回答或外部工具执行</text>
+<rect x="40" y="700" width="260" height="120" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="170.0" y="742.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">遥感影像与用户请求</text>
+<text x="170.0" y="778.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">“提取右上方的飞机”</text>
+<rect x="360" y="700" width="250" height="120" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="485.0" y="742.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">RemoteAgent</text>
+<text x="485.0" y="778.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">理解意图并规划任务</text>
+<rect x="670" y="700" width="200" height="120" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="770.0" y="742.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">任务路由</text>
+<text x="770.0" y="778.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">能力与粒度判断</text>
+<rect x="940" y="600" width="280" height="150" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="1080.0" y="639.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">内部任务</text>
+<text x="1080.0" y="675.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">分类 · 视觉定位</text>
+<text x="1080.0" y="711.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">计数 · 区域推理</text>
+<rect x="940" y="840" width="280" height="150" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="1080.0" y="879.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">外部任务</text>
+<text x="1080.0" y="915.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">检测 · 分割</text>
+<text x="1080.0" y="951.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">变化检测等密集预测</text>
+<rect x="1290" y="595" width="270" height="400" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="1425.0" y="693.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">专家工具库</text>
+<text x="1425.0" y="727.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">水平框：SkySense</text>
+<text x="1425.0" y="761.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">旋转框：SM3Det</text>
+<text x="1425.0" y="795.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">语义分割：CrossEarth</text>
+<text x="1425.0" y="829.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">指代分割：RemoteSAM</text>
+<text x="1425.0" y="863.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">变化检测：Change3D</text>
+<text x="1425.0" y="897.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">轮廓提取：DirectSAM</text></svg>

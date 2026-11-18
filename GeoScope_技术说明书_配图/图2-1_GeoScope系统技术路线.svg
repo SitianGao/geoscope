@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="770" viewBox="0 0 1600 770"><rect width="100%" height="100%" fill="white"/>
+<polyline points="391,185 429,185" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="429,185 417.0,180.0 417.0,190.0" fill="#526A77"/>
+<polyline points="781,185 819,185" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="819,185 807.0,180.0 807.0,190.0" fill="#526A77"/>
+<polyline points="1171,185 1209,185" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1209,185 1197.0,180.0 1197.0,190.0" fill="#526A77"/>
+<polyline points="605,241 605,284" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="605,284 610.0,272.0 600.0,272.0" fill="#526A77"/>
+<polyline points="995,241 995,284" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="995,284 1000.0,272.0 990.0,272.0" fill="#526A77"/>
+<polyline points="1385,241 1385,444" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1385,444 1390.0,432.0 1380.0,432.0" fill="#526A77"/>
+<polyline points="1209,500 1171,500" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1171,500 1183.0,505.0 1183.0,495.0" fill="#526A77"/>
+<polyline points="819,500 781,500" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="781,500 793.0,505.0 793.0,495.0" fill="#526A77"/>
+<polyline points="429,500 391,500" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="391,500 403.0,505.0 403.0,495.0" fill="#526A77"/>
+<text x="800.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="700" fill="#243B47">GeoScope：从自然语言意图到可复核的遥感分析结果</text>
+<rect x="40" y="130" width="350" height="110" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="215.0" y="167.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">影像与自然语言任务</text>
+<text x="215.0" y="203.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">目标 · 范围 · 执行模式</text>
+<rect x="430" y="130" width="350" height="110" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="605.0" y="167.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">RemoteAgent</text>
+<text x="605.0" y="203.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">意图理解与任务规划</text>
+<rect x="820" y="130" width="350" height="110" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="995.0" y="167.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">GeoScope Harness</text>
+<text x="995.0" y="203.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">工具 · 目标 · 参数校验</text>
+<rect x="1210" y="130" width="350" height="110" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="1385.0" y="167.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">RemoteSAM</text>
+<text x="1385.0" y="203.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">文本引导的像素级分割</text>
+<rect x="430" y="285" width="350" height="85" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="605.0" y="309.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">场景问答</text>
+<text x="605.0" y="345.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">生成直接回答</text>
+<rect x="820" y="285" width="350" height="85" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="995.0" y="309.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">条件不足或调用不合法</text>
+<text x="995.0" y="345.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">澄清或拒绝，并保存原因</text>
+<rect x="1210" y="445" width="350" height="110" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="1385.0" y="482.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">返回蒙版校验</text>
+<text x="1385.0" y="518.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">尺寸 · 编码 · 实际模式</text>
+<rect x="820" y="445" width="350" height="110" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="995.0" y="482.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">空间筛选与统计</text>
+<text x="995.0" y="518.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">像素面积 · 整图覆盖比例</text>
+<rect x="430" y="445" width="350" height="110" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="605.0" y="482.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">实验版本与结果保存</text>
+<text x="605.0" y="518.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">参数 · 产物 · 日志关联</text>
+<rect x="40" y="445" width="350" height="110" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="215.0" y="482.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">可视化复核与导出</text>
+<text x="215.0" y="518.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">原图 · 叠加 · 对比 · 批量</text>
+<rect x="40" y="630" width="740" height="90" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="410.0" y="657.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">研究基础：RemoteAgent 与 RemoteSAM</text>
+<text x="410.0" y="693.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">提供任务认知和遥感视觉感知能力</text>
+<rect x="820" y="630" width="740" height="90" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="1190.0" y="657.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">作品实现：执行约束、统计与连续实验管理</text>
+<text x="1190.0" y="693.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">实现模型能力到可用分析流程的衔接</text></svg>

@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" version="24.7.17">
+  <diagram id="图2-4_RemoteSAM中文原理图" name="图2-4_RemoteSAM中文原理图">
+    <mxGraphModel page="1" pageWidth="1600" pageHeight="1030" grid="1" gridSize="10">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e0" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="311" y="170" />
+            <mxPoint as="targetPoint" x="379" y="170" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="311" y="335" />
+            <mxPoint as="targetPoint" x="379" y="335" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="661" y="170" />
+            <mxPoint as="targetPoint" x="739" y="235" />
+            <Array as="points">
+              <mxPoint x="700" y="170" />
+              <mxPoint x="700" y="235" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="661" y="335" />
+            <mxPoint as="targetPoint" x="739" y="275" />
+            <Array as="points">
+              <mxPoint x="700" y="335" />
+              <mxPoint x="700" y="275" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1051" y="255" />
+            <mxPoint as="targetPoint" x="1129" y="255" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=none;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1345" y="311" />
+            <mxPoint as="targetPoint" x="260" y="450" />
+            <Array as="points">
+              <mxPoint x="1345" y="450" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="260" y="450" />
+            <mxPoint as="targetPoint" x="260" y="529" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="800" y="450" />
+            <mxPoint as="targetPoint" x="800" y="529" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" value="" style="edgeStyle=none;html=1;strokeWidth=2;strokeColor=#526A77;endArrow=block;endFill=1;endSize=8;">
+          <mxGeometry as="geometry" relative="1">
+            <mxPoint as="sourcePoint" x="1345" y="450" />
+            <mxPoint as="targetPoint" x="1345" y="529" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="n0" vertex="1" parent="1" value="RemoteSAM：以指代表达分割为核心的多粒度任务统一" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;strokeWidth=1.5;fontSize=32;fontStyle=1;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="22" width="1520" height="50" />
+        </mxCell>
+        <mxCell id="n1" vertex="1" parent="1" value="遥感影像" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="120" width="270" height="100" />
+        </mxCell>
+        <mxCell id="n2" vertex="1" parent="1" value="自然语言指代表达&lt;br&gt;“影像左侧的飞机”" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F3F5F6;strokeColor=#71808C;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="285" width="270" height="100" />
+        </mxCell>
+        <mxCell id="n3" vertex="1" parent="1" value="视觉编码器&lt;br&gt;Swin-Base" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="380" y="120" width="280" height="100" />
+        </mxCell>
+        <mxCell id="n4" vertex="1" parent="1" value="文本编码器&lt;br&gt;BERT" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F1EDF7;strokeColor=#76618F;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="380" y="285" width="280" height="100" />
+        </mxCell>
+        <mxCell id="n5" vertex="1" parent="1" value="跨模态融合与解码&lt;br&gt;基于 RMSIN 架构" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="740" y="200" width="310" height="110" />
+        </mxCell>
+        <mxCell id="n6" vertex="1" parent="1" value="像素级分割与类别响应&lt;br&gt;蒙版及预测分数" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=24;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1130" y="200" width="430" height="110" />
+        </mxCell>
+        <mxCell id="n7" vertex="1" parent="1" value="像素级任务&lt;br&gt;&lt;br&gt;指代表达分割：直接输出蒙版&lt;br&gt;语义分割：按类别提示并整合&lt;br&gt;&lt;br&gt;保留目标边界与空间分布" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EEF5FC;strokeColor=#45698B;strokeWidth=1.5;fontSize=22;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="530" width="440" height="350" />
+        </mxCell>
+        <mxCell id="n8" vertex="1" parent="1" value="区域级任务&lt;br&gt;&lt;br&gt;视觉定位：蒙版转边界框&lt;br&gt;目标检测：类别蒙版转多框&lt;br&gt;结合轮廓细化缓解相邻目标合并&lt;br&gt;&lt;br&gt;蒙版到边界框转换（M2B）" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FCF2E6;strokeColor=#A47A40;strokeWidth=1.5;fontSize=22;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="580" y="530" width="440" height="350" />
+        </mxCell>
+        <mxCell id="n9" vertex="1" parent="1" value="影像级任务&lt;br&gt;&lt;br&gt;多标签分类：聚合类别响应&lt;br&gt;场景分类：选择最高类别分数&lt;br&gt;目标计数：统计检测结果&lt;br&gt;影像描述：按类别与位置组织文本" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EDF5EE;strokeColor=#487660;strokeWidth=1.5;fontSize=22;fontStyle=0;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="1120" y="530" width="440" height="350" />
+        </mxCell>
+        <mxCell id="n10" vertex="1" parent="1" value="统一表示与输出转换支持八类任务，无需为每类任务独立设计预测头" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;strokeWidth=1.5;fontSize=24;fontStyle=1;fontColor=#243B47;fontFamily=Microsoft YaHei;align=center;verticalAlign=middle;">
+          <mxGeometry as="geometry" x="40" y="930" width="1520" height="55" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

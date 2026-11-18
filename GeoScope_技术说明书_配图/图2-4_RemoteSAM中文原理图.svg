@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1030" viewBox="0 0 1600 1030"><rect width="100%" height="100%" fill="white"/>
+<polyline points="311,170 379,170" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="379,170 367.0,165.0 367.0,175.0" fill="#526A77"/>
+<polyline points="311,335 379,335" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="379,335 367.0,330.0 367.0,340.0" fill="#526A77"/>
+<polyline points="661,170 700,170 700,235 739,235" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="739,235 727.0,230.0 727.0,240.0" fill="#526A77"/>
+<polyline points="661,335 700,335 700,275 739,275" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="739,275 727.0,270.0 727.0,280.0" fill="#526A77"/>
+<polyline points="1051,255 1129,255" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1129,255 1117.0,250.0 1117.0,260.0" fill="#526A77"/>
+<polyline points="1345,311 1345,450 260,450" fill="none" stroke="#526A77" stroke-width="2"/>
+<polyline points="260,450 260,529" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="260,529 265.0,517.0 255.0,517.0" fill="#526A77"/>
+<polyline points="800,450 800,529" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="800,529 805.0,517.0 795.0,517.0" fill="#526A77"/>
+<polyline points="1345,450 1345,529" fill="none" stroke="#526A77" stroke-width="2"/>
+<polygon points="1345,529 1350.0,517.0 1340.0,517.0" fill="#526A77"/>
+<text x="800.0" y="47.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="32" font-weight="700" fill="#243B47">RemoteSAM：以指代表达分割为核心的多粒度任务统一</text>
+<rect x="40" y="120" width="270" height="100" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="175.0" y="170.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">遥感影像</text>
+<rect x="40" y="285" width="270" height="100" rx="12" fill="#F3F5F6" stroke="#71808C" stroke-width="1.5"/>
+<text x="175.0" y="317.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">自然语言指代表达</text>
+<text x="175.0" y="353.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">“影像左侧的飞机”</text>
+<rect x="380" y="120" width="280" height="100" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="520.0" y="152.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">视觉编码器</text>
+<text x="520.0" y="188.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">Swin-Base</text>
+<rect x="380" y="285" width="280" height="100" rx="12" fill="#F1EDF7" stroke="#76618F" stroke-width="1.5"/>
+<text x="520.0" y="317.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">文本编码器</text>
+<text x="520.0" y="353.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">BERT</text>
+<rect x="740" y="200" width="310" height="110" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="895.0" y="237.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">跨模态融合与解码</text>
+<text x="895.0" y="273.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">基于 RMSIN 架构</text>
+<rect x="1130" y="200" width="430" height="110" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="1345.0" y="237.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">像素级分割与类别响应</text>
+<text x="1345.0" y="273.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="400" fill="#243B47">蒙版及预测分数</text>
+<rect x="40" y="530" width="440" height="350" rx="12" fill="#EEF5FC" stroke="#45698B" stroke-width="1.5"/>
+<text x="260.0" y="620.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">像素级任务</text>
+<text x="260.0" y="654.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47"></text>
+<text x="260.0" y="688.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">指代表达分割：直接输出蒙版</text>
+<text x="260.0" y="722.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">语义分割：按类别提示并整合</text>
+<text x="260.0" y="756.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47"></text>
+<text x="260.0" y="790.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">保留目标边界与空间分布</text>
+<rect x="580" y="530" width="440" height="350" rx="12" fill="#FCF2E6" stroke="#A47A40" stroke-width="1.5"/>
+<text x="800.0" y="603.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">区域级任务</text>
+<text x="800.0" y="637.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47"></text>
+<text x="800.0" y="671.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">视觉定位：蒙版转边界框</text>
+<text x="800.0" y="705.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">目标检测：类别蒙版转多框</text>
+<text x="800.0" y="739.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">结合轮廓细化缓解相邻目标合并</text>
+<text x="800.0" y="773.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47"></text>
+<text x="800.0" y="807.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">蒙版到边界框转换（M2B）</text>
+<rect x="1120" y="530" width="440" height="350" rx="12" fill="#EDF5EE" stroke="#487660" stroke-width="1.5"/>
+<text x="1340.0" y="620.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">影像级任务</text>
+<text x="1340.0" y="654.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47"></text>
+<text x="1340.0" y="688.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">多标签分类：聚合类别响应</text>
+<text x="1340.0" y="722.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">场景分类：选择最高类别分数</text>
+<text x="1340.0" y="756.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">目标计数：统计检测结果</text>
+<text x="1340.0" y="790.0" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="22" font-weight="400" fill="#243B47">影像描述：按类别与位置组织文本</text>
+<text x="800.0" y="957.5" text-anchor="middle" dominant-baseline="central" font-family="Microsoft YaHei, sans-serif" font-size="24" font-weight="700" fill="#243B47">统一表示与输出转换支持八类任务，无需为每类任务独立设计预测头</text></svg>

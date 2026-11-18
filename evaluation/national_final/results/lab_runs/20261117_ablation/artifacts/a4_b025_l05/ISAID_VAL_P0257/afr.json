@@ -1,0 +1,407 @@
+{
+  "algorithm_name": "geoscope_afr",
+  "algorithm_version": "v1",
+  "config": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.2,
+    "budget": {
+      "max_regions": null,
+      "fraction": 0.25
+    },
+    "lam": 0.5,
+    "lam_per_region": null,
+    "threshold": 0.5,
+    "tile_size": 1024,
+    "overlap": 256,
+    "upscale": {
+      "enabled": true,
+      "min_size": 512,
+      "scale": 2.0
+    },
+    "review_ratio_threshold": 0.05
+  },
+  "config_sha256": "47b5ae543aee1e47fc3be4e436e5ae2a331a8e6dad604f9de3860bd9c325906d",
+  "image_size": [
+    1080,
+    1596
+  ],
+  "grid_regions": 4,
+  "selected_regions": 1,
+  "budget_used": 1,
+  "request_count": 2,
+  "local_success_count": 1,
+  "fallback_count": 0,
+  "local_service_inference_ms_total": 134.08,
+  "local_service_ms_total": 190.95,
+  "peak_vram_mb": 1839.94,
+  "threshold_validated": false,
+  "disagreement_available": true,
+  "disagreement_notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。",
+  "p0_service": {
+    "model": {
+      "service_version": "1.2.0",
+      "device": "cuda:0",
+      "fp16": true,
+      "epoc": false,
+      "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+    },
+    "timing_ms": {
+      "preprocess": 35.92,
+      "inference": 138.86,
+      "postprocess": 9.17,
+      "total": 228.37
+    },
+    "quality": {
+      "empty_mask": false,
+      "foreground_pixels": 62716,
+      "foreground_ratio": 0.03638494384108419,
+      "mean_foreground_confidence": 0.858438,
+      "mean_image_confidence": 0.046451
+    },
+    "quality_mode": "fast",
+    "requested_quality_mode": "fast",
+    "mode_parameters": {
+      "requested_mode": "fast",
+      "resolved_mode": "fast",
+      "tile_count": 1,
+      "strategy": "whole_image_argmax",
+      "tile_size": null,
+      "overlap": 0,
+      "probability_threshold": null,
+      "blend": null,
+      "blend_min_weight": null
+    },
+    "original_size": [
+      1080,
+      1596
+    ],
+    "output_size": [
+      1080,
+      1596
+    ],
+    "peak_vram_mb": 1839.94,
+    "full_mask_candidate_stats": {
+      "label": "candidate_regions",
+      "connectivity": 8,
+      "min_area_pixels": 1,
+      "raw_candidate_count": 21,
+      "candidate_count": 21,
+      "filtered_out_count": 0,
+      "total_area_pixels": 62716,
+      "min_area": 492,
+      "max_area": 13386,
+      "mean_area": 2986.476,
+      "candidates": [
+        {
+          "candidate_id": 1,
+          "area_pixels": 1578,
+          "bbox": {
+            "x": 690,
+            "y": 300,
+            "width": 53,
+            "height": 55
+          },
+          "center": {
+            "x": 717.443,
+            "y": 324.352
+          }
+        },
+        {
+          "candidate_id": 2,
+          "area_pixels": 1094,
+          "bbox": {
+            "x": 768,
+            "y": 335,
+            "width": 39,
+            "height": 56
+          },
+          "center": {
+            "x": 785.446,
+            "y": 361.724
+          }
+        },
+        {
+          "candidate_id": 3,
+          "area_pixels": 2301,
+          "bbox": {
+            "x": 519,
+            "y": 444,
+            "width": 61,
+            "height": 78
+          },
+          "center": {
+            "x": 545.654,
+            "y": 482.638
+          }
+        },
+        {
+          "candidate_id": 4,
+          "area_pixels": 2115,
+          "bbox": {
+            "x": 704,
+            "y": 455,
+            "width": 69,
+            "height": 60
+          },
+          "center": {
+            "x": 736.924,
+            "y": 482.75
+          }
+        },
+        {
+          "candidate_id": 5,
+          "area_pixels": 2798,
+          "bbox": {
+            "x": 606,
+            "y": 492,
+            "width": 63,
+            "height": 73
+          },
+          "center": {
+            "x": 635.058,
+            "y": 527.456
+          }
+        },
+        {
+          "candidate_id": 6,
+          "area_pixels": 1434,
+          "bbox": {
+            "x": 292,
+            "y": 515,
+            "width": 56,
+            "height": 52
+          },
+          "center": {
+            "x": 320.361,
+            "y": 542.635
+          }
+        },
+        {
+          "candidate_id": 7,
+          "area_pixels": 2345,
+          "bbox": {
+            "x": 683,
+            "y": 540,
+            "width": 62,
+            "height": 71
+          },
+          "center": {
+            "x": 715.4,
+            "y": 573.146
+          }
+        },
+        {
+          "candidate_id": 8,
+          "area_pixels": 1827,
+          "bbox": {
+            "x": 929,
+            "y": 565,
+            "width": 59,
+            "height": 55
+          },
+          "center": {
+            "x": 955.435,
+            "y": 594.276
+          }
+        },
+        {
+          "candidate_id": 9,
+          "area_pixels": 2497,
+          "bbox": {
+            "x": 851,
+            "y": 606,
+            "width": 73,
+            "height": 93
+          },
+          "center": {
+            "x": 888.901,
+            "y": 653.548
+          }
+        },
+        {
+          "candidate_id": 10,
+          "area_pixels": 3009,
+          "bbox": {
+            "x": 408,
+            "y": 619,
+            "width": 64,
+            "height": 83
+          },
+          "center": {
+            "x": 439.985,
+            "y": 662.174
+          }
+        },
+        {
+          "candidate_id": 11,
+          "area_pixels": 1870,
+          "bbox": {
+            "x": 537,
+            "y": 693,
+            "width": 52,
+            "height": 61
+          },
+          "center": {
+            "x": 561.855,
+            "y": 723.421
+          }
+        },
+        {
+          "candidate_id": 12,
+          "area_pixels": 1470,
+          "bbox": {
+            "x": 583,
+            "y": 740,
+            "width": 52,
+            "height": 51
+          },
+          "center": {
+            "x": 611.309,
+            "y": 765.861
+          }
+        },
+        {
+          "candidate_id": 13,
+          "area_pixels": 2956,
+          "bbox": {
+            "x": 320,
+            "y": 763,
+            "width": 64,
+            "height": 78
+          },
+          "center": {
+            "x": 349.921,
+            "y": 802.74
+          }
+        },
+        {
+          "candidate_id": 14,
+          "area_pixels": 833,
+          "bbox": {
+            "x": 397,
+            "y": 834,
+            "width": 37,
+            "height": 30
+          },
+          "center": {
+            "x": 417.036,
+            "y": 849.303
+          }
+        },
+        {
+          "candidate_id": 15,
+          "area_pixels": 2014,
+          "bbox": {
+            "x": 440,
+            "y": 866,
+            "width": 84,
+            "height": 71
+          },
+          "center": {
+            "x": 478.733,
+            "y": 900.284
+          }
+        },
+        {
+          "candidate_id": 16,
+          "area_pixels": 4664,
+          "bbox": {
+            "x": 189,
+            "y": 927,
+            "width": 104,
+            "height": 92
+          },
+          "center": {
+            "x": 244.0,
+            "y": 973.552
+          }
+        },
+        {
+          "candidate_id": 17,
+          "area_pixels": 13386,
+          "bbox": {
+            "x": 291,
+            "y": 973,
+            "width": 169,
+            "height": 153
+          },
+          "center": {
+            "x": 386.19,
+            "y": 1037.589
+          }
+        },
+        {
+          "candidate_id": 18,
+          "area_pixels": 492,
+          "bbox": {
+            "x": 492,
+            "y": 996,
+            "width": 28,
+            "height": 22
+          },
+          "center": {
+            "x": 506.417,
+            "y": 1007.506
+          }
+        },
+        {
+          "candidate_id": 19,
+          "area_pixels": 10989,
+          "bbox": {
+            "x": 179,
+            "y": 1087,
+            "width": 201,
+            "height": 155
+          },
+          "center": {
+            "x": 257.485,
+            "y": 1168.62
+          }
+        },
+        {
+          "candidate_id": 20,
+          "area_pixels": 2114,
+          "bbox": {
+            "x": 25,
+            "y": 1158,
+            "width": 73,
+            "height": 72
+          },
+          "center": {
+            "x": 60.888,
+            "y": 1193.43
+          }
+        },
+        {
+          "candidate_id": 21,
+          "area_pixels": 930,
+          "bbox": {
+            "x": 309,
+            "y": 1262,
+            "width": 34,
+            "height": 39
+          },
+          "center": {
+            "x": 326.696,
+            "y": 1281.918
+          }
+        }
+      ],
+      "notice": "Connected regions are candidate targets and require human review."
+    },
+    "quality_confirmation": "afr_orchestrated_fast_base"
+  },
+  "honesty_notes": [
+    "区域难度评分基于预测概率，不是校准置信度；",
+    "disagreement 是整图与局部预测的分歧，不是错误概率；",
+    "候选连通区域数量不等于准确实例数。"
+  ],
+  "review": {
+    "ratio_threshold": 0.05,
+    "review_region_count": 0,
+    "review_regions": [],
+    "notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。"
+  },
+  "fallback_records": []
+}

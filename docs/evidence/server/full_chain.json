@@ -1,0 +1,1807 @@
+{
+  "execution_source": "laboratory server; real checkpoints; no mock responses",
+  "retrieval": {
+    "success": true,
+    "request_id": "9920988cbcc6428c9f059a5ca708a491",
+    "image_id": null,
+    "result_id": null,
+    "status": "completed",
+    "data": {
+      "query": "airport with airplanes",
+      "model": "RemoteCLIP",
+      "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a",
+      "index_version": "92cca98094c1643b7751d1e0eeab7a23d5b75a1069d6a01906b3ebf94e8ec02a",
+      "model_info": {
+        "model": "RemoteCLIP",
+        "architecture": "ViT-B-32",
+        "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+        "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+        "weight_repository": "chendelong/RemoteCLIP",
+        "device": "cuda:0",
+        "open_clip_version": "2.24.0",
+        "torch_version": "2.4.1+cu121",
+        "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+        "tokenizer": "SimpleTokenizer",
+        "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+      },
+      "results": [
+        {
+          "image_id": "4153d56d5a77",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "rank": 1,
+          "similarity": 0.24395349621772766,
+          "session_url": "/api/session/4153d56d5a77",
+          "thumbnail_url": "/experiments/4153d56d5a77/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
+        },
+        {
+          "image_id": "ed1a790d481e",
+          "image_sha256": "42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1",
+          "rank": 2,
+          "similarity": 0.22121994197368622,
+          "session_url": "/api/session/ed1a790d481e",
+          "thumbnail_url": "/experiments/ed1a790d481e/original.png",
+          "name": "街区建筑研究样区"
+        }
+      ],
+      "status": "completed",
+      "real_execution": true,
+      "notice": "Normalized embedding cosine similarity is not probability or pixel localization"
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "baseline": {
+    "id": "7e1b71bebf11",
+    "session_id": "4153d56d5a77",
+    "parent_run_id": null,
+    "version": 2,
+    "query": "提取全图飞机并计算面积占比",
+    "mode": "live",
+    "created_at": "2026-11-18T03:00:05.501730+00:00",
+    "status": "completed",
+    "trace": [
+      {
+        "step": 1,
+        "name": "读取实验上下文",
+        "detail": "影像 800 × 800；继承所选结果条件",
+        "state": "completed",
+        "duration_ms": 0,
+        "at": "2026-11-18T03:00:05.518114+00:00"
+      },
+      {
+        "step": 2,
+        "name": "确认执行边界",
+        "detail": "目标由 Agent 工具参数提供；范围 全图，来源 harness_pixel_scope_rule；先全图分割再裁切",
+        "state": "completed",
+        "duration_ms": 0,
+        "at": "2026-11-18T03:00:08.041828+00:00"
+      },
+      {
+        "step": 3,
+        "name": "理解任务与选择路径",
+        "detail": "RemoteAgent · segment",
+        "state": "completed",
+        "duration_ms": 2523.37,
+        "at": "2026-11-18T03:00:08.041845+00:00"
+      },
+      {
+        "step": 4,
+        "name": "RemoteSAM目标提取",
+        "detail": "真实服务调用；范围由确定性几何工具约束",
+        "state": "completed",
+        "duration_ms": 1367.73,
+        "at": "2026-11-18T03:00:09.409597+00:00"
+      },
+      {
+        "step": 5,
+        "name": "范围筛选与像素统计",
+        "detail": "全图；整图分母 640,000 px",
+        "state": "completed",
+        "duration_ms": 0,
+        "at": "2026-11-18T03:00:09.438149+00:00"
+      },
+      {
+        "step": 6,
+        "name": "结果检查",
+        "detail": "尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核",
+        "state": "completed",
+        "duration_ms": 0,
+        "at": "2026-11-18T03:00:09.548641+00:00"
+      },
+      {
+        "step": 7,
+        "name": "反馈执行结果给 RemoteAgent",
+        "detail": "已回传确定性结果；模型原文保留在记录中，页面统计不由模型改写。",
+        "state": "completed",
+        "duration_ms": 0,
+        "at": "2026-11-18T03:00:11.488384+00:00"
+      }
+    ],
+    "provenance": {
+      "planner": "RemoteAgent",
+      "perception": "RemoteSAM服务",
+      "source": "Wikimedia Commons：JFK Terminal 5 aerial view，作者 Quintin Soloviev，CC BY 4.0；为适配演示已裁剪缩放。https://commons.wikimedia.org/wiki/File:JFK_Terminal_5_aerial_view.jpg",
+      "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+      "planner_protocol": "remoteagent",
+      "perception_revision": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+    },
+    "task_options": {
+      "roi": null,
+      "roi_source": null,
+      "quality_mode": "fast",
+      "effective_quality_mode": "fast",
+      "quality_source": "explicit_selection",
+      "batch_id": null,
+      "item_id": null
+    },
+    "agent_decision": {
+      "status": "tool_call",
+      "raw_response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+      "raw_response_sha256": "c100f0aa715bae15429148a7bfdc13de2ab65fc577ed2680fe8a0f8bef9240d8",
+      "text": "",
+      "history": [
+        {
+          "round": 1,
+          "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+          "status": "tool_call",
+          "tool_call": {
+            "name": "referring_expression_segmentation",
+            "arguments": {
+              "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+              "prompt": "all planes"
+            }
+          }
+        }
+      ],
+      "tool_call": {
+        "name": "referring_expression_segmentation",
+        "arguments": {
+          "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+          "prompt": "all planes"
+        }
+      }
+    },
+    "task": {
+      "action": "segment",
+      "target": "aircraft",
+      "side": "all",
+      "invert": false,
+      "scope_source": "harness_pixel_scope_rule",
+      "tool_name": "referring_expression_segmentation",
+      "planner_tool_name": "referring_expression_segmentation",
+      "routing_policy": "agent_selected",
+      "service_request": {
+        "task": "referring_seg",
+        "text": "all planes",
+        "quality_mode": "fast"
+      },
+      "mask_field": null,
+      "planner_protocol": "remoteagent",
+      "scope_rule": "整图目标分割后按像素半幅裁切；由 Harness 执行",
+      "roi": null,
+      "roi_source": null,
+      "quality_mode": "fast",
+      "effective_quality_mode": "fast",
+      "quality_source": "explicit_selection",
+      "batch_id": null,
+      "item_id": null
+    },
+    "service_metadata": {
+      "model": {
+        "service_version": "1.2.0",
+        "device": "cuda:0",
+        "fp16": true,
+        "epoc": false,
+        "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+      },
+      "timing_ms": {
+        "preprocess": 12.99,
+        "inference": 1199.28,
+        "postprocess": 2.78,
+        "total": 1233.18
+      },
+      "quality": {
+        "empty_mask": false,
+        "foreground_pixels": 5795,
+        "foreground_ratio": 0.0090546875
+      },
+      "quality_mode": "fast",
+      "requested_quality_mode": "fast",
+      "mode_parameters": {
+        "requested_mode": "fast",
+        "resolved_mode": "fast",
+        "tile_count": 1,
+        "strategy": "whole_image_argmax",
+        "tile_size": null,
+        "overlap": 0,
+        "probability_threshold": null,
+        "blend": null,
+        "blend_min_weight": null
+      },
+      "original_size": [
+        800,
+        800
+      ],
+      "output_size": [
+        800,
+        800
+      ],
+      "peak_vram_mb": 1838.0,
+      "full_mask_candidate_stats": {
+        "label": "candidate_regions",
+        "connectivity": 8,
+        "min_area_pixels": 1,
+        "raw_candidate_count": 4,
+        "candidate_count": 4,
+        "filtered_out_count": 0,
+        "total_area_pixels": 5795,
+        "min_area": 271,
+        "max_area": 2873,
+        "mean_area": 1448.75,
+        "candidates": [
+          {
+            "candidate_id": 1,
+            "area_pixels": 333,
+            "bbox": {
+              "x": 151,
+              "y": 233,
+              "width": 24,
+              "height": 30
+            },
+            "center": {
+              "x": 163.318,
+              "y": 249.15
+            }
+          },
+          {
+            "candidate_id": 2,
+            "area_pixels": 271,
+            "bbox": {
+              "x": 205,
+              "y": 244,
+              "width": 29,
+              "height": 19
+            },
+            "center": {
+              "x": 220.148,
+              "y": 252.915
+            }
+          },
+          {
+            "candidate_id": 3,
+            "area_pixels": 2318,
+            "bbox": {
+              "x": 181,
+              "y": 642,
+              "width": 68,
+              "height": 78
+            },
+            "center": {
+              "x": 215.295,
+              "y": 680.33
+            }
+          },
+          {
+            "candidate_id": 4,
+            "area_pixels": 2873,
+            "bbox": {
+              "x": 271,
+              "y": 660,
+              "width": 92,
+              "height": 96
+            },
+            "center": {
+              "x": 316.987,
+              "y": 710.531
+            }
+          }
+        ],
+        "notice": "Connected regions are candidate targets and require human review."
+      }
+    },
+    "mask_cache_key": "d4b100d3afed75bc83d50536f0cb8985f7f8ba2777fbc6583a132ecc8704f11f",
+    "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+    "metrics": {
+      "pixel_area": 5795,
+      "total_pixels": 640000,
+      "area_ratio": 0.0090546875,
+      "bbox_xyxy": [
+        151,
+        233,
+        363,
+        756
+      ],
+      "width": 800,
+      "height": 800,
+      "scope": "all",
+      "scope_label": "全图",
+      "unit": "pixel",
+      "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+      "spatial_check": true,
+      "roi": null,
+      "candidate_stats": {
+        "label": "candidate_regions",
+        "connectivity": 8,
+        "min_area_pixels": 1,
+        "raw_candidate_count": 4,
+        "candidate_count": 4,
+        "filtered_out_count": 0,
+        "total_area_pixels": 5795,
+        "min_area": 271,
+        "max_area": 2873,
+        "mean_area": 1448.75,
+        "candidates": [
+          {
+            "candidate_id": 1,
+            "area_pixels": 333,
+            "bbox": {
+              "x": 151,
+              "y": 233,
+              "width": 24,
+              "height": 30
+            },
+            "center": {
+              "x": 163.318,
+              "y": 249.15
+            }
+          },
+          {
+            "candidate_id": 2,
+            "area_pixels": 271,
+            "bbox": {
+              "x": 205,
+              "y": 244,
+              "width": 29,
+              "height": 19
+            },
+            "center": {
+              "x": 220.148,
+              "y": 252.915
+            }
+          },
+          {
+            "candidate_id": 3,
+            "area_pixels": 2318,
+            "bbox": {
+              "x": 181,
+              "y": 642,
+              "width": 68,
+              "height": 78
+            },
+            "center": {
+              "x": 215.295,
+              "y": 680.33
+            }
+          },
+          {
+            "candidate_id": 4,
+            "area_pixels": 2873,
+            "bbox": {
+              "x": 271,
+              "y": 660,
+              "width": 92,
+              "height": 96
+            },
+            "center": {
+              "x": 316.987,
+              "y": 710.531
+            }
+          }
+        ],
+        "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+      },
+      "distribution": {
+        "basis": "full_mask_before_scope",
+        "left_pixels": 5795,
+        "right_pixels": 0
+      },
+      "ground_area_available": false
+    },
+    "mask_url": "/experiments/4153d56d5a77/7e1b71bebf11/mask.png",
+    "overlay_url": "/experiments/4153d56d5a77/7e1b71bebf11/overlay.png",
+    "export_url": "/api/export/4153d56d5a77/7e1b71bebf11",
+    "message": "已生成全图飞机区域：5,795 px，占整幅影像 0.91%。请结合叠加图复核目标语义与边界。",
+    "tool_feedback": {
+      "status": "success",
+      "tool_name": "referring_expression_segmentation",
+      "metrics": {
+        "pixel_area": 5795,
+        "total_pixels": 640000,
+        "area_ratio": 0.0090546875,
+        "bbox_xyxy": [
+          151,
+          233,
+          363,
+          756
+        ],
+        "width": 800,
+        "height": 800,
+        "scope": "all",
+        "scope_label": "全图",
+        "unit": "pixel",
+        "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+        "spatial_check": true,
+        "roi": null,
+        "candidate_stats": {
+          "label": "candidate_regions",
+          "connectivity": 8,
+          "min_area_pixels": 1,
+          "raw_candidate_count": 4,
+          "candidate_count": 4,
+          "filtered_out_count": 0,
+          "total_area_pixels": 5795,
+          "min_area": 271,
+          "max_area": 2873,
+          "mean_area": 1448.75,
+          "candidates": [
+            {
+              "candidate_id": 1,
+              "area_pixels": 333,
+              "bbox": {
+                "x": 151,
+                "y": 233,
+                "width": 24,
+                "height": 30
+              },
+              "center": {
+                "x": 163.318,
+                "y": 249.15
+              }
+            },
+            {
+              "candidate_id": 2,
+              "area_pixels": 271,
+              "bbox": {
+                "x": 205,
+                "y": 244,
+                "width": 29,
+                "height": 19
+              },
+              "center": {
+                "x": 220.148,
+                "y": 252.915
+              }
+            },
+            {
+              "candidate_id": 3,
+              "area_pixels": 2318,
+              "bbox": {
+                "x": 181,
+                "y": 642,
+                "width": 68,
+                "height": 78
+              },
+              "center": {
+                "x": 215.295,
+                "y": 680.33
+              }
+            },
+            {
+              "candidate_id": 4,
+              "area_pixels": 2873,
+              "bbox": {
+                "x": 271,
+                "y": 660,
+                "width": 92,
+                "height": 96
+              },
+              "center": {
+                "x": 316.987,
+                "y": 710.531
+              }
+            }
+          ],
+          "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+        },
+        "distribution": {
+          "basis": "full_mask_before_scope",
+          "left_pixels": 5795,
+          "right_pixels": 0
+        },
+        "ground_area_available": false
+      },
+      "scope_rule": "整图目标分割后按像素半幅裁切；由 Harness 执行",
+      "actual_service_request": {
+        "task": "referring_seg",
+        "text": "all planes",
+        "quality_mode": "fast"
+      },
+      "artifact_ids": {
+        "session_id": "4153d56d5a77",
+        "run_id": "7e1b71bebf11",
+        "mask_url": "/experiments/4153d56d5a77/7e1b71bebf11/mask.png"
+      },
+      "reused_from_run_id": null,
+      "service_metadata": {
+        "model": {
+          "service_version": "1.2.0",
+          "device": "cuda:0",
+          "fp16": true,
+          "epoc": false,
+          "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+        },
+        "timing_ms": {
+          "preprocess": 12.99,
+          "inference": 1199.28,
+          "postprocess": 2.78,
+          "total": 1233.18
+        },
+        "quality": {
+          "empty_mask": false,
+          "foreground_pixels": 5795,
+          "foreground_ratio": 0.0090546875
+        },
+        "quality_mode": "fast",
+        "requested_quality_mode": "fast",
+        "mode_parameters": {
+          "requested_mode": "fast",
+          "resolved_mode": "fast",
+          "tile_count": 1,
+          "strategy": "whole_image_argmax",
+          "tile_size": null,
+          "overlap": 0,
+          "probability_threshold": null,
+          "blend": null,
+          "blend_min_weight": null
+        },
+        "original_size": [
+          800,
+          800
+        ],
+        "output_size": [
+          800,
+          800
+        ],
+        "peak_vram_mb": 1838.0,
+        "full_mask_candidate_stats": {
+          "label": "candidate_regions",
+          "connectivity": 8,
+          "min_area_pixels": 1,
+          "raw_candidate_count": 4,
+          "candidate_count": 4,
+          "filtered_out_count": 0,
+          "total_area_pixels": 5795,
+          "min_area": 271,
+          "max_area": 2873,
+          "mean_area": 1448.75,
+          "candidates": [
+            {
+              "candidate_id": 1,
+              "area_pixels": 333,
+              "bbox": {
+                "x": 151,
+                "y": 233,
+                "width": 24,
+                "height": 30
+              },
+              "center": {
+                "x": 163.318,
+                "y": 249.15
+              }
+            },
+            {
+              "candidate_id": 2,
+              "area_pixels": 271,
+              "bbox": {
+                "x": 205,
+                "y": 244,
+                "width": 29,
+                "height": 19
+              },
+              "center": {
+                "x": 220.148,
+                "y": 252.915
+              }
+            },
+            {
+              "candidate_id": 3,
+              "area_pixels": 2318,
+              "bbox": {
+                "x": 181,
+                "y": 642,
+                "width": 68,
+                "height": 78
+              },
+              "center": {
+                "x": 215.295,
+                "y": 680.33
+              }
+            },
+            {
+              "candidate_id": 4,
+              "area_pixels": 2873,
+              "bbox": {
+                "x": 271,
+                "y": 660,
+                "width": 92,
+                "height": 96
+              },
+              "center": {
+                "x": 316.987,
+                "y": 710.531
+              }
+            }
+          ],
+          "notice": "Connected regions are candidate targets and require human review."
+        }
+      }
+    },
+    "agent_feedback": {
+      "status": "completed",
+      "raw_response": "<answer>The area of the extracted planes is 5795 pixels, which constitutes approximately 0.0090546875 of the total image area.</answer>",
+      "raw_response_sha256": "b23d926d1fcac66a1862a63aa1f53720310afc0e47f5cacc321fc2aac188b58e",
+      "text": "The area of the extracted planes is 5795 pixels, which constitutes approximately 0.0090546875 of the total image area.",
+      "history": [
+        {
+          "round": 1,
+          "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+          "status": "tool_call",
+          "tool_call": {
+            "name": "referring_expression_segmentation",
+            "arguments": {
+              "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+              "prompt": "all planes"
+            }
+          }
+        },
+        {
+          "round": 2,
+          "response": "<answer>The area of the extracted planes is 5795 pixels, which constitutes approximately 0.0090546875 of the total image area.</answer>",
+          "status": "completed",
+          "tool_call": null,
+          "tool_result_status": "success"
+        }
+      ],
+      "tool_call": null
+    },
+    "duration_ms": 5986.89,
+    "report_url": "/api/report/4153d56d5a77/7e1b71bebf11"
+  },
+  "adaptive": {
+    "success": true,
+    "request_id": "0c6052a7b18343eeb78c3801bf916570",
+    "image_id": "4153d56d5a77",
+    "result_id": "7e1b71bebf11",
+    "status": "completed",
+    "data": {
+      "image_id": "4153d56d5a77",
+      "result_id": "0d0a70c5d68d",
+      "parent_result_id": "7e1b71bebf11",
+      "run": {
+        "id": "0d0a70c5d68d",
+        "session_id": "4153d56d5a77",
+        "parent_run_id": "7e1b71bebf11",
+        "version": 3,
+        "query": "提取飞机",
+        "mode": "live",
+        "created_at": "2026-11-18T03:00:11.500549+00:00",
+        "status": "completed",
+        "trace": [
+          {
+            "step": 1,
+            "name": "读取实验上下文",
+            "detail": "影像 800 × 800；继承所选结果条件",
+            "state": "completed",
+            "duration_ms": 0,
+            "at": "2026-11-18T03:00:11.509444+00:00"
+          },
+          {
+            "step": 2,
+            "name": "确认执行边界",
+            "detail": "目标由 Agent 工具参数提供；范围 全图，来源 explicit_scope_selection；先全图分割再裁切",
+            "state": "completed",
+            "duration_ms": 0,
+            "at": "2026-11-18T03:00:13.204670+00:00"
+          },
+          {
+            "step": 3,
+            "name": "理解任务与选择路径",
+            "detail": "RemoteAgent · segment",
+            "state": "completed",
+            "duration_ms": 1695.21,
+            "at": "2026-11-18T03:00:13.204685+00:00"
+          },
+          {
+            "step": 4,
+            "name": "GeoScope-AFR 自适应推理",
+            "detail": "选中 0/1 个局部区域，共 1 次真实服务调用",
+            "state": "completed",
+            "duration_ms": 393.96,
+            "at": "2026-11-18T03:00:13.598662+00:00"
+          },
+          {
+            "step": 5,
+            "name": "范围筛选与像素统计",
+            "detail": "全图；整图分母 640,000 px",
+            "state": "completed",
+            "duration_ms": 0,
+            "at": "2026-11-18T03:00:13.623732+00:00"
+          },
+          {
+            "step": 6,
+            "name": "结果检查",
+            "detail": "尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核",
+            "state": "completed",
+            "duration_ms": 0,
+            "at": "2026-11-18T03:00:13.738578+00:00"
+          },
+          {
+            "step": 7,
+            "name": "反馈执行结果给 RemoteAgent",
+            "detail": "已回传确定性结果；模型原文保留在记录中，页面统计不由模型改写。",
+            "state": "completed",
+            "duration_ms": 0,
+            "at": "2026-11-18T03:00:15.512669+00:00"
+          }
+        ],
+        "provenance": {
+          "planner": "RemoteAgent",
+          "perception": "RemoteSAM服务",
+          "source": "Wikimedia Commons：JFK Terminal 5 aerial view，作者 Quintin Soloviev，CC BY 4.0；为适配演示已裁剪缩放。https://commons.wikimedia.org/wiki/File:JFK_Terminal_5_aerial_view.jpg",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "planner_protocol": "remoteagent",
+          "perception_revision": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+        },
+        "task_options": {
+          "roi": null,
+          "roi_source": null,
+          "quality_mode": "adaptive",
+          "effective_quality_mode": "adaptive",
+          "quality_source": "explicit_selection",
+          "batch_id": null,
+          "item_id": null,
+          "algorithm": "geoscope_afr_v1"
+        },
+        "agent_decision": {
+          "status": "tool_call",
+          "raw_response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+          "raw_response_sha256": "c100f0aa715bae15429148a7bfdc13de2ab65fc577ed2680fe8a0f8bef9240d8",
+          "text": "",
+          "history": [
+            {
+              "round": 1,
+              "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+              "status": "tool_call",
+              "tool_call": {
+                "name": "referring_expression_segmentation",
+                "arguments": {
+                  "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+                  "prompt": "all planes"
+                }
+              }
+            }
+          ],
+          "tool_call": {
+            "name": "referring_expression_segmentation",
+            "arguments": {
+              "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+              "prompt": "all planes"
+            }
+          }
+        },
+        "task": {
+          "action": "segment",
+          "target": "aircraft",
+          "side": "all",
+          "invert": false,
+          "scope_source": "explicit_scope_selection",
+          "tool_name": "referring_expression_segmentation",
+          "planner_tool_name": "referring_expression_segmentation",
+          "routing_policy": "agent_selected",
+          "service_request": {
+            "task": "referring_seg",
+            "text": "all planes",
+            "quality_mode": "fast"
+          },
+          "mask_field": null,
+          "planner_protocol": "remoteagent",
+          "scope_rule": "整图目标分割后按像素半幅裁切；由 Harness 执行",
+          "roi": null,
+          "roi_source": null,
+          "quality_mode": "adaptive",
+          "effective_quality_mode": "adaptive",
+          "quality_source": "explicit_selection",
+          "batch_id": null,
+          "item_id": null
+        },
+        "afr": {
+          "status": "completed",
+          "algorithm": "geoscope_afr",
+          "algorithm_version": "v1",
+          "config": {
+            "alpha": 0.5,
+            "beta": 0.3,
+            "gamma": 0.2,
+            "budget": {
+              "max_regions": null,
+              "fraction": 0.25
+            },
+            "lam": 0.5,
+            "lam_per_region": null,
+            "threshold": 0.5,
+            "tile_size": 1024,
+            "overlap": 256,
+            "upscale": {
+              "enabled": true,
+              "min_size": 512,
+              "scale": 2.0
+            },
+            "review_ratio_threshold": 0.05
+          },
+          "config_sha256": "47b5ae543aee1e47fc3be4e436e5ae2a331a8e6dad604f9de3860bd9c325906d",
+          "image_size": [
+            800,
+            800
+          ],
+          "grid_regions": 1,
+          "selected_regions": 0,
+          "budget_used": 0,
+          "request_count": 1,
+          "local_success_count": 0,
+          "fallback_count": 0,
+          "local_service_ms_total": 0.0,
+          "threshold_validated": false,
+          "fallback_records": [],
+          "disagreement": {
+            "available": false,
+            "region_stats": [],
+            "review_region_count": 0,
+            "review_regions": [],
+            "notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。"
+          },
+          "service_metadata": {
+            "model": {
+              "service_version": "1.2.0",
+              "device": "cuda:0",
+              "fp16": true,
+              "epoc": false,
+              "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+            },
+            "timing_ms": {
+              "preprocess": 14.75,
+              "inference": 171.41,
+              "postprocess": 3.03,
+              "total": 207.56
+            },
+            "quality": {
+              "empty_mask": false,
+              "foreground_pixels": 5795,
+              "foreground_ratio": 0.0090546875,
+              "mean_foreground_confidence": 0.893622,
+              "mean_image_confidence": 0.009961
+            },
+            "quality_mode": "fast",
+            "requested_quality_mode": "fast",
+            "mode_parameters": {
+              "requested_mode": "fast",
+              "resolved_mode": "fast",
+              "tile_count": 1,
+              "strategy": "whole_image_argmax",
+              "tile_size": null,
+              "overlap": 0,
+              "probability_threshold": null,
+              "blend": null,
+              "blend_min_weight": null
+            },
+            "original_size": [
+              800,
+              800
+            ],
+            "output_size": [
+              800,
+              800
+            ],
+            "peak_vram_mb": 1839.94,
+            "full_mask_candidate_stats": {
+              "label": "candidate_regions",
+              "connectivity": 8,
+              "min_area_pixels": 1,
+              "raw_candidate_count": 4,
+              "candidate_count": 4,
+              "filtered_out_count": 0,
+              "total_area_pixels": 5795,
+              "min_area": 271,
+              "max_area": 2873,
+              "mean_area": 1448.75,
+              "candidates": [
+                {
+                  "candidate_id": 1,
+                  "area_pixels": 333,
+                  "bbox": {
+                    "x": 151,
+                    "y": 233,
+                    "width": 24,
+                    "height": 30
+                  },
+                  "center": {
+                    "x": 163.318,
+                    "y": 249.15
+                  }
+                },
+                {
+                  "candidate_id": 2,
+                  "area_pixels": 271,
+                  "bbox": {
+                    "x": 205,
+                    "y": 244,
+                    "width": 29,
+                    "height": 19
+                  },
+                  "center": {
+                    "x": 220.148,
+                    "y": 252.915
+                  }
+                },
+                {
+                  "candidate_id": 3,
+                  "area_pixels": 2318,
+                  "bbox": {
+                    "x": 181,
+                    "y": 642,
+                    "width": 68,
+                    "height": 78
+                  },
+                  "center": {
+                    "x": 215.295,
+                    "y": 680.33
+                  }
+                },
+                {
+                  "candidate_id": 4,
+                  "area_pixels": 2873,
+                  "bbox": {
+                    "x": 271,
+                    "y": 660,
+                    "width": 92,
+                    "height": 96
+                  },
+                  "center": {
+                    "x": 316.987,
+                    "y": 710.531
+                  }
+                }
+              ],
+              "notice": "Connected regions are candidate targets and require human review."
+            },
+            "quality_confirmation": "afr_orchestrated_fast_base"
+          },
+          "honesty_notes": [
+            "区域难度评分基于预测概率，不是校准置信度；",
+            "disagreement 是整图与局部预测的分歧，不是错误概率；",
+            "候选连通区域数量不等于准确实例数。"
+          ],
+          "probability_map_ref": "/experiments/4153d56d5a77/0d0a70c5d68d/probability_map.png"
+        },
+        "service_metadata": {
+          "model": {
+            "service_version": "1.2.0",
+            "device": "cuda:0",
+            "fp16": true,
+            "epoc": false,
+            "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+          },
+          "timing_ms": {
+            "preprocess": 14.75,
+            "inference": 171.41,
+            "postprocess": 3.03,
+            "total": 207.56
+          },
+          "quality": {
+            "empty_mask": false,
+            "foreground_pixels": 5795,
+            "foreground_ratio": 0.0090546875,
+            "mean_foreground_confidence": 0.893622,
+            "mean_image_confidence": 0.009961
+          },
+          "quality_mode": "fast",
+          "requested_quality_mode": "fast",
+          "mode_parameters": {
+            "requested_mode": "fast",
+            "resolved_mode": "fast",
+            "tile_count": 1,
+            "strategy": "whole_image_argmax",
+            "tile_size": null,
+            "overlap": 0,
+            "probability_threshold": null,
+            "blend": null,
+            "blend_min_weight": null
+          },
+          "original_size": [
+            800,
+            800
+          ],
+          "output_size": [
+            800,
+            800
+          ],
+          "peak_vram_mb": 1839.94,
+          "full_mask_candidate_stats": {
+            "label": "candidate_regions",
+            "connectivity": 8,
+            "min_area_pixels": 1,
+            "raw_candidate_count": 4,
+            "candidate_count": 4,
+            "filtered_out_count": 0,
+            "total_area_pixels": 5795,
+            "min_area": 271,
+            "max_area": 2873,
+            "mean_area": 1448.75,
+            "candidates": [
+              {
+                "candidate_id": 1,
+                "area_pixels": 333,
+                "bbox": {
+                  "x": 151,
+                  "y": 233,
+                  "width": 24,
+                  "height": 30
+                },
+                "center": {
+                  "x": 163.318,
+                  "y": 249.15
+                }
+              },
+              {
+                "candidate_id": 2,
+                "area_pixels": 271,
+                "bbox": {
+                  "x": 205,
+                  "y": 244,
+                  "width": 29,
+                  "height": 19
+                },
+                "center": {
+                  "x": 220.148,
+                  "y": 252.915
+                }
+              },
+              {
+                "candidate_id": 3,
+                "area_pixels": 2318,
+                "bbox": {
+                  "x": 181,
+                  "y": 642,
+                  "width": 68,
+                  "height": 78
+                },
+                "center": {
+                  "x": 215.295,
+                  "y": 680.33
+                }
+              },
+              {
+                "candidate_id": 4,
+                "area_pixels": 2873,
+                "bbox": {
+                  "x": 271,
+                  "y": 660,
+                  "width": 92,
+                  "height": 96
+                },
+                "center": {
+                  "x": 316.987,
+                  "y": 710.531
+                }
+              }
+            ],
+            "notice": "Connected regions are candidate targets and require human review."
+          },
+          "quality_confirmation": "afr_orchestrated_fast_base"
+        },
+        "mask_cache_key": "bc52a9402fa1ab27eef1664fa025154ef1a4bccae8c425565a1fa0d00ea5abfb",
+        "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+        "metrics": {
+          "pixel_area": 5795,
+          "total_pixels": 640000,
+          "area_ratio": 0.0090546875,
+          "bbox_xyxy": [
+            151,
+            233,
+            363,
+            756
+          ],
+          "width": 800,
+          "height": 800,
+          "scope": "all",
+          "scope_label": "全图",
+          "unit": "pixel",
+          "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+          "spatial_check": true,
+          "roi": null,
+          "candidate_stats": {
+            "label": "candidate_regions",
+            "connectivity": 8,
+            "min_area_pixels": 1,
+            "raw_candidate_count": 4,
+            "candidate_count": 4,
+            "filtered_out_count": 0,
+            "total_area_pixels": 5795,
+            "min_area": 271,
+            "max_area": 2873,
+            "mean_area": 1448.75,
+            "candidates": [
+              {
+                "candidate_id": 1,
+                "area_pixels": 333,
+                "bbox": {
+                  "x": 151,
+                  "y": 233,
+                  "width": 24,
+                  "height": 30
+                },
+                "center": {
+                  "x": 163.318,
+                  "y": 249.15
+                }
+              },
+              {
+                "candidate_id": 2,
+                "area_pixels": 271,
+                "bbox": {
+                  "x": 205,
+                  "y": 244,
+                  "width": 29,
+                  "height": 19
+                },
+                "center": {
+                  "x": 220.148,
+                  "y": 252.915
+                }
+              },
+              {
+                "candidate_id": 3,
+                "area_pixels": 2318,
+                "bbox": {
+                  "x": 181,
+                  "y": 642,
+                  "width": 68,
+                  "height": 78
+                },
+                "center": {
+                  "x": 215.295,
+                  "y": 680.33
+                }
+              },
+              {
+                "candidate_id": 4,
+                "area_pixels": 2873,
+                "bbox": {
+                  "x": 271,
+                  "y": 660,
+                  "width": 92,
+                  "height": 96
+                },
+                "center": {
+                  "x": 316.987,
+                  "y": 710.531
+                }
+              }
+            ],
+            "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+          },
+          "distribution": {
+            "basis": "full_mask_before_scope",
+            "left_pixels": 5795,
+            "right_pixels": 0
+          },
+          "ground_area_available": false
+        },
+        "mask_url": "/experiments/4153d56d5a77/0d0a70c5d68d/mask.png",
+        "overlay_url": "/experiments/4153d56d5a77/0d0a70c5d68d/overlay.png",
+        "export_url": "/api/export/4153d56d5a77/0d0a70c5d68d",
+        "message": "已生成全图飞机区域：5,795 px，占整幅影像 0.91%。请结合叠加图复核目标语义与边界。",
+        "tool_feedback": {
+          "status": "success",
+          "tool_name": "referring_expression_segmentation",
+          "metrics": {
+            "pixel_area": 5795,
+            "total_pixels": 640000,
+            "area_ratio": 0.0090546875,
+            "bbox_xyxy": [
+              151,
+              233,
+              363,
+              756
+            ],
+            "width": 800,
+            "height": 800,
+            "scope": "all",
+            "scope_label": "全图",
+            "unit": "pixel",
+            "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+            "spatial_check": true,
+            "roi": null,
+            "candidate_stats": {
+              "label": "candidate_regions",
+              "connectivity": 8,
+              "min_area_pixels": 1,
+              "raw_candidate_count": 4,
+              "candidate_count": 4,
+              "filtered_out_count": 0,
+              "total_area_pixels": 5795,
+              "min_area": 271,
+              "max_area": 2873,
+              "mean_area": 1448.75,
+              "candidates": [
+                {
+                  "candidate_id": 1,
+                  "area_pixels": 333,
+                  "bbox": {
+                    "x": 151,
+                    "y": 233,
+                    "width": 24,
+                    "height": 30
+                  },
+                  "center": {
+                    "x": 163.318,
+                    "y": 249.15
+                  }
+                },
+                {
+                  "candidate_id": 2,
+                  "area_pixels": 271,
+                  "bbox": {
+                    "x": 205,
+                    "y": 244,
+                    "width": 29,
+                    "height": 19
+                  },
+                  "center": {
+                    "x": 220.148,
+                    "y": 252.915
+                  }
+                },
+                {
+                  "candidate_id": 3,
+                  "area_pixels": 2318,
+                  "bbox": {
+                    "x": 181,
+                    "y": 642,
+                    "width": 68,
+                    "height": 78
+                  },
+                  "center": {
+                    "x": 215.295,
+                    "y": 680.33
+                  }
+                },
+                {
+                  "candidate_id": 4,
+                  "area_pixels": 2873,
+                  "bbox": {
+                    "x": 271,
+                    "y": 660,
+                    "width": 92,
+                    "height": 96
+                  },
+                  "center": {
+                    "x": 316.987,
+                    "y": 710.531
+                  }
+                }
+              ],
+              "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+            },
+            "distribution": {
+              "basis": "full_mask_before_scope",
+              "left_pixels": 5795,
+              "right_pixels": 0
+            },
+            "ground_area_available": false
+          },
+          "scope_rule": "整图目标分割后按像素半幅裁切；由 Harness 执行",
+          "actual_service_request": {
+            "task": "referring_seg",
+            "text": "all planes",
+            "quality_mode": "fast"
+          },
+          "artifact_ids": {
+            "session_id": "4153d56d5a77",
+            "run_id": "0d0a70c5d68d",
+            "mask_url": "/experiments/4153d56d5a77/0d0a70c5d68d/mask.png"
+          },
+          "reused_from_run_id": null,
+          "service_metadata": {
+            "model": {
+              "service_version": "1.2.0",
+              "device": "cuda:0",
+              "fp16": true,
+              "epoc": false,
+              "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+            },
+            "timing_ms": {
+              "preprocess": 14.75,
+              "inference": 171.41,
+              "postprocess": 3.03,
+              "total": 207.56
+            },
+            "quality": {
+              "empty_mask": false,
+              "foreground_pixels": 5795,
+              "foreground_ratio": 0.0090546875,
+              "mean_foreground_confidence": 0.893622,
+              "mean_image_confidence": 0.009961
+            },
+            "quality_mode": "fast",
+            "requested_quality_mode": "fast",
+            "mode_parameters": {
+              "requested_mode": "fast",
+              "resolved_mode": "fast",
+              "tile_count": 1,
+              "strategy": "whole_image_argmax",
+              "tile_size": null,
+              "overlap": 0,
+              "probability_threshold": null,
+              "blend": null,
+              "blend_min_weight": null
+            },
+            "original_size": [
+              800,
+              800
+            ],
+            "output_size": [
+              800,
+              800
+            ],
+            "peak_vram_mb": 1839.94,
+            "full_mask_candidate_stats": {
+              "label": "candidate_regions",
+              "connectivity": 8,
+              "min_area_pixels": 1,
+              "raw_candidate_count": 4,
+              "candidate_count": 4,
+              "filtered_out_count": 0,
+              "total_area_pixels": 5795,
+              "min_area": 271,
+              "max_area": 2873,
+              "mean_area": 1448.75,
+              "candidates": [
+                {
+                  "candidate_id": 1,
+                  "area_pixels": 333,
+                  "bbox": {
+                    "x": 151,
+                    "y": 233,
+                    "width": 24,
+                    "height": 30
+                  },
+                  "center": {
+                    "x": 163.318,
+                    "y": 249.15
+                  }
+                },
+                {
+                  "candidate_id": 2,
+                  "area_pixels": 271,
+                  "bbox": {
+                    "x": 205,
+                    "y": 244,
+                    "width": 29,
+                    "height": 19
+                  },
+                  "center": {
+                    "x": 220.148,
+                    "y": 252.915
+                  }
+                },
+                {
+                  "candidate_id": 3,
+                  "area_pixels": 2318,
+                  "bbox": {
+                    "x": 181,
+                    "y": 642,
+                    "width": 68,
+                    "height": 78
+                  },
+                  "center": {
+                    "x": 215.295,
+                    "y": 680.33
+                  }
+                },
+                {
+                  "candidate_id": 4,
+                  "area_pixels": 2873,
+                  "bbox": {
+                    "x": 271,
+                    "y": 660,
+                    "width": 92,
+                    "height": 96
+                  },
+                  "center": {
+                    "x": 316.987,
+                    "y": 710.531
+                  }
+                }
+              ],
+              "notice": "Connected regions are candidate targets and require human review."
+            },
+            "quality_confirmation": "afr_orchestrated_fast_base"
+          }
+        },
+        "agent_feedback": {
+          "status": "completed",
+          "raw_response": "<answer>飞机的像素面积为5795，占总像素的比例为0.0090546875。</answer>",
+          "raw_response_sha256": "23f9f5a0074b4f33bd8ea5797ed05db4ed43f3a181a81aecb7ac4c11970864ce",
+          "text": "飞机的像素面积为5795，占总像素的比例为0.0090546875。",
+          "history": [
+            {
+              "round": 1,
+              "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png\", \"all planes\")",
+              "status": "tool_call",
+              "tool_call": {
+                "name": "referring_expression_segmentation",
+                "arguments": {
+                  "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/4153d56d5a77/original.png",
+                  "prompt": "all planes"
+                }
+              }
+            },
+            {
+              "round": 2,
+              "response": "<answer>飞机的像素面积为5795，占总像素的比例为0.0090546875。</answer>",
+              "status": "completed",
+              "tool_call": null,
+              "tool_result_status": "success"
+            }
+          ],
+          "tool_call": null
+        },
+        "duration_ms": 4012.17,
+        "report_url": "/api/report/4153d56d5a77/0d0a70c5d68d"
+      }
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "plan": {
+    "success": true,
+    "request_id": "fce1d47d86b54082bfe2c31abee57c30",
+    "image_id": "4153d56d5a77",
+    "result_id": "0d0a70c5d68d",
+    "status": "completed",
+    "data": {
+      "status": "completed",
+      "failed_step": null,
+      "events": [
+        {
+          "step": 1,
+          "tool": "get_segmentation",
+          "status": "completed",
+          "duration_ms": 7.261,
+          "output": {
+            "image_id": "4153d56d5a77",
+            "result_id": "0d0a70c5d68d",
+            "target": "aircraft",
+            "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+            "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+            "model_execution": true,
+            "source_mode": "live",
+            "mask_basis": "saved_final_mask",
+            "saved_scope": "all",
+            "saved_roi": null
+          }
+        },
+        {
+          "step": 2,
+          "tool": "apply_scope",
+          "status": "completed",
+          "duration_ms": 0.834,
+          "output": {
+            "scope": "left_half",
+            "roi": null
+          }
+        },
+        {
+          "step": 3,
+          "tool": "region_statistics",
+          "status": "completed",
+          "duration_ms": 2.147,
+          "output": {
+            "target_pixels_in_scope": 5795,
+            "image_pixels": 640000,
+            "scope_pixels": 320000,
+            "ratio_of_full_image": 0.0090546875,
+            "ratio_within_scope": 0.018109375,
+            "scope": "left_half",
+            "roi": null,
+            "width": 800,
+            "height": 800,
+            "unit": "pixel",
+            "mask_hash": "bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f",
+            "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+            "image_id": "4153d56d5a77",
+            "result_id": "0d0a70c5d68d",
+            "target": "aircraft",
+            "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+            "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+            "model_execution": true,
+            "source_mode": "live",
+            "mask_basis": "saved_final_mask",
+            "saved_scope": "all",
+            "saved_roi": null
+          }
+        },
+        {
+          "step": 4,
+          "tool": "compare_versions",
+          "status": "completed",
+          "duration_ms": 13.065,
+          "output": {
+            "width": 800,
+            "height": 800,
+            "base_pixels": 5795,
+            "target_pixels": 5795,
+            "intersection_pixels": 5795,
+            "union_pixels": 5795,
+            "added_pixels": 0,
+            "removed_pixels": 0,
+            "prediction_agreement_iou": 1.0,
+            "empty_set_rule": "both_empty_agreement_is_one",
+            "notice": "Prediction agreement is not ground truth accuracy; diff red=removed, green=added",
+            "diff_mask_ref": "/api/national/artifacts/b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e.png",
+            "diff_sha256": "b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e",
+            "base_result_id": "7e1b71bebf11",
+            "target_result_id": "0d0a70c5d68d",
+            "base_provenance": {
+              "image_id": "4153d56d5a77",
+              "result_id": "7e1b71bebf11",
+              "target": "aircraft",
+              "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+              "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+              "model_execution": true,
+              "source_mode": "live",
+              "mask_basis": "saved_final_mask",
+              "saved_scope": "all",
+              "saved_roi": null
+            },
+            "scope": "left_half",
+            "roi": null,
+            "image_id": "4153d56d5a77",
+            "result_id": "0d0a70c5d68d",
+            "target": "aircraft",
+            "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+            "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+            "model_execution": true,
+            "source_mode": "live",
+            "mask_basis": "saved_final_mask",
+            "saved_scope": "all",
+            "saved_roi": null
+          }
+        },
+        {
+          "step": 5,
+          "tool": "report_generation",
+          "status": "completed",
+          "duration_ms": 1.197,
+          "output": {
+            "statistics": {
+              "target_pixels_in_scope": 5795,
+              "image_pixels": 640000,
+              "scope_pixels": 320000,
+              "ratio_of_full_image": 0.0090546875,
+              "ratio_within_scope": 0.018109375,
+              "scope": "left_half",
+              "roi": null,
+              "width": 800,
+              "height": 800,
+              "unit": "pixel",
+              "mask_hash": "bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f",
+              "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+            },
+            "report": "{\n  \"image_id\": \"4153d56d5a77\",\n  \"result_id\": \"0d0a70c5d68d\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783\",\n  \"image_sha256\": \"47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f\",\n  \"model_execution\": true,\n  \"source_mode\": \"live\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5795,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 320000,\n  \"ratio_of_full_image\": 0.0090546875,\n  \"ratio_within_scope\": 0.018109375,\n  \"scope\": \"left_half\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+            "format": "application/json",
+            "source": "deterministic_computation",
+            "image_id": "4153d56d5a77",
+            "result_id": "0d0a70c5d68d",
+            "target": "aircraft",
+            "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+            "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+            "model_execution": true,
+            "source_mode": "live",
+            "mask_basis": "saved_final_mask",
+            "saved_scope": "all",
+            "saved_roi": null
+          }
+        }
+      ],
+      "artifacts": {
+        "get_segmentation": {
+          "image_id": "4153d56d5a77",
+          "result_id": "0d0a70c5d68d",
+          "target": "aircraft",
+          "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": true,
+          "source_mode": "live",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        },
+        "apply_scope": {
+          "scope": "left_half",
+          "roi": null
+        },
+        "region_statistics": {
+          "target_pixels_in_scope": 5795,
+          "image_pixels": 640000,
+          "scope_pixels": 320000,
+          "ratio_of_full_image": 0.0090546875,
+          "ratio_within_scope": 0.018109375,
+          "scope": "left_half",
+          "roi": null,
+          "width": 800,
+          "height": 800,
+          "unit": "pixel",
+          "mask_hash": "bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f",
+          "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+          "image_id": "4153d56d5a77",
+          "result_id": "0d0a70c5d68d",
+          "target": "aircraft",
+          "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": true,
+          "source_mode": "live",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        },
+        "compare_versions": {
+          "width": 800,
+          "height": 800,
+          "base_pixels": 5795,
+          "target_pixels": 5795,
+          "intersection_pixels": 5795,
+          "union_pixels": 5795,
+          "added_pixels": 0,
+          "removed_pixels": 0,
+          "prediction_agreement_iou": 1.0,
+          "empty_set_rule": "both_empty_agreement_is_one",
+          "notice": "Prediction agreement is not ground truth accuracy; diff red=removed, green=added",
+          "diff_mask_ref": "/api/national/artifacts/b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e.png",
+          "diff_sha256": "b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e",
+          "base_result_id": "7e1b71bebf11",
+          "target_result_id": "0d0a70c5d68d",
+          "base_provenance": {
+            "image_id": "4153d56d5a77",
+            "result_id": "7e1b71bebf11",
+            "target": "aircraft",
+            "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+            "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+            "model_execution": true,
+            "source_mode": "live",
+            "mask_basis": "saved_final_mask",
+            "saved_scope": "all",
+            "saved_roi": null
+          },
+          "scope": "left_half",
+          "roi": null,
+          "image_id": "4153d56d5a77",
+          "result_id": "0d0a70c5d68d",
+          "target": "aircraft",
+          "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": true,
+          "source_mode": "live",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        },
+        "report_generation": {
+          "statistics": {
+            "target_pixels_in_scope": 5795,
+            "image_pixels": 640000,
+            "scope_pixels": 320000,
+            "ratio_of_full_image": 0.0090546875,
+            "ratio_within_scope": 0.018109375,
+            "scope": "left_half",
+            "roi": null,
+            "width": 800,
+            "height": 800,
+            "unit": "pixel",
+            "mask_hash": "bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f",
+            "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+          },
+          "report": "{\n  \"image_id\": \"4153d56d5a77\",\n  \"result_id\": \"0d0a70c5d68d\",\n  \"target\": \"aircraft\",\n  \"full_mask_sha256\": \"4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783\",\n  \"image_sha256\": \"47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f\",\n  \"model_execution\": true,\n  \"source_mode\": \"live\",\n  \"mask_basis\": \"saved_final_mask\",\n  \"saved_scope\": \"all\",\n  \"saved_roi\": null,\n  \"target_pixels_in_scope\": 5795,\n  \"image_pixels\": 640000,\n  \"scope_pixels\": 320000,\n  \"ratio_of_full_image\": 0.0090546875,\n  \"ratio_within_scope\": 0.018109375,\n  \"scope\": \"left_half\",\n  \"roi\": null,\n  \"width\": 800,\n  \"height\": 800,\n  \"unit\": \"pixel\",\n  \"mask_hash\": \"bf61bc145f03eac987db3d79f71aa219e58d9eb168dd89c2ea6099214c98490f\",\n  \"coordinate_rule\": \"original pixels, xyxy half-open; odd remainder belongs to right/bottom\"\n}",
+          "format": "application/json",
+          "source": "deterministic_computation",
+          "image_id": "4153d56d5a77",
+          "result_id": "0d0a70c5d68d",
+          "target": "aircraft",
+          "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "model_execution": true,
+          "source_mode": "live",
+          "mask_basis": "saved_final_mask",
+          "saved_scope": "all",
+          "saved_roi": null
+        }
+      },
+      "error": null
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "comparison": {
+    "success": true,
+    "request_id": "ad2eed662ce14f4c9047b7628f884414",
+    "image_id": "4153d56d5a77",
+    "result_id": "0d0a70c5d68d",
+    "status": "completed",
+    "data": {
+      "width": 800,
+      "height": 800,
+      "base_pixels": 5795,
+      "target_pixels": 5795,
+      "intersection_pixels": 5795,
+      "union_pixels": 5795,
+      "added_pixels": 0,
+      "removed_pixels": 0,
+      "prediction_agreement_iou": 1.0,
+      "empty_set_rule": "both_empty_agreement_is_one",
+      "notice": "Prediction agreement is not ground truth accuracy; diff red=removed, green=added",
+      "diff_mask_ref": "/api/national/artifacts/b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e.png",
+      "diff_sha256": "b992393af405d8fb6bea844cea5c7b0d771e8fced32639f9257ec74c009acb9e",
+      "base_result_id": "7e1b71bebf11",
+      "target_result_id": "0d0a70c5d68d",
+      "base_provenance": {
+        "image_id": "4153d56d5a77",
+        "result_id": "7e1b71bebf11",
+        "target": "aircraft",
+        "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+        "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+        "model_execution": true,
+        "source_mode": "live",
+        "mask_basis": "saved_final_mask",
+        "saved_scope": "all",
+        "saved_roi": null
+      },
+      "scope": "all",
+      "roi": null,
+      "image_id": "4153d56d5a77",
+      "result_id": "0d0a70c5d68d",
+      "target": "aircraft",
+      "full_mask_sha256": "4cd7060fd7ed94ccaab3f66b34433a4445d94da9b5ab7dbc10955d9baeeca783",
+      "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+      "model_execution": true,
+      "source_mode": "live",
+      "mask_basis": "saved_final_mask",
+      "saved_scope": "all",
+      "saved_roi": null
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "export_members": [
+    "original.png",
+    "mask.png",
+    "overlay.png",
+    "result.json",
+    "statistics.json",
+    "run_log.json",
+    "report.md"
+  ],
+  "afr_artifacts": {
+    "probability_map_ref": {
+      "http_status": 200,
+      "bytes": 15700
+    }
+  },
+  "status": "completed"
+}

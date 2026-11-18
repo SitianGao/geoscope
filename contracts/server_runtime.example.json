@@ -1,0 +1,12 @@
+{
+  "root": "/path/to/independent-geoscope-deployment",
+  "sam_python": "/path/to/existing-sam-env/bin/python",
+  "sam_weights": "/path/to/RemoteSAMv1.pth",
+  "sam_sha256": "replace-with-verified-sha256",
+  "sam_tokenizer": "/path/to/bert-base-uncased",
+  "agent_weights": "/path/to/RemoteAgent",
+  "clip_weights": "/path/to/RemoteCLIP-ViT-B-32.pt",
+  "clip_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+  "clip_architecture": "ViT-B-32",
+  "gallery": "outputs/remoteclip-gallery.json"
+}

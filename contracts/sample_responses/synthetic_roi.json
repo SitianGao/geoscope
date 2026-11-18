@@ -1,0 +1,22 @@
+{
+  "evidence_source": "synthetic unit input, not model output",
+  "data": {
+    "target_pixels_in_scope": 10,
+    "image_pixels": 100,
+    "scope_pixels": 25,
+    "ratio_of_full_image": 0.1,
+    "ratio_within_scope": 0.4,
+    "scope": "roi",
+    "roi": [
+      0,
+      0,
+      5,
+      5
+    ],
+    "width": 10,
+    "height": 10,
+    "unit": "pixel",
+    "mask_hash": "c3fa88c329b9047b24831a5bae877f1604e15202d9ed6dedf3a90bcd09f4eb39",
+    "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom"
+  }
+}

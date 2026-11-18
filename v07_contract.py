@@ -4,7 +4,7 @@ from __future__ import annotations
 import re
 
 
-QUALITY_MODES = {'fast', 'accurate', 'auto'}
+QUALITY_MODES = {'fast', 'accurate', 'auto', 'adaptive'}
 DETAIL_ENHANCED_TARGETS = {'aircraft'}
 ROI_WORDS = re.compile(r'框选|框内|选区|研究区|矩形|\broi\b|selected region', re.I)
 BATCH_WORDS = re.compile(r'批量|整批|这一批|这些影像|所有影像|\bbatch\b|these images', re.I)
@@ -63,17 +63,21 @@ def resolve_quality(query, context, selected=None):
     fast = bool(re.search(r'快速|快一点|快些|速度优先|\bfast\b', q))
     accurate = bool(re.search(r'高精度|精细|小目标|精度优先|\baccurate\b', q))
     automatic = bool(re.search(r'自动模式|自动选择|\bauto\b', q))
-    found = [name for name, present in (('fast', fast), ('accurate', accurate), ('auto', automatic)) if present]
-    if len(found) > 1:
+    adaptive = bool(re.search(r'自适应|智能|\badaptive\b', q))
+    found = [name for name, present in (('fast', fast), ('accurate', accurate),
+                                        ('auto', automatic), ('adaptive', adaptive)) if present]
+    if len(found) > 1 and 'adaptive' not in found:
         raise ValueError('任务同时要求多个执行模式，请只选择一种')
+    if adaptive and any(name in found for name in ('fast', 'accurate')):
+        found = ['adaptive']  # 自适应优先于文字中的 fast/accurate（已文档化）
     if selected is not None and (not isinstance(selected, str) or selected not in QUALITY_MODES):
-        raise ValueError('非法 quality_mode；仅支持 fast、accurate、auto')
+        raise ValueError('非法 quality_mode；仅支持 fast、accurate、auto、adaptive')
     if selected not in (None, 'auto') and found and selected != found[0]:
         raise ValueError('执行模式选择与文字任务冲突')
     requested = selected or (found[0] if found else context.get('quality_mode', 'auto'))
     if requested not in QUALITY_MODES:
         raise ValueError('上下文包含非法 quality_mode')
-    effective = ('accurate' if accurate else 'fast') if requested == 'auto' else requested
+    effective = ('adaptive' if adaptive else ('accurate' if accurate else 'fast')) if requested == 'auto' else requested
     source = 'explicit_selection' if selected else 'task_text' if found else 'selected_version_context' if context.get('quality_mode') else 'default'
     return requested, effective, source
 
@@ -87,6 +91,13 @@ def adapt_quality_for_target(target, requested, effective):
     path.  Preserve the user's requested mode for provenance, but send the
     stable whole-image mode to RemoteSAM for unvalidated target categories.
     """
+    if effective == 'adaptive' and target not in DETAIL_ENHANCED_TARGETS:
+        return 'fast', {
+            'requested_mode': requested,
+            'effective_mode': 'fast',
+            'reason_code': 'adaptive_not_validated_for_target',
+            'message': '自适应区域推理目前只在飞机目标上完成验证；当前目标已自动使用稳定的整图模式。',
+        }
     if effective != 'accurate' or target in DETAIL_ENHANCED_TARGETS:
         return effective, None
     return 'fast', {

@@ -1,0 +1,114 @@
+test_chat_uses_openai_compatible_path_and_key (test_agent_harness_integration.VLLMTransportTests.test_chat_uses_openai_compatible_path_and_key) ... ok
+test_model_discovery (test_agent_harness_integration.VLLMTransportTests.test_model_discovery) ... ok
+test_aircraft_referring_prompt_matches_improved_fast_configuration (test_agent_integration.OfficialAgentIntegrationTests.test_aircraft_referring_prompt_matches_improved_fast_configuration) ... ok
+test_annotation_and_complement_route_to_mask_then_invert (test_agent_integration.OfficialAgentIntegrationTests.test_annotation_and_complement_route_to_mask_then_invert) ... ok
+test_building_route_reuses_same_verified_service_mask (test_agent_integration.OfficialAgentIntegrationTests.test_building_route_reuses_same_verified_service_mask) ... ok
+test_cache_reuse_still_reports_execution_to_model_and_selected_context (test_agent_integration.OfficialAgentIntegrationTests.test_cache_reuse_still_reports_execution_to_model_and_selected_context) ... ok
+test_complex_or_conflicting_pixel_scope_stops_before_model (test_agent_integration.OfficialAgentIntegrationTests.test_complex_or_conflicting_pixel_scope_stops_before_model) ... ok
+test_dense_prompt_exposes_only_deployed_tools_and_whole_image_airplanes (test_agent_integration.OfficialAgentIntegrationTests.test_dense_prompt_exposes_only_deployed_tools_and_whole_image_airplanes) ... ok
+test_direct_answer_cannot_pretend_dense_task_completed (test_agent_integration.OfficialAgentIntegrationTests.test_direct_answer_cannot_pretend_dense_task_completed) ... ok
+test_direct_answer_does_not_segment (test_agent_integration.OfficialAgentIntegrationTests.test_direct_answer_does_not_segment) ... ok
+test_export_is_local_and_preserves_decision_evidence (test_agent_integration.OfficialAgentIntegrationTests.test_export_is_local_and_preserves_decision_evidence) ... ok
+test_failure_is_fed_back_without_new_metrics_or_overwriting_old_result (test_agent_integration.OfficialAgentIntegrationTests.test_failure_is_fed_back_without_new_metrics_or_overwriting_old_result) ... ok
+test_feedback_cannot_overwrite_statistics_or_start_another_tool (test_agent_integration.OfficialAgentIntegrationTests.test_feedback_cannot_overwrite_statistics_or_start_another_tool) ... ok
+test_feedback_outage_preserves_successful_artifacts (test_agent_integration.OfficialAgentIntegrationTests.test_feedback_outage_preserves_successful_artifacts) ... ok
+test_official_plan_tool_feedback_contains_real_asset_and_exact_statistics (test_agent_integration.OfficialAgentIntegrationTests.test_official_plan_tool_feedback_contains_real_asset_and_exact_statistics) ... ok
+test_reasoning_text_is_redacted_but_response_hash_is_kept (test_agent_integration.OfficialAgentIntegrationTests.test_reasoning_text_is_redacted_but_response_hash_is_kept) ... ok
+test_rejected_or_unparsed_decisions_cannot_call_sam (test_agent_integration.OfficialAgentIntegrationTests.test_rejected_or_unparsed_decisions_cannot_call_sam) ... ok
+test_semantic_aircraft_keeps_canonical_service_class (test_agent_integration.OfficialAgentIntegrationTests.test_semantic_aircraft_keeps_canonical_service_class) ... ok
+test_single_class_semantic_tool_keeps_actual_service_task (test_agent_integration.OfficialAgentIntegrationTests.test_single_class_semantic_tool_keeps_actual_service_task) ... ok
+test_unsupported_model_constraints_and_multi_class_require_clarification (test_agent_integration.OfficialAgentIntegrationTests.test_unsupported_model_constraints_and_multi_class_require_clarification) ... ok
+test_visual_question_cannot_accidentally_run_segmentation (test_agent_integration.OfficialAgentIntegrationTests.test_visual_question_cannot_accidentally_run_segmentation) ... ok
+test_complete_comparison_and_aircraft_subset (test_eval_comparison.EvaluationComparisonTests.test_complete_comparison_and_aircraft_subset) ... ok
+test_low_iou_success_is_not_mislabeled_as_execution_failure (test_evaluation_tools.EvaluationToolsTest.test_low_iou_success_is_not_mislabeled_as_execution_failure) ... ok
+test_workflow_failure_remains_in_denominator (test_evaluation_tools.EvaluationToolsTest.test_workflow_failure_remains_in_denominator) ... ok
+test_ambiguity_preserves_context (test_harness.HarnessTests.test_ambiguity_preserves_context) ... ok
+test_branch_from_old_result (test_harness.HarnessTests.test_branch_from_old_result) ... ok
+test_complex_spatial_constraint_clarifies (test_harness.HarnessTests.test_complex_spatial_constraint_clarifies) ... ok
+test_custom_image_requires_model (test_harness.HarnessTests.test_custom_image_requires_model) ... ok
+test_export_refuses_missing_result (test_harness.HarnessTests.test_export_refuses_missing_result) ... ok
+test_failure_never_generates_fake_statistics (test_harness.HarnessTests.test_failure_never_generates_fake_statistics) ... ok
+test_followup_preserves_target_and_versions (test_harness.HarnessTests.test_followup_preserves_target_and_versions) ... ok
+test_half_masks_partition_full_image (test_harness.HarnessTests.test_half_masks_partition_full_image) ... ok
+test_human_review_is_persisted_and_updates_report (test_harness.HarnessTests.test_human_review_is_persisted_and_updates_report) ... ok
+test_no_pretend_live_result (test_harness.HarnessTests.test_no_pretend_live_result) ... ok
+test_non_target_annotation_inverts_the_base_mask (test_harness.HarnessTests.test_non_target_annotation_inverts_the_base_mask) ... ok
+test_odd_image_partition (test_harness.HarnessTests.test_odd_image_partition) ... ok
+test_real_adapter_accepts_aligned_mask (test_harness.HarnessTests.test_real_adapter_accepts_aligned_mask) ... ok
+test_real_mask_size_error_is_not_resized (test_harness.HarnessTests.test_real_mask_size_error_is_not_resized) ... ok
+test_unsupported_class_not_empty_truth (test_harness.HarnessTests.test_unsupported_class_not_empty_truth) ... ok
+test_empty_rule_and_dimensions (test_national_compare.CompareTests.test_empty_rule_and_dimensions) ... ok
+test_recomputable_diff (test_national_compare.CompareTests.test_recomputable_diff) ... ok
+test_errors_are_structured_and_clip_is_not_faked (test_national_http.NationalHTTPTests.test_errors_are_structured_and_clip_is_not_faked) ... 127.0.0.1 - - [17/Nov/2026 19:20:56] "GET /api/national/retrieval/status HTTP/1.1" 503 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "POST /api/national/tools/shell HTTP/1.1" 400 -
+127.0.0.1 - - [17/Nov/2026 19:20:56] "GET /api/national/tools/registry HTTP/1.1" 200 -
+ok
+test_legacy_upload_run_export_and_new_plan (test_national_http.NationalHTTPTests.test_legacy_upload_run_export_and_new_plan) ... 127.0.0.1 - - [17/Nov/2026 19:20:57] "POST /api/session HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "POST /api/run HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "POST /api/national/tools/region-statistics HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "GET /api/national/artifacts/8686a2f2382e12c27c75cbcccf2e1671e142f53047ccce78f0f43c2fbd809c66.png HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "POST /api/national/plans/execute HTTP/1.1" 200 -
+127.0.0.1 - - [17/Nov/2026 19:20:57] "GET /api/export/2296d0019004/74d3071f8d16 HTTP/1.1" 200 -
+ok
+test_actual_saved_artifacts_and_repeat (test_national_planner.PlannerTests.test_actual_saved_artifacts_and_repeat) ... ok
+test_different_image_comparison_rejected (test_national_planner.PlannerTests.test_different_image_comparison_rejected) ... ok
+test_failure_keeps_prior_outputs_and_original (test_national_planner.PlannerTests.test_failure_keeps_prior_outputs_and_original) ... ok
+test_final_mask_corruption_and_dimensions_rejected (test_national_planner.PlannerTests.test_final_mask_corruption_and_dimensions_rejected) ... ok
+test_image_target_and_checksum_guards (test_national_planner.PlannerTests.test_image_target_and_checksum_guards) ... ok
+test_missing_file_has_clear_error (test_national_planner.PlannerTests.test_missing_file_has_clear_error) ... ok
+test_saved_roi_is_preserved_when_new_scope_applied (test_national_planner.PlannerTests.test_saved_roi_is_preserved_when_new_scope_applied) ... ok
+test_unavailable_capabilities_are_truthful (test_national_planner.PlannerTests.test_unavailable_capabilities_are_truthful) ... ok
+test_whitelist_schema_and_no_side_effects (test_national_planner.PlannerTests.test_whitelist_schema_and_no_side_effects) ... ok
+test_diagonal_is_connected (test_national_regions.RegionsTests.test_diagonal_is_connected) ... ok
+test_scope_splits_component (test_national_regions.RegionsTests.test_scope_splits_component) ... ok
+test_spatial_empty_and_pixel_directions (test_national_regions.RegionsTests.test_spatial_empty_and_pixel_directions) ... ok
+test_two_blocks_and_filter (test_national_regions.RegionsTests.test_two_blocks_and_filter) ... ok
+test_empty_full_and_no_overlap (test_national_statistics.StatisticsTests.test_empty_full_and_no_overlap) ... ok
+test_odd_halves_partition (test_national_statistics.StatisticsTests.test_odd_halves_partition) ... ok
+test_probability_and_conflicting_scope_rejected (test_national_statistics.StatisticsTests.test_probability_and_conflicting_scope_rejected) ... ok
+test_roi_denominators (test_national_statistics.StatisticsTests.test_roi_denominators) ... ok
+test_roi_rejections (test_national_statistics.StatisticsTests.test_roi_rejections) ... ok
+test_plan_accepts_single_xml_style_tool_call_from_checkpoint (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_accepts_single_xml_style_tool_call_from_checkpoint) ... ok
+test_plan_accepts_tool_call_wrapped_in_answer_tag (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_accepts_tool_call_wrapped_in_answer_tag) ... ok
+test_plan_binds_tool_to_current_image (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_binds_tool_to_current_image) ... ok
+test_plan_does_not_salvage_multiple_xml_tool_calls (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_does_not_salvage_multiple_xml_tool_calls) ... ok
+test_plan_rejects_angle_wrapped_unavailable_tool (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_rejects_angle_wrapped_unavailable_tool) ... ok
+test_plan_rejects_tool_that_is_not_deployed (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_rejects_tool_that_is_not_deployed) ... ok
+test_plan_sends_real_image_and_keeps_direct_answer (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_plan_sends_real_image_and_keeps_direct_answer) ... ok
+test_remote_sam_structured_execution_retains_mask (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_remote_sam_structured_execution_retains_mask) ... ok
+test_self_executing_loop_preserves_full_tool_response (test_remoteagent_workflow.RemoteAgentWorkflowTests.test_self_executing_loop_preserves_full_tool_response) ... ok
+test_image_and_embedding_changes_are_rejected (test_remoteclip_integration.IndexTests.test_image_and_embedding_changes_are_rejected) ... ok
+test_invalid_queries_gallery_and_missing_index (test_remoteclip_integration.IndexTests.test_invalid_queries_gallery_and_missing_index) ... ok
+test_sorted_normalized_and_truncated (test_remoteclip_integration.IndexTests.test_sorted_normalized_and_truncated) ... ok
+test_real_image_text_embeddings (test_remoteclip_integration.RealModelTests.test_real_image_text_embeddings) ... skipped 'Real RemoteCLIP requires explicit trusted weights'
+test_agent_record_redacts_service_address_and_token (test_v07_agent_contract.V07AgentContractTests.test_agent_record_redacts_service_address_and_token) ... ok
+test_agent_target_must_match_explicit_and_inherited_target (test_v07_agent_contract.V07AgentContractTests.test_agent_target_must_match_explicit_and_inherited_target) ... ok
+test_auto_mode_keeps_legacy_result_without_claiming_actual_mode (test_v07_agent_contract.V07AgentContractTests.test_auto_mode_keeps_legacy_result_without_claiming_actual_mode) ... ok
+test_batch_keeps_other_images_after_one_failure (test_v07_agent_contract.V07AgentContractTests.test_batch_keeps_other_images_after_one_failure) ... ok
+test_building_detail_mode_falls_back_to_stable_whole_image (test_v07_agent_contract.V07AgentContractTests.test_building_detail_mode_falls_back_to_stable_whole_image) ... ok
+test_invalid_roi_and_missing_roi_preserve_result (test_v07_agent_contract.V07AgentContractTests.test_invalid_roi_and_missing_roi_preserve_result) ... ok
+test_live_batch_calls_each_image_and_keeps_failure_isolated (test_v07_agent_contract.V07AgentContractTests.test_live_batch_calls_each_image_and_keeps_failure_isolated) ... ok
+test_live_mode_records_actual_service_parameters_separately_from_roi_metrics (test_v07_agent_contract.V07AgentContractTests.test_live_mode_records_actual_service_parameters_separately_from_roi_metrics) ... ok
+test_live_mode_requires_service_confirmation (test_v07_agent_contract.V07AgentContractTests.test_live_mode_requires_service_confirmation) ... ok
+test_quality_rejection_and_batch_intent (test_v07_agent_contract.V07AgentContractTests.test_quality_rejection_and_batch_intent) ... ok
+test_roi_clips_and_is_saved_with_version (test_v07_agent_contract.V07AgentContractTests.test_roi_clips_and_is_saved_with_version) ... ok
+test_actual_http_binary_one_masks_cache_and_restart (test_workbench_integration.IntegrationTests.test_actual_http_binary_one_masks_cache_and_restart) ... ok
+test_corrupt_cached_mask_triggers_new_inference (test_workbench_integration.IntegrationTests.test_corrupt_cached_mask_triggers_new_inference) ... ok
+test_corrupt_persisted_session_is_not_loaded (test_workbench_integration.IntegrationTests.test_corrupt_persisted_session_is_not_loaded) ... ok
+test_dotenv_is_literal_and_shell_wins (test_workbench_integration.IntegrationTests.test_dotenv_is_literal_and_shell_wins) ... ok
+test_export_over_http_and_missing_session (test_workbench_integration.IntegrationTests.test_export_over_http_and_missing_session) ... ok
+test_probability_maps_are_rejected (test_workbench_integration.IntegrationTests.test_probability_maps_are_rejected) ... ok
+test_revision_change_invalidates_cached_segmentation (test_workbench_integration.IntegrationTests.test_revision_change_invalidates_cached_segmentation) ... ok
+test_roi_candidate_statistics_use_final_mask (test_workbench_integration.IntegrationTests.test_roi_candidate_statistics_use_final_mask) ... ok
+test_service_probe_does_not_infer_and_requires_true_readiness (test_workbench_integration.IntegrationTests.test_service_probe_does_not_infer_and_requires_true_readiness) ... ok
+test_unknown_revision_and_force_do_not_reuse (test_workbench_integration.IntegrationTests.test_unknown_revision_and_force_do_not_reuse) ... ok
+
+----------------------------------------------------------------------
+Ran 95 tests in 19.010s
+
+OK (skipped=1)

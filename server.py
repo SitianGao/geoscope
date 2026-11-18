@@ -308,14 +308,77 @@ def binary_mask(mask):
     if values.issubset({0,255}): return mask
     raise ValueError('RemoteSAM须返回0/1或0/255二值蒙版，不能把概率图或多类标签直接计算为目标面积')
 
-def mask_cache_key(s,mode,target,service_request=None):
+def mask_cache_key(s,mode,target,service_request=None,algorithm=''):
     revision='manual-polygons-v1' if mode=='demo' else os.environ.get('GEO_REMOTESAM_REVISION','')
     if not revision: return None  # Unknown live model revision cannot be safely reused.
     value={'image':hashlib.sha256((DATA/s['id']/'original.png').read_bytes()).hexdigest(),
            'mode':mode,'target':target,'prompt':DESCRIPTIONS[target],'revision':revision,
            'endpoint':os.environ.get('GEO_REMOTESAM_URL','') if mode=='live' else '',
-           'service_request':service_request}
+           'service_request':service_request,
+           'algorithm':algorithm}
     return hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()
+
+def afr_config_from_env():
+    """从环境变量构建 GeoScope-AFR 配置（惰性导入 geoscope_algorithms）。
+
+    GEO_AFR_BUDGET_REGIONS: 区域预算整数；未设置时用 GEO_AFR_BUDGET_FRACTION（默认 0.25）。
+    GEO_AFR_LAM: 融合系数（默认 0.5）。GEO_AFR_THRESHOLD: 二值化阈值（默认 0.5）。
+    """
+    from geoscope_algorithms.adaptive_runner import AFRConfig
+    from geoscope_algorithms.adaptive_refinement import Budget
+    if os.environ.get('GEO_AFR_BUDGET_REGIONS'):
+        budget=Budget(max_regions=int(os.environ['GEO_AFR_BUDGET_REGIONS']))
+    else:
+        budget=Budget(fraction=float(os.environ.get('GEO_AFR_BUDGET_FRACTION','0.25')))
+    return AFRConfig(budget=budget,
+                     lam=float(os.environ.get('GEO_AFR_LAM','0.5')),
+                     threshold=float(os.environ.get('GEO_AFR_THRESHOLD','0.5')))
+
+def afr_cache_fingerprint():
+    """adaptive 模式的缓存隔离指纹（配置变化自动失效缓存）。"""
+    from geoscope_algorithms.adaptive_runner import config_fingerprint
+    return 'geoscope_afr_v1:'+config_fingerprint(afr_config_from_env())
+
+def run_adaptive_pipeline(image,service_request,url):
+    """GeoScope-AFR 编排（惰性导入）。失败向上抛，由 _run_task 回退既有链路。
+
+    返回 (mask_pil, probability_pil, disagreement_pil_or_None, afr_meta_dict)。
+    """
+    import numpy as np
+    from geoscope_algorithms.adaptive_runner import run_adaptive
+    result=run_adaptive(image,service_request,lambda req: post_json(url,req),afr_config_from_env())
+    prob_u8=np.rint(np.clip(result.probability,0.0,1.0)*255.0).astype(np.uint8)
+    mask_pil=Image.fromarray(result.fused_mask,'L')
+    prob_pil=Image.fromarray(prob_u8,'L')
+    disagreement_pil=Image.fromarray(result.disagreement,'L') if result.disagreement is not None else None
+    meta=result.metadata
+    afr_meta={
+        'status':'completed',
+        'algorithm':meta['algorithm_name'],
+        'algorithm_version':meta['algorithm_version'],
+        'config':meta['config'],
+        'config_sha256':meta['config_sha256'],
+        'image_size':meta['image_size'],
+        'grid_regions':meta['grid_regions'],
+        'selected_regions':meta['selected_regions'],
+        'budget_used':meta['budget_used'],
+        'request_count':meta['request_count'],
+        'local_success_count':meta['local_success_count'],
+        'fallback_count':meta['fallback_count'],
+        'local_service_ms_total':meta['local_service_ms_total'],
+        'threshold_validated':meta['threshold_validated'],
+        'fallback_records':result.fallback_records,
+        'disagreement':{
+            'available':meta['disagreement_available'],
+            'region_stats':result.disagreement_stats,
+            'review_region_count':result.review['review_region_count'],
+            'review_regions':result.review['review_regions'],
+            'notice':meta['disagreement_notice'],
+        },
+        'service_metadata':meta['p0_service'],
+        'honesty_notes':meta['honesty_notes'],
+    }
+    return mask_pil,prob_pil,disagreement_pil,afr_meta
 
 def new_session(sample='urban',uploaded=None,name=None):
     sid=uid(); folder=DATA/sid; folder.mkdir()
@@ -356,7 +419,7 @@ def run_batch(p, progress=None, batch_id=None):
         raise ValueError('请填写不超过1800字的批量任务')
     if p.get('mode','live') not in ('demo','live'):
         raise ValueError('未知模式')
-    if p.get('quality_mode') is not None and (not isinstance(p['quality_mode'],str) or p['quality_mode'] not in ('fast','accurate','auto')):
+    if p.get('quality_mode') is not None and (not isinstance(p['quality_mode'],str) or p['quality_mode'] not in ('fast','accurate','auto','adaptive')):
         raise ValueError('非法 quality_mode')
     batch_quality,batch_effective_quality,_=resolve_quality(query,{},p.get('quality_mode'))
     batch_target=target_intent(query)
@@ -512,7 +575,8 @@ def _run_task(s,p,allow_batch=False):
             if mode=='live' and quality_adaptation:
                 plan['quality_adaptation']=quality_adaptation
             if mode=='live':
-                plan['service_request']['quality_mode']=effective_quality
+                # adaptive 是 Harness 层编排模式：服务端不认识，只发 fast/accurate
+                plan['service_request']['quality_mode']='fast' if effective_quality=='adaptive' else effective_quality
         result['task']=plan
         if plan['action']=='clarify':
             result.update(status='needs_clarification',message=plan['question']); event('等待条件确认','需求尚未执行','waiting')
@@ -527,7 +591,8 @@ def _run_task(s,p,allow_batch=False):
             event('准备实验包','引用所选或最近有效结果；不重新推理')
         else:
             target,side=plan['target'],plan['side']; t=time.perf_counter()
-            cache_key=mask_cache_key(s,mode,target,plan.get('service_request'))
+            algorithm=afr_cache_fingerprint() if plan.get('effective_quality_mode')=='adaptive' else ''
+            cache_key=mask_cache_key(s,mode,target,plan.get('service_request'),algorithm=algorithm)
             cached=DATA/s['id']/previous['id']/'full_mask.png' if previous else None
             reusable=bool(cache_key and previous and previous.get('mask_cache_key')==cache_key and cached.is_file()
                           and not p.get('force_perception') and not re.search(r'重新|重跑|不要复用',query))
@@ -549,27 +614,52 @@ def _run_task(s,p,allow_batch=False):
             else:
                 url=os.environ.get('GEO_REMOTESAM_URL','')
                 if not url: raise ValueError('RemoteSAM 服务未配置，未执行分割')
-                data=post_json(url,{**plan['service_request'],'image':image_b64(image)})
-                confirmed_quality=data.get('quality_mode')
-                if confirmed_quality!=effective_quality:
-                    if confirmed_quality is not None or quality_mode!='auto' or p.get('quality_mode') is not None:
-                        raise ValueError('RemoteSAM 未确认所选质量模式，不能将结果标记为该模式')
-                    result['task_options']['effective_quality_mode']=None
-                    plan['effective_quality_mode']=None
-                    plan['quality_confirmation']='legacy_service_unconfirmed'
-                encoded=(data.get('masks',{}).get(plan['mask_field']) or data.get('mask')) if plan.get('mask_field') else data.get('mask')
-                if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
-                mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
-                if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
-                result['service_metadata']={key:data[key] for key in (
-                    'model','timing_ms','quality','quality_mode','requested_quality_mode',
-                    'parameters','service_version','mode_parameters',
-                    'original_size','output_size','peak_vram_mb') if key in data}
-                if 'candidate_stats' in data:
-                    result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
-                if confirmed_quality is None:
-                    result['service_metadata']['quality_confirmation']='legacy_service_unconfirmed'
-                event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
+                adaptive_done=False
+                if effective_quality=='adaptive':
+                    try:
+                        mask,prob_pil,disagreement_pil,afr_meta=run_adaptive_pipeline(image,plan['service_request'],url)
+                        result['afr']=afr_meta
+                        result['service_metadata']=afr_meta.get('service_metadata',{})
+                        result['task_options']['algorithm']='geoscope_afr_v1'
+                        adaptive_done=True
+                        prob_pil.save(folder/'probability_map.png')
+                        afr_meta['probability_map_ref']=f'/experiments/{s["id"]}/{runid}/probability_map.png'
+                        if disagreement_pil is not None:
+                            disagreement_pil.save(folder/'disagreement.png')
+                            afr_meta['disagreement_ref']=f'/experiments/{s["id"]}/{runid}/disagreement.png'
+                        save_json(folder/'afr.json',afr_meta)
+                        event('GeoScope-AFR 自适应推理',f'选中 {afr_meta["selected_regions"]}/{afr_meta["grid_regions"]} 个局部区域，共 {afr_meta["request_count"]} 次真实服务调用',elapsed=(time.perf_counter()-t)*1000)
+                    except Exception as exc:
+                        result['afr']={'status':'fallback','reason':'adaptive_orchestration_failed','error':type(exc).__name__,'action':'existing whole-image fast path retained'}
+                        plan['quality_adaptation']={'requested_mode':'adaptive','effective_mode':'fast','reason_code':'adaptive_fallback','message':'自适应区域推理未完成，已回退稳定的整图模式；结果保留并记录。'}
+                        result['task_options']['quality_adaptation']=plan['quality_adaptation']
+                        result['task_options']['effective_quality_mode']='fast'
+                        plan['effective_quality_mode']='fast'
+                        plan['service_request']['quality_mode']='fast'
+                        effective_quality='fast'
+                        event('GeoScope-AFR 未完成','自适应编排失败，已回退整图模式',elapsed=(time.perf_counter()-t)*1000)
+                if not adaptive_done:
+                    data=post_json(url,{**plan['service_request'],'image':image_b64(image)})
+                    confirmed_quality=data.get('quality_mode')
+                    if confirmed_quality!=effective_quality:
+                        if confirmed_quality is not None or quality_mode!='auto' or p.get('quality_mode') is not None:
+                            raise ValueError('RemoteSAM 未确认所选质量模式，不能将结果标记为该模式')
+                        result['task_options']['effective_quality_mode']=None
+                        plan['effective_quality_mode']=None
+                        plan['quality_confirmation']='legacy_service_unconfirmed'
+                    encoded=(data.get('masks',{}).get(plan['mask_field']) or data.get('mask')) if plan.get('mask_field') else data.get('mask')
+                    if data.get('status')!='success' or not encoded: raise ValueError('RemoteSAM未返回有效蒙版')
+                    mask=Image.open(io.BytesIO(base64.b64decode(encoded,validate=True))).convert('L')
+                    if mask.size!=image.size: raise ValueError('RemoteSAM蒙版尺寸与原图不一致，请检查服务端坐标还原')
+                    result['service_metadata']={key:data[key] for key in (
+                        'model','timing_ms','quality','quality_mode','requested_quality_mode',
+                        'parameters','service_version','mode_parameters',
+                        'original_size','output_size','peak_vram_mb') if key in data}
+                    if 'candidate_stats' in data:
+                        result['service_metadata']['full_mask_candidate_stats']=data['candidate_stats']
+                    if confirmed_quality is None:
+                        result['service_metadata']['quality_confirmation']='legacy_service_unconfirmed'
+                    event('RemoteSAM目标提取','真实服务调用；范围由确定性几何工具约束',elapsed=(time.perf_counter()-t)*1000)
             mask=binary_mask(mask)
             if mask.size!=image.size: raise ValueError('完整蒙版尺寸与原图不一致')
             mask.save(folder/'full_mask.png')

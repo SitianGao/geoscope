@@ -1,0 +1,12 @@
+{
+  "generated_by": "split_dataset.py",
+  "seed": 20261118,
+  "historical_diagnostic": 20,
+  "rule": "历史诊断集=省赛 20 图固定集；新增数据按来源场景分组（同场景不跨 split）",
+  "extended_roles": {
+    "dev_validation": null,
+    "independent_test": null,
+    "status": "pending_data_required",
+    "note": "无新增影像；A3-A5 参数选择与独立验证需新数据，如实标记待补"
+  }
+}

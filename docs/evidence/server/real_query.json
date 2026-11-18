@@ -1,0 +1,164 @@
+{
+  "recorded_at": "2026-11-18T02:31:04.661225+00:00",
+  "status": {
+    "success": true,
+    "request_id": "27dfaff2992d4e1ca05d4f4b7499a424",
+    "image_id": null,
+    "result_id": null,
+    "status": "completed",
+    "data": {
+      "ready": true,
+      "error": null,
+      "model_info": {
+        "model": "RemoteCLIP",
+        "architecture": "ViT-B-32",
+        "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+        "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+        "weight_repository": "chendelong/RemoteCLIP",
+        "device": "cuda:0",
+        "open_clip_version": "2.24.0",
+        "torch_version": "2.4.1+cu121",
+        "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+        "tokenizer": "SimpleTokenizer",
+        "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+      },
+      "index_ready": true,
+      "index_version": "92cca98094c1643b7751d1e0eeab7a23d5b75a1069d6a01906b3ebf94e8ec02a",
+      "image_count": 2,
+      "model": "RemoteCLIP",
+      "index_size": 2,
+      "max_top_k": 100
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "first_query": {
+    "success": true,
+    "request_id": "b0fba021bea840f2a5d3864f502f72f2",
+    "image_id": null,
+    "result_id": null,
+    "status": "completed",
+    "data": {
+      "query": "airport with airplanes",
+      "model": "RemoteCLIP",
+      "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a",
+      "index_version": "92cca98094c1643b7751d1e0eeab7a23d5b75a1069d6a01906b3ebf94e8ec02a",
+      "model_info": {
+        "model": "RemoteCLIP",
+        "architecture": "ViT-B-32",
+        "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+        "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+        "weight_repository": "chendelong/RemoteCLIP",
+        "device": "cuda:0",
+        "open_clip_version": "2.24.0",
+        "torch_version": "2.4.1+cu121",
+        "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+        "tokenizer": "SimpleTokenizer",
+        "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+      },
+      "results": [
+        {
+          "image_id": "4153d56d5a77",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "rank": 1,
+          "similarity": 0.24395349621772766,
+          "session_url": "/api/session/4153d56d5a77",
+          "thumbnail_url": "/experiments/4153d56d5a77/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
+        },
+        {
+          "image_id": "ed1a790d481e",
+          "image_sha256": "42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1",
+          "rank": 2,
+          "similarity": 0.22121994197368622,
+          "session_url": "/api/session/ed1a790d481e",
+          "thumbnail_url": "/experiments/ed1a790d481e/original.png",
+          "name": "街区建筑研究样区"
+        }
+      ],
+      "status": "completed",
+      "real_execution": true,
+      "notice": "Normalized embedding cosine similarity is not probability or pixel localization"
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "repeat_query": {
+    "success": true,
+    "request_id": "57b20c8246f94b30a6dfa59c01b4b128",
+    "image_id": null,
+    "result_id": null,
+    "status": "completed",
+    "data": {
+      "query": "airport with airplanes",
+      "model": "RemoteCLIP",
+      "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a",
+      "index_version": "92cca98094c1643b7751d1e0eeab7a23d5b75a1069d6a01906b3ebf94e8ec02a",
+      "model_info": {
+        "model": "RemoteCLIP",
+        "architecture": "ViT-B-32",
+        "weights_sha256": "60014e395d930a3f2963d1d89c8522bf4ad56775571e4356e866864789af85c4",
+        "upstream": "https://github.com/ChenDelong1999/RemoteCLIP",
+        "weight_repository": "chendelong/RemoteCLIP",
+        "device": "cuda:0",
+        "open_clip_version": "2.24.0",
+        "torch_version": "2.4.1+cu121",
+        "preprocess": "Compose(\n    Resize(size=224, interpolation=bicubic, max_size=None, antialias=True)\n    CenterCrop(size=(224, 224))\n    <function _convert_to_rgb>\n    ToTensor()\n    Normalize(mean=(0.48145466, 0.4578275, 0.40821073), std=(0.26862954, 0.26130258, 0.27577711))\n)",
+        "tokenizer": "SimpleTokenizer",
+        "embedding_version": "dfe52fb63fb38079763d7343b3fa4c16ce59bdc097508998b49e319daf4d234a"
+      },
+      "results": [
+        {
+          "image_id": "4153d56d5a77",
+          "image_sha256": "47b86235c4c4c25a15521591e66083bca67cc4895bcff6168cf5166e2316106f",
+          "rank": 1,
+          "similarity": 0.24395349621772766,
+          "session_url": "/api/session/4153d56d5a77",
+          "thumbnail_url": "/experiments/4153d56d5a77/original.png",
+          "name": "JFK 机场航站区飞机研究样区"
+        },
+        {
+          "image_id": "ed1a790d481e",
+          "image_sha256": "42280364653b1945ec8b67a4315c4bac7dbbccc3e2afe7fd667e9c0acb4582f1",
+          "rank": 2,
+          "similarity": 0.22121994197368622,
+          "session_url": "/api/session/ed1a790d481e",
+          "thumbnail_url": "/experiments/ed1a790d481e/original.png",
+          "name": "街区建筑研究样区"
+        }
+      ],
+      "status": "completed",
+      "real_execution": true,
+      "notice": "Normalized embedding cosine similarity is not probability or pixel localization"
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  },
+  "selected_session": {
+    "id": "4153d56d5a77",
+    "sample": "airport",
+    "name": "JFK 机场航站区飞机研究样区",
+    "width": 800,
+    "height": 800,
+    "image_url": "/experiments/4153d56d5a77/original.png",
+    "created_at": "2026-11-18T02:29:27.963433+00:00",
+    "runs": [],
+    "context": {},
+    "source": "Wikimedia Commons：JFK Terminal 5 aerial view，作者 Quintin Soloviev，CC BY 4.0；为适配演示已裁剪缩放。https://commons.wikimedia.org/wiki/File:JFK_Terminal_5_aerial_view.jpg"
+  },
+  "repeat_exact_match": true,
+  "real_segmentation_executed": false,
+  "notice": "Actual RemoteCLIP inference and old platform image selection verified. Segmentation requires separately configured real RemoteAgent/RemoteSAM services."
+}

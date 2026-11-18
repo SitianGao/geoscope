@@ -1,0 +1,30 @@
+[
+  {
+    "component": "sam",
+    "pid": 2471600,
+    "owned_process": true,
+    "ready": true,
+    "error": null
+  },
+  {
+    "component": "agent",
+    "pid": 2471601,
+    "owned_process": true,
+    "ready": true,
+    "error": null
+  },
+  {
+    "component": "clip",
+    "pid": 2471602,
+    "owned_process": true,
+    "ready": true,
+    "error": null
+  },
+  {
+    "component": "workbench",
+    "pid": 2471603,
+    "owned_process": true,
+    "ready": true,
+    "error": null
+  }
+]

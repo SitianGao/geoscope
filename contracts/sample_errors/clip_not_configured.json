@@ -1,0 +1,17 @@
+{
+  "success": false,
+  "request_id": "6836a1bd87834ba4ae8c8df694e4c529",
+  "image_id": null,
+  "result_id": null,
+  "status": "not_ready",
+  "data": {},
+  "error": {
+    "code": "service_unavailable",
+    "message": "RemoteCLIP service is not configured"
+  },
+  "meta": {
+    "source": "geoscope_tool",
+    "tool_version": "national-v1",
+    "real_execution": false
+  }
+}

@@ -1,0 +1,1 @@
+{"status": "completed", "image_id": "4153d56d5a77", "base": "7e1b71bebf11", "afr": "0d0a70c5d68d", "evidence": "docs/evidence/server/full_chain.json"}

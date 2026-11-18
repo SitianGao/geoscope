@@ -1,0 +1,27 @@
+{
+  "generated_by": "evaluation/verify_dataset_manifest.py",
+  "generated_at": "2026-11-17T22:15:00+08:00",
+  "manifest": "evaluation/dataset_manifest.csv",
+  "manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "status": "verified_historical_diagnostic",
+  "pairs_verified": 20,
+  "class_counts": {
+    "building": 10,
+    "plane": 10
+  },
+  "checks": [
+    "relative path safety",
+    "image SHA-256",
+    "ground-truth SHA-256",
+    "image and mask dimensions",
+    "RGB image and L mask modes",
+    "binary ground truth values 0/255",
+    "ground-truth foreground pixel count"
+  ],
+  "data_root": "datasets (local, git-ignored)",
+  "honesty_notes": [
+    "These 20 pairs are the frozen historical diagnostic set, not an independent test set.",
+    "No new dev-validation or independent-test images were provided.",
+    "A3-A5 results on these pairs must be labeled exploratory historical-diagnostic results."
+  ]
+}

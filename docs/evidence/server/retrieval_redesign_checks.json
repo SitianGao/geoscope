@@ -1,0 +1,52 @@
+[
+  {
+    "viewport": "desktop",
+    "options": [
+      1,
+      3
+    ],
+    "scores": [
+      "0.245",
+      "0.244",
+      "0.221"
+    ],
+    "layout": {
+      "pageOverflow": 0,
+      "dialogOverflow": 0,
+      "contentOverflow": 0,
+      "buttons": [
+        720.84375,
+        720.84375,
+        720.84375
+      ]
+    },
+    "selected_image_id": "2b2acb90b45d",
+    "real_execution": true,
+    "errors": []
+  },
+  {
+    "viewport": "mobile",
+    "options": [
+      1,
+      3
+    ],
+    "scores": [
+      "0.245",
+      "0.244",
+      "0.221"
+    ],
+    "layout": {
+      "pageOverflow": 0,
+      "dialogOverflow": 0,
+      "contentOverflow": 839,
+      "buttons": [
+        751.4375,
+        1148.046875,
+        1544.65625
+      ]
+    },
+    "selected_image_id": "2b2acb90b45d",
+    "real_execution": true,
+    "errors": []
+  }
+]

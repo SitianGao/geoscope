@@ -1,5 +1,6 @@
 """Manage only this deployment's Linux processes; never terminate by port/name."""
 import argparse
+import errno
 import json
 import os
 from pathlib import Path
@@ -66,8 +67,16 @@ class Runtime:
         if self.owns(name, pid): return {'component': name, 'pid': pid, 'state': 'already_running'}
         command, cwd, port, _ = self.spec(name)
         # An occupied port may belong to a teammate; never take it over.
-        with socket.socket() as check:
-            check.bind(('127.0.0.1', port))
+        deadline = time.monotonic()+2
+        while True:
+            try:
+                with socket.socket() as check:
+                    check.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    check.bind(('127.0.0.1', port))
+                break
+            except OSError as exc:
+                if exc.errno != errno.EADDRINUSE or time.monotonic() >= deadline: raise
+                time.sleep(.05)
         with (self.output/(name+'.log')).open('ab') as log:
             process = subprocess.Popen(command, cwd=cwd, env=self.environment(), stdin=subprocess.DEVNULL,
                 stdout=log, stderr=subprocess.STDOUT, start_new_session=True, close_fds=True)

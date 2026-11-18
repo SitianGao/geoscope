@@ -1,0 +1,446 @@
+{
+  "id": "e8e1eb4a6be7",
+  "session_id": "7c8d57152d4b",
+  "parent_run_id": "628d33918a0e",
+  "version": 11,
+  "query": "提取最下面的船",
+  "mode": "live",
+  "created_at": "2026-11-18T06:04:23.404069+00:00",
+  "status": "completed",
+  "trace": [
+    {
+      "step": 1,
+      "name": "读取实验上下文",
+      "detail": "影像 2250 × 2269；继承所选结果条件",
+      "state": "completed",
+      "duration_ms": 0,
+      "at": "2026-11-18T06:04:23.494375+00:00"
+    },
+    {
+      "step": 2,
+      "name": "确认执行边界",
+      "detail": "最下方的船舶；位置描述保留为指代提示，不转成全图类别或半幅",
+      "state": "completed",
+      "duration_ms": 0,
+      "at": "2026-11-18T06:04:25.395233+00:00"
+    },
+    {
+      "step": 3,
+      "name": "理解任务与选择路径",
+      "detail": "RemoteAgent · segment",
+      "state": "completed",
+      "duration_ms": 1900.47,
+      "at": "2026-11-18T06:04:25.395250+00:00"
+    },
+    {
+      "step": 4,
+      "name": "RemoteSAM目标提取",
+      "detail": "真实服务调用；范围由确定性几何工具约束",
+      "state": "completed",
+      "duration_ms": 1239.89,
+      "at": "2026-11-18T06:04:26.635158+00:00"
+    },
+    {
+      "step": 5,
+      "name": "范围筛选与像素统计",
+      "detail": "全图；整图分母 5,105,250 px",
+      "state": "completed",
+      "duration_ms": 0,
+      "at": "2026-11-18T06:04:26.940357+00:00"
+    },
+    {
+      "step": 6,
+      "name": "结果检查",
+      "detail": "尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核",
+      "state": "completed",
+      "duration_ms": 0,
+      "at": "2026-11-18T06:04:27.760065+00:00"
+    },
+    {
+      "step": 7,
+      "name": "反馈执行结果给 RemoteAgent",
+      "detail": "已回传确定性结果；模型原文保留在记录中，页面统计不由模型改写。",
+      "state": "completed",
+      "duration_ms": 0,
+      "at": "2026-11-18T06:04:30.043753+00:00"
+    }
+  ],
+  "provenance": {
+    "planner": "RemoteAgent",
+    "perception": "RemoteSAM服务",
+    "source": "用户上传影像",
+    "image_sha256": "4ebbd0bfcf0cdba5f2327fb005e439a6daab0061d349c5f32eacc74226621ab7",
+    "planner_protocol": "remoteagent",
+    "perception_revision": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+  },
+  "task_options": {
+    "roi": null,
+    "roi_source": "explicit_clear",
+    "quality_mode": "fast",
+    "effective_quality_mode": "fast",
+    "quality_source": "explicit_selection",
+    "batch_id": null,
+    "item_id": null
+  },
+  "agent_decision": {
+    "status": "tool_call",
+    "raw_response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png\", \"the bottommost ship\")",
+    "raw_response_sha256": "d333385eebeea31e5ac78db9d41bca165c597ce3284cbbe55693e42eeec8730f",
+    "text": "",
+    "history": [
+      {
+        "round": 1,
+        "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png\", \"the bottommost ship\")",
+        "status": "tool_call",
+        "tool_call": {
+          "name": "referring_expression_segmentation",
+          "arguments": {
+            "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png",
+            "prompt": "the bottommost ship"
+          }
+        }
+      }
+    ],
+    "tool_call": {
+      "name": "referring_expression_segmentation",
+      "arguments": {
+        "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png",
+        "prompt": "the bottommost ship"
+      }
+    }
+  },
+  "task": {
+    "action": "segment",
+    "target": "ship",
+    "side": "all",
+    "invert": false,
+    "scope_source": "object_reference_on_original_image",
+    "tool_name": "referring_expression_segmentation",
+    "planner_tool_name": "referring_expression_segmentation",
+    "routing_policy": "agent_selected",
+    "service_request": {
+      "task": "referring_seg",
+      "text": "the bottommost ship",
+      "quality_mode": "fast"
+    },
+    "mask_field": null,
+    "planner_protocol": "remoteagent",
+    "reference": {
+      "kind": "positional_extreme",
+      "target": "ship",
+      "direction": "bottom",
+      "prompt": "the bottommost ship",
+      "label": "最下方的船舶"
+    },
+    "scope_rule": "单目标指代；位置限定传给模型，语义与边界需复核",
+    "roi": null,
+    "roi_source": "explicit_clear",
+    "quality_mode": "fast",
+    "effective_quality_mode": "fast",
+    "quality_source": "explicit_selection",
+    "batch_id": null,
+    "item_id": null
+  },
+  "service_metadata": {
+    "model": {
+      "service_version": "1.2.0",
+      "device": "cuda:0",
+      "fp16": true,
+      "epoc": false,
+      "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+    },
+    "timing_ms": {
+      "preprocess": 82.9,
+      "inference": 163.42,
+      "postprocess": 21.85,
+      "total": 392.02
+    },
+    "quality": {
+      "empty_mask": false,
+      "foreground_pixels": 120398,
+      "foreground_ratio": 0.023583174183438617
+    },
+    "quality_mode": "fast",
+    "requested_quality_mode": "fast",
+    "mode_parameters": {
+      "requested_mode": "fast",
+      "resolved_mode": "fast",
+      "tile_count": 1,
+      "strategy": "whole_image_argmax",
+      "tile_size": null,
+      "overlap": 0,
+      "probability_threshold": null,
+      "blend": null,
+      "blend_min_weight": null
+    },
+    "original_size": [
+      2250,
+      2269
+    ],
+    "output_size": [
+      2250,
+      2269
+    ],
+    "peak_vram_mb": 1839.94,
+    "full_mask_candidate_stats": {
+      "label": "candidate_regions",
+      "connectivity": 8,
+      "min_area_pixels": 1,
+      "raw_candidate_count": 1,
+      "candidate_count": 1,
+      "filtered_out_count": 0,
+      "total_area_pixels": 120398,
+      "min_area": 120398,
+      "max_area": 120398,
+      "mean_area": 120398.0,
+      "candidates": [
+        {
+          "candidate_id": 1,
+          "area_pixels": 120398,
+          "bbox": {
+            "x": 751,
+            "y": 1831,
+            "width": 1020,
+            "height": 193
+          },
+          "center": {
+            "x": 1244.027,
+            "y": 1924.027
+          }
+        }
+      ],
+      "notice": "Connected regions are candidate targets and require human review."
+    }
+  },
+  "mask_cache_key": "c5568877d0fe29a83c972291883032283a3e235169af6f3c4f0d9c601889ba18",
+  "full_mask_sha256": "9f61ef762c553cf1cbb700d189a15dc8296624854cd5e61a91218a52e687e8b1",
+  "metrics": {
+    "pixel_area": 120398,
+    "total_pixels": 5105250,
+    "area_ratio": 0.023583174183438617,
+    "bbox_xyxy": [
+      751,
+      1831,
+      1771,
+      2024
+    ],
+    "width": 2250,
+    "height": 2269,
+    "scope": "all",
+    "scope_label": "全图",
+    "unit": "pixel",
+    "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+    "spatial_check": true,
+    "roi": null,
+    "candidate_stats": {
+      "label": "candidate_regions",
+      "connectivity": 8,
+      "min_area_pixels": 1,
+      "raw_candidate_count": 1,
+      "candidate_count": 1,
+      "filtered_out_count": 0,
+      "total_area_pixels": 120398,
+      "min_area": 120398,
+      "max_area": 120398,
+      "mean_area": 120398.0,
+      "candidates": [
+        {
+          "candidate_id": 1,
+          "area_pixels": 120398,
+          "bbox": {
+            "x": 751,
+            "y": 1831,
+            "width": 1020,
+            "height": 193
+          },
+          "center": {
+            "x": 1244.027,
+            "y": 1924.027
+          }
+        }
+      ],
+      "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+    },
+    "distribution": {
+      "basis": "full_mask_before_scope",
+      "left_pixels": 44679,
+      "right_pixels": 75719
+    },
+    "ground_area_available": false
+  },
+  "mask_url": "/experiments/7c8d57152d4b/e8e1eb4a6be7/mask.png",
+  "overlay_url": "/experiments/7c8d57152d4b/e8e1eb4a6be7/overlay.png",
+  "export_url": "/api/export/7c8d57152d4b/e8e1eb4a6be7",
+  "message": "已生成最下方的船舶区域：120,398 px，占整幅影像 2.36%。请结合叠加图复核目标语义与边界。",
+  "tool_feedback": {
+    "status": "success",
+    "tool_name": "referring_expression_segmentation",
+    "metrics": {
+      "pixel_area": 120398,
+      "total_pixels": 5105250,
+      "area_ratio": 0.023583174183438617,
+      "bbox_xyxy": [
+        751,
+        1831,
+        1771,
+        2024
+      ],
+      "width": 2250,
+      "height": 2269,
+      "scope": "all",
+      "scope_label": "全图",
+      "unit": "pixel",
+      "spatial_rule": "像素范围裁切；面积比例的分母始终为整幅影像",
+      "spatial_check": true,
+      "roi": null,
+      "candidate_stats": {
+        "label": "candidate_regions",
+        "connectivity": 8,
+        "min_area_pixels": 1,
+        "raw_candidate_count": 1,
+        "candidate_count": 1,
+        "filtered_out_count": 0,
+        "total_area_pixels": 120398,
+        "min_area": 120398,
+        "max_area": 120398,
+        "mean_area": 120398.0,
+        "candidates": [
+          {
+            "candidate_id": 1,
+            "area_pixels": 120398,
+            "bbox": {
+              "x": 751,
+              "y": 1831,
+              "width": 1020,
+              "height": 193
+            },
+            "center": {
+              "x": 1244.027,
+              "y": 1924.027
+            }
+          }
+        ],
+        "notice": "语义蒙版的连通区域只是候选目标，数量和边界需人工复核。"
+      },
+      "distribution": {
+        "basis": "full_mask_before_scope",
+        "left_pixels": 44679,
+        "right_pixels": 75719
+      },
+      "ground_area_available": false
+    },
+    "scope_rule": "单目标指代；位置限定传给模型，语义与边界需复核",
+    "actual_service_request": {
+      "task": "referring_seg",
+      "text": "the bottommost ship",
+      "quality_mode": "fast"
+    },
+    "artifact_ids": {
+      "session_id": "7c8d57152d4b",
+      "run_id": "e8e1eb4a6be7",
+      "mask_url": "/experiments/7c8d57152d4b/e8e1eb4a6be7/mask.png"
+    },
+    "reused_from_run_id": null,
+    "service_metadata": {
+      "model": {
+        "service_version": "1.2.0",
+        "device": "cuda:0",
+        "fp16": true,
+        "epoc": false,
+        "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+      },
+      "timing_ms": {
+        "preprocess": 82.9,
+        "inference": 163.42,
+        "postprocess": 21.85,
+        "total": 392.02
+      },
+      "quality": {
+        "empty_mask": false,
+        "foreground_pixels": 120398,
+        "foreground_ratio": 0.023583174183438617
+      },
+      "quality_mode": "fast",
+      "requested_quality_mode": "fast",
+      "mode_parameters": {
+        "requested_mode": "fast",
+        "resolved_mode": "fast",
+        "tile_count": 1,
+        "strategy": "whole_image_argmax",
+        "tile_size": null,
+        "overlap": 0,
+        "probability_threshold": null,
+        "blend": null,
+        "blend_min_weight": null
+      },
+      "original_size": [
+        2250,
+        2269
+      ],
+      "output_size": [
+        2250,
+        2269
+      ],
+      "peak_vram_mb": 1839.94,
+      "full_mask_candidate_stats": {
+        "label": "candidate_regions",
+        "connectivity": 8,
+        "min_area_pixels": 1,
+        "raw_candidate_count": 1,
+        "candidate_count": 1,
+        "filtered_out_count": 0,
+        "total_area_pixels": 120398,
+        "min_area": 120398,
+        "max_area": 120398,
+        "mean_area": 120398.0,
+        "candidates": [
+          {
+            "candidate_id": 1,
+            "area_pixels": 120398,
+            "bbox": {
+              "x": 751,
+              "y": 1831,
+              "width": 1020,
+              "height": 193
+            },
+            "center": {
+              "x": 1244.027,
+              "y": 1924.027
+            }
+          }
+        ],
+        "notice": "Connected regions are candidate targets and require human review."
+      }
+    }
+  },
+  "agent_feedback": {
+    "status": "completed",
+    "raw_response": "<answer>The bottommost ship has been successfully segmented with a pixel area of 120398 pixels and an area ratio of 0.023583174183438617.</answer>",
+    "raw_response_sha256": "a8bc5a64dac3c091acf0ee27df9972d28a1ff6892dda62456ede942d32eda50c",
+    "text": "The bottommost ship has been successfully segmented with a pixel area of 120398 pixels and an area ratio of 0.023583174183438617.",
+    "history": [
+      {
+        "round": 1,
+        "response": "T_call(referring_expression_segmentation, \"/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png\", \"the bottommost ship\")",
+        "status": "tool_call",
+        "tool_call": {
+          "name": "referring_expression_segmentation",
+          "arguments": {
+            "image_path": "/home/gst/geoscope-national/member-a-20261118/experiments/7c8d57152d4b/original.png",
+            "prompt": "the bottommost ship"
+          }
+        }
+      },
+      {
+        "round": 2,
+        "response": "<answer>The bottommost ship has been successfully segmented with a pixel area of 120398 pixels and an area ratio of 0.023583174183438617.</answer>",
+        "status": "completed",
+        "tool_call": null,
+        "tool_result_status": "success"
+      }
+    ],
+    "tool_call": null
+  },
+  "duration_ms": 6639.77,
+  "report_url": "/api/report/7c8d57152d4b/e8e1eb4a6be7"
+}

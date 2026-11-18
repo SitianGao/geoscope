@@ -123,6 +123,8 @@ class Backend:
             raise ToolError('service_unavailable', 'Real Agent and RemoteSAM must be configured for AFR')
         session = s.get_session(args['image_id'])
         parent = next(r for r in session['runs'] if r['id'] == args['result_id'])
+        if parent.get('task', {}).get('reference'):
+            raise ToolError('invalid_arguments', 'Object-relative references require whole-image context; AFR tiling is not applied to this task')
         aliases = {'all': 'all', 'left_half': 'left', 'right_half': 'right', 'top_half': 'top', 'bottom_half': 'bottom', 'roi': 'all'}
         scope = args.get('scope')
         roi = ({'xyxy': args['roi'], 'source': 'drawn', 'image_size': [session['width'], session['height']]}

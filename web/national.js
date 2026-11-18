@@ -650,50 +650,65 @@
     });
 
     function showRetrieval() {
-        modal('RemoteCLIP 图文语义检索', '<div class="national-dialog"><p>按文字查询相似的影像。相似度用于排序，像素分割在工作台中单独执行。</p>' +
-            '<form id="nationalSearchForm"><label>检索文本<input id="nationalSearchQuery" type="search" placeholder="airport with airplanes" maxlength="240" required></label>' +
-            '<label>候选上限<select id="nationalSearchTopK"><option>3</option><option selected>5</option><option>10</option></select></label>' +
+        modal('查找遥感影像', '<div class="national-dialog national-retrieval"><p class="retrieval-intro">描述你想找的场景或地物，选择影像后继续分割与统计。</p>' +
+            '<form id="nationalSearchForm"><label>场景描述<input id="nationalSearchQuery" type="search" placeholder="例如：airport with airplanes" maxlength="240" required></label>' +
+            '<label>返回数量<select id="nationalSearchTopK"><option>3</option></select></label>' +
             '<button type="submit" class="primary" id="nationalSearchSubmit" disabled>检索影像</button></form>' +
-            '<p id="nationalSearchStatus" class="national-notice" role="status">正在检查模型和图库索引…</p>' +
-            '<div class="national-controls"><button id="nationalSearchRetry" type="button">重新检查</button>' +
-            '<button id="nationalOpenGallery" type="button">使用现有影像库</button></div>' +
-            '<div id="nationalSearchHits" class="national-search-hits"></div></div>', '影像库');
+            '<div class="retrieval-toolbar"><p id="nationalSearchStatus" role="status">正在连接检索服务…</p>' +
+            '<div class="retrieval-actions"><button id="nationalSearchRetry" type="button">重新检查</button>' +
+            '<button id="nationalOpenGallery" type="button">浏览影像库</button></div></div>' +
+            '<div id="nationalSearchEmpty" class="retrieval-empty">输入场景描述，查找图库中的相关影像。</div>' +
+            '<div id="nationalSearchHits" class="national-search-hits" aria-label="影像检索结果"></div>' +
+            '<details id="nationalRetrievalDetails" class="retrieval-details" hidden><summary>检索记录与数据来源</summary><div id="nationalRetrievalProvenance"></div></details>' +
+            '<p class="retrieval-footnote">由 RemoteCLIP 按语义相似度排序；分数不代表目标存在概率。</p></div>', '影像检索 · REMOTECLIP');
         const form = $('nationalSearchForm');
         const submit = $('nationalSearchSubmit');
         const retry = $('nationalSearchRetry');
         const status = $('nationalSearchStatus');
         const hits = $('nationalSearchHits');
         const topK = $('nationalSearchTopK');
+        const empty = $('nationalSearchEmpty');
+        const details = $('nationalRetrievalDetails');
+        const provenance = $('nationalRetrievalProvenance');
         let ready = false;
+        let indexSize = null;
+        function showEmpty(text) { empty.textContent = text; empty.hidden = false; }
 
         async function check() {
             ready = false;
             submit.disabled = retry.disabled = true;
-            status.textContent = '正在检查模型和图库索引…';
+            status.textContent = '正在连接检索服务…';
             hits.replaceChildren();
+            details.hidden = true;
+            details.open = false;
             try {
                 const result = await requestNational('/retrieval/status');
                 if (!active(status)) return;
                 ready = result.ready === true || result.status === 'ready';
+                indexSize = Number.isInteger(result.index_size) ? result.index_size : null;
                 if (result.index_size === 0) {
                     ready = false;
                     status.textContent = '图库为空，请先构建索引。';
+                    showEmpty('当前图库还没有影像。可先通过工作台上传或创建索引。');
                     return;
                 }
                 // Only offer positive choices allowed by the service.
-                const limit = Number.isInteger(result.max_top_k) ? result.max_top_k : 10;
+                const limit = Math.min(Number.isInteger(result.max_top_k) ? result.max_top_k : 10, indexSize ?? 10);
                 if (limit < 1) {
                     ready = false;
                     status.textContent = '后端没有提供可用的检索候选数量。';
                     return;
                 }
-                const choices = [...new Set([Math.min(3, limit), Math.min(5, limit), Math.min(10, limit)])];
-                topK.replaceChildren(...choices.map(item => new Option(item, item, false, item === Math.min(5, limit))));
-                status.textContent = ready ? '检索就绪 · ' + (result.model ?? 'RemoteCLIP') +
-                    (result.index_version ? ' · 索引 ' + result.index_version : '') :
+                const choices = [...new Set([1, 3, 5, 10, limit].filter(item => item <= limit))].sort((a, b) => a-b);
+                topK.replaceChildren(...choices.map(item => new Option(item + ' 项', item, false, item === Math.min(5, limit))));
+                status.textContent = ready ? '检索就绪' + (indexSize === null ? '' : ' · 图库 ' + indexSize + ' 幅影像') :
                     result.message ?? '模型或图库索引未就绪。';
+                showEmpty(ready ? '输入场景描述，查找图库中的相关影像。' : '检索服务尚未就绪，请稍后重新检查。');
             } catch (error) {
-                if (active(status)) status.textContent = 'RemoteCLIP 未就绪 · ' + error.message;
+                if (active(status)) {
+                    status.textContent = 'RemoteCLIP 未就绪 · ' + error.message;
+                    showEmpty('暂时无法检索，仍可从“浏览影像库”打开已有影像。');
+                }
             } finally {
                 if (active(status)) {
                     submit.disabled = !ready;
@@ -711,8 +726,12 @@
                 return;
             }
             submit.disabled = retry.disabled = true;
-            status.textContent = '正在等待 RemoteCLIP 返回排序…';
+            submit.textContent = '正在检索…';
+            status.textContent = '正在匹配图库中的影像…';
             hits.replaceChildren();
+            details.hidden = true;
+            details.open = false;
+            showEmpty('正在分析场景描述，请稍候。');
             try {
                 const result = await requestNational('/retrieval/search', jsonPost({query, top_k: Number(topK.value)}));
                 if (!active(status)) return;
@@ -722,39 +741,60 @@
                 const results = result.results;
                 if (!results.length) {
                     status.textContent = '本次检索没有候选影像。';
+                    showEmpty('没有找到候选影像，试试其他场景描述。');
                     return;
                 }
                 if (results.some(hit => typeof hit?.image_id !== 'string' || !Number.isInteger(hit.rank) ||
                     hit.rank < 1 || !finite(hit.similarity))) {
                     throw new Error('检索结果缺少影像 ID、排名或相似度。');
                 }
-                status.textContent = (result.model ?? 'RemoteCLIP') + ' · ' + results.length + ' 条候选' +
-                    (result.embedding_version ? ' · 向量版本 ' + result.embedding_version : '') +
-                    (result.index_version ? ' · 索引 ' + result.index_version : '');
+                empty.hidden = true;
+                status.textContent = '找到 ' + results.length + ' 幅相关影像' + (indexSize === null ? '' : ' · 图库共 ' + indexSize + ' 幅');
+                provenance.innerHTML = '<dl>' + [
+                    ['查询', query], ['模型', result.model ?? 'RemoteCLIP'],
+                    ['向量版本', result.embedding_version ?? missing], ['索引版本', result.index_version ?? missing]
+                ].map(([label, value]) => '<div><dt>' + escape(label) + '</dt><dd><code>' + escape(value) + '</code></dd></div>').join('') + '</dl>' +
+                    '<ul>' + results.map(hit => '<li>第 ' + hit.rank + ' 位 · 影像 <code>' + escape(hit.image_id) +
+                        '</code> · 原始相似度 <code>' + escape(hit.similarity) + '</code>' +
+                        (hit.image_sha256 ? '<br>原图 SHA256 <code>' + escape(hit.image_sha256) + '</code>' : '') + '</li>').join('') + '</ul>';
+                details.hidden = false;
                 for (const hit of results.slice().sort((a, b) => a.rank - b.rank)) {
                     const sample = Object.hasOwn(state.status?.samples ?? {}, hit.image_id)
                         ? state.status.samples[hit.image_id] : null;
                     const thumb = sameOriginUrl(hit.thumbnail_url) ?? (sample ? '/assets/' + encodeURIComponent(sample.file) : null);
                     const card = document.createElement('article');
-                    card.innerHTML = (thumb ? '<img src="' + escape(thumb) + '" alt="" loading="lazy">' : '') +
-                        '<div><small>第 ' + hit.rank + ' 位 · ' + escape(hit.image_id) + '</small><h3>' +
-                        escape(hit.name ?? sample?.name ?? hit.image_id) + '</h3><span>相似度 ' + escape(hit.similarity) +
-                        '</span><button type="button" class="secondary">分析该影像</button></div>';
-                    card.querySelector('button').onclick = async () => {
-                        if (sample) await newExperiment(hit.image_id);
-                        else if (/^[a-f0-9]{12}$/.test(hit.image_id)) await openExperiment(hit.image_id);
-                        else {
-                            status.textContent = '影像 ' + hit.image_id + ' 尚未映射到工作台样例或现有实验。';
-                            return;
+                    const name = hit.name ?? sample?.name ?? '未命名影像';
+                    const dimensions = Number.isInteger(hit.width) && Number.isInteger(hit.height) ? hit.width + ' × ' + hit.height + ' px' : '遥感影像';
+                    card.innerHTML = '<div class="retrieval-preview">' +
+                        (thumb ? '<img src="' + escape(thumb) + '" alt="' + escape(name) + '" loading="lazy">' : '<span class="retrieval-no-preview">暂无预览</span>') +
+                        '<span class="retrieval-rank">' + String(hit.rank).padStart(2, '0') + (hit.rank === 1 ? ' · 最相关' : '') + '</span></div>' +
+                        '<div class="retrieval-card-body"><h3 title="' + escape(name) + '">' + escape(name) + '</h3>' +
+                        '<small class="retrieval-dimensions">' + dimensions + '</small>' +
+                        '<div class="retrieval-score"><span>相似度</span> <strong title="原始相似度 ' + escape(hit.similarity) + '">' + hit.similarity.toFixed(3) + '</strong></div>' +
+                        '<button type="button" class="secondary">分析该影像<span aria-hidden="true">↗</span></button></div>';
+                    const open = card.querySelector('button');
+                    open.onclick = async () => {
+                        open.disabled = true;
+                        try {
+                            if (sample) await newExperiment(hit.image_id);
+                            else if (/^[a-f0-9]{12}$/.test(hit.image_id)) await openExperiment(hit.image_id);
+                            else throw new Error('该候选尚未映射到现有影像。');
+                            if (!$('modal').open) $('query').focus();
+                        } catch (error) {
+                            if (active(status)) status.textContent = '影像打开失败 · ' + error.message;
+                        } finally {
+                            if (open.isConnected) open.disabled = false;
                         }
-                        if (!$('modal').open) $('query').focus();
                     };
                     hits.append(card);
                 }
             } catch (error) {
-                if (active(status)) status.textContent = error.message;
+                if (active(status)) {
+                    status.textContent = error.message;
+                    showEmpty('本次检索未完成，请重试或浏览已有影像。');
+                }
             } finally {
-                if (active(status)) submit.disabled = retry.disabled = false;
+                if (active(status)) { submit.disabled = retry.disabled = false; submit.textContent = '检索影像'; }
             }
         };
         retry.onclick = check;

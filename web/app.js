@@ -4,7 +4,7 @@ const state = { session:null, selected:null, last:null, original:null, mask:null
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
 const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强',adaptive:'GeoScope-AFR 自适应推理'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
-const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
+const targetLabel = run => (run?.task?.invert?'非':'')+(run?.task?.reference?.label||targetNames[run?.task?.target]||'目标');
 function currentTarget(){
  return state.selected?.task?.target||state.session?.context?.target||state.status?.samples?.[state.session?.sample]?.target||null;
 }
@@ -216,6 +216,12 @@ function renderReview(run){
  const card=$('reviewCard');
  if(run.mode==='demo'){card.hidden=true;$('resultStatus').textContent='演示结果';$('resultStatus').className='result-badge';return;}
  card.hidden=false;card.className='review-card';$('reviewAdjustments').hidden=true;
+ if(run.reference_contract_warning){
+  $('reviewTitle').textContent='旧版结果需要重新提取';$('reviewText').textContent=run.reference_contract_warning;
+  $('reviewApprove').textContent='请先重新提取';$('reviewApprove').disabled=true;$('reviewAdjust').textContent='重新描述目标';
+  $('resultStatus').textContent='旧版结果需重跑';$('resultStatus').className='result-badge warning';
+  $('resultSubtitle').textContent=`V${run.version} · 位置限定未执行，原产物仅供追溯`;return;
+ }
  const decision=run.human_review?.decision;
  if(decision==='accepted'){
   card.classList.add('confirmed');$('reviewTitle').textContent='你已确认这个结果符合当前分析需要';
@@ -247,8 +253,9 @@ function addMessage(role,text,kind='',run=null,interactive=true){
  const d=document.createElement('div');d.className=`message ${role} ${kind}`;
  d.innerHTML=`<div class="message-label"><span>${role==='user'?'YOU':'GEOSCOPE'}</span><span>${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="bubble"></div>`;
  if(run?.mask_url&&role==='assistant'){
-  const ratio=(run.metrics.area_ratio*100).toFixed(2),scope=run.task.roi?'框选区域':sideNames[run.task.side];
+  const ratio=(run.metrics.area_ratio*100).toFixed(2),scope=run.task.reference?'':run.task.roi?'框选区域':sideNames[run.task.side];
   d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'演示结果':'请在右侧查看叠加图并确认'}</p></div>`;
+  if(run.reference_contract_warning)d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>旧版结果需重跑</strong><p>${escape(run.reference_contract_warning)}</p></div>`;
   if(!interactive)d.classList.add('message-compact');
  }else d.querySelector('.bubble').textContent=text;
  if(run?.mask_url){
@@ -256,7 +263,7 @@ function addMessage(role,text,kind='',run=null,interactive=true){
   if(interactive){
    const chips=document.createElement('div');chips.className='followup-chips';chips.innerHTML='<span class="followup-label">接下来可以：</span>';
    const enhanced=run.task.target==='aircraft';
-   const actions=[[`改成${next}侧`,`改成${next}侧的${target}`],['提取全图','提取全图'+target],[enhanced?'飞机细节增强':'稳定模式重跑',`${enhanced?'用飞机细节增强':'用稳定整图模式'}重新提取${run.task.roi?'框选区域内的':sideNames[run.task.side]}${target}`]];
+   const actions=run.task.reference?[['重新提取同一目标','重新提取'+target],['提取全图同类','提取全图'+targetNames[run.task.target]]]:[[`改成${next}侧`,`改成${next}侧的${target}`],['提取全图','提取全图'+target],[enhanced?'飞机细节增强':'稳定模式重跑',`${enhanced?'用飞机细节增强':'用稳定整图模式'}重新提取${run.task.roi?'框选区域内的':sideNames[run.task.side]}${target}`]];
    for(const [label,q] of actions){const btn=document.createElement('button');btn.textContent=label;btn.dataset.prompt=q;if(label==='飞机细节增强')btn.dataset.quality='accurate';if(label==='稳定模式重跑')btn.dataset.quality='fast';chips.append(btn);}
    const explain=document.createElement('button');explain.textContent='解释这个结果';explain.dataset.reviewAction='explain';chips.append(explain);d.append(chips);
   }
@@ -277,7 +284,7 @@ function renderTrace(run){
 }
 function renderVersions(){
  const versions=state.session.runs.filter(r=>r.mask_url);
- $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(r.task.roi?'框选区域':sideNames[r.task.side])}${escape(targetLabel(r))}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
+ $('versions').innerHTML=versions.map(r=>`<button class="version-pill ${r.id===state.selected?.id?'selected':''}" data-run="${r.id}"><span>V${r.version}</span>${escape(r.task.reference?'':r.task.roi?'框选区域':sideNames[r.task.side])}${escape(targetLabel(r))}</button>`).join('')||'<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
 }
 async function selectRun(run){
  const token=++state.loadToken;
@@ -289,15 +296,15 @@ async function selectRun(run){
   state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
   syncTargetUi(run.task?.target,run.task?.quality_mode||'auto');updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
-  $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
+  $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.reference?'单目标指代':run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
   $('qualityValue').textContent=run.mode==='demo'?'预置演示':run.afr?.status==='fallback'?'稳定整图（AFR 回退）':
     run.task?.quality_adaptation?'稳定整图（已防退化）':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
-  $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
+  $('resultTitle').textContent=(run.task.reference?'':run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
-  $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
-  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${run.task.roi?'矩形研究区':sideNames[run.task.side]}`;
+  $('checksList').innerHTML=['蒙版尺寸与原始影像一致',run.task.reference?'位置限定已传入模型，目标与边界待复核':`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
+  $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${run.task.reference?'单目标指代':run.task.roi?'矩形研究区':sideNames[run.task.side]}`;
   $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){if(token===state.loadToken){toast(e.message);publishWorkbenchResult(null,e.message);}}
 }

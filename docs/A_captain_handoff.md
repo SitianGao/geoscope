@@ -2,7 +2,7 @@
 
 分支：`feature/national-tools-clip`。已包含队长算法 `c1ef225` 和 B 工作台 `8e022c2`，由 A 完成接口兼容及服务器真实联调。请整体检出该分支审查，不必再次把这两个提交 cherry-pick 一遍。主分支不由 A 自动合并。
 
-此前 [PR #9](https://github.com/SitianGao/geoscope/pull/9) 已由队长合并。当前用户反馈修复在 [A 修复分支](https://github.com/SitianGao/geoscope/tree/feature/national-tools-clip)，另开后续 PR；不自动合并 main。
+此前 [PR #9](https://github.com/SitianGao/geoscope/pull/9) 已由队长合并。当前用户反馈修复请审查 [PR #11](https://github.com/SitianGao/geoscope/pull/11)，代码在 [A 修复分支](https://github.com/SitianGao/geoscope/tree/feature/national-tools-clip)；不自动合并 main。
 
 最新用户反馈已处理：检索弹窗重整桌面/手机布局，原始相似度与长编号保留在追溯详情；“提取最下面的船”通过单目标指代完整传入 SAM，不再退化成全图类别。船舶复测 image_id=`7c8d57152d4b`、新 result_id=`e8e1eb4a6be7`，真实面积 120,398 px（2.36%），仅底部船舶高亮。旧错误版本会显示需重跑告警，不覆盖原产物。截图见 docs/evidence/server/ship_reference_workbench.png、retrieval_redesign_desktop.png。
 

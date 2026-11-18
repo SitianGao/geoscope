@@ -100,6 +100,9 @@ function updateMode(){
  $('provenanceLabel').textContent=state.mode==='demo'?(state.session?.sample?'内置样例 · 预置标注演示':'上传影像 · 需连接模型'):'模型模式 · 实际服务调用';
  $('composerNote').textContent=state.mode==='demo'?'当前为流程演示，未调用模型':'上传影像将发送至你配置的模型服务';
 }
+function publishWorkbenchResult(run=null,error=null){
+ document.dispatchEvent(new CustomEvent('geoscope:result',{detail:{run,error}}));
+}
 function resetMetrics(){
  $('answerCard').hidden=true;$('reviewCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
  $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
@@ -107,6 +110,7 @@ function resetMetrics(){
  $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';
  $('resultStatus').textContent='准备就绪';$('resultStatus').className='result-badge';$('coverageBar').style.width='0%';$('ringValue').setAttribute('stroke-dasharray','0 164');
  $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
+ publishWorkbenchResult();
 }
 function renderAnswer(run){
  $('answerCard').hidden=false;$('reviewCard').hidden=true;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
@@ -200,9 +204,11 @@ async function saveReview(decision){
  if(!state.selected||state.busy)return;
  try{
   const response=await api('/api/review',{session_id:state.session.id,run_id:state.selected.id,decision});
-  state.selected.human_review=response.human_review;
-  const stored=state.session.runs.find(item=>item.id===state.selected.id);if(stored)stored.human_review=response.human_review;
-  renderReview(state.selected);
+  const stored=state.session.id===response.session_id&&state.session.runs.find(item=>item.id===response.run_id);
+  if(stored)stored.human_review=response.human_review;
+  if(state.session.id===response.session_id&&state.selected?.id===response.run_id){
+   renderReview(state.selected);publishWorkbenchResult(state.selected);
+  }
   toast(decision==='accepted'?'已记录你的确认，实验报告已更新':'已记录“需要调整”，请选择下一步');
  }catch(e){toast(e.message);}
 }
@@ -267,6 +273,7 @@ function renderTrace(run){
  $('runLabel').textContent=`RUN ${run.id.slice(0,6).toUpperCase()} · ${run.duration_ms} ms`;
  $('trace').innerHTML=run.trace.map(t=>`<div class="trace-step ${escape(t.state)}" title="${escape(t.detail)}"><strong><b>${String(t.step).padStart(2,'0')}</b>${escape(t.name)}</strong><p>${escape(t.detail)}</p></div>`).join('');
  $('executionDot').style.background=run.status==='failed'?'#c89969':'#6d967b';
+ publishWorkbenchResult(run);
 }
 function renderVersions(){
  const versions=state.session.runs.filter(r=>r.mask_url);
@@ -275,6 +282,7 @@ function renderVersions(){
 async function selectRun(run){
  const token=++state.loadToken;
  try{const mask=await loadImage(run.mask_url);if(token!==state.loadToken)return;
+  if(mask.naturalWidth!==state.session.width||mask.naturalHeight!==state.session.height)throw new Error('蒙版尺寸与原图不一致');
   $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
   $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
@@ -290,12 +298,13 @@ async function selectRun(run){
   $('checksList').innerHTML=['蒙版尺寸与原始影像一致',`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
   $('contextChip').hidden=false;$('contextChip').lastElementChild.textContent=`继承 V${run.version} · ${targetLabel(run)} · ${run.task.roi?'矩形研究区':sideNames[run.task.side]}`;
   $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
- }catch(e){toast(e.message);}
+ }catch(e){if(token===state.loadToken){toast(e.message);publishWorkbenchResult(null,e.message);}}
 }
 async function run(query,simulateFailure=false){
  if(state.busy||!state.session)return;
  query=query.trim();if(!query)return;
  state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;$('busyOverlay').hidden=false;$('query').value='';
+ document.dispatchEvent(new Event('geoscope:running'));
  if($('starterList'))$('starterList').remove();
  const welcome=$('chat').querySelector('.assistant-intro');if(welcome)welcome.remove();
  $('chat').querySelectorAll('.followup-chips').forEach(chips=>chips.remove());
@@ -313,7 +322,7 @@ async function run(query,simulateFailure=false){
   if(result.mask_url)await selectRun(result);else{if(result.status==='answered')renderAnswer(result);renderTrace(result);}
   if(result.status==='export_ready')download(result.export_url);
   if(result.status==='failed'&&state.selected)toast('本次未完成，画布保留上一次有效结果');
- }catch(e){addMessage('assistant',e.message,'warning');toast('请求未完成，未生成结果');}
+ }catch(e){addMessage('assistant',e.message,'warning');toast('请求未完成，未生成结果');publishWorkbenchResult(null,e.message);}
  finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;$('busyOverlay').hidden=true;}
 }
 $('taskForm').onsubmit=e=>{e.preventDefault();run($('query').value);};

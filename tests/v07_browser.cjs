@@ -6,6 +6,7 @@ const assert = require('node:assert/strict');
  const page=await browser.newPage({viewport:{width:1512,height:1050}});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.goto(process.env.GEO_TEST_BASE_URL||'http://127.0.0.1:4181');
+ await page.waitForFunction(()=>localStorage.getItem('geoscope-session')&&!document.getElementById('sendBtn').disabled);
  await page.locator('#galleryBtn').click();await page.locator('[data-sample="airport"]').click();
  await page.locator('#drawRoiBtn').click();
  const rect=await page.locator('#imageCanvas').boundingBox();

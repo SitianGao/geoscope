@@ -1,0 +1,53 @@
+[
+  {
+    "group": "A0",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "RemoteSAM 1.1.0 · all airplanes · 整图 · 阈值 0.5",
+    "metrics": {
+      "iou": 0.1584711709511742,
+      "dice": 0.22806771311855864,
+      "precision": 0.16505329262183246,
+      "recall": 0.7620531733323623,
+      "inference_ms": 658.287
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/30306a66ce4ad95e49922f1ec5415bc5d8b9004b/evaluation/results/aircraft_v2/remotesam_aircraft_all_experiments_verified.csv",
+    "source_experiment_id": "prompt_all_airplanes"
+  },
+  {
+    "group": "A1",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "RemoteSAM 1.1.0 · all planes · 整图 · 阈值 0.5",
+    "metrics": {
+      "iou": 0.24600262808913778,
+      "dice": 0.3292218440328807,
+      "precision": 0.2629486186239228,
+      "recall": 0.6688611529129684,
+      "inference_ms": 440.808
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/30306a66ce4ad95e49922f1ec5415bc5d8b9004b/evaluation/results/aircraft_v2/remotesam_aircraft_all_experiments_verified.csv",
+    "source_experiment_id": "prompt_all_planes"
+  },
+  {
+    "group": "A2",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "RemoteSAM 1.1.0 · all planes · 1024 切片 · 重叠 256 · Hann 加权 · 阈值 0.88",
+    "metrics": {
+      "iou": 0.3055661981202589,
+      "dice": 0.4132893733561945,
+      "precision": 0.3738089636586416,
+      "recall": 0.7196215192222309,
+      "inference_ms": 5658.794
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/30306a66ce4ad95e49922f1ec5415bc5d8b9004b/evaluation/results/aircraft_v2/remotesam_aircraft_all_experiments_verified.csv",
+    "source_experiment_id": "tile_1024_overlap_256_p0_88"
+  }
+]

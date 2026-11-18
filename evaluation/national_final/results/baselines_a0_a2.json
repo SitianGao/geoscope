@@ -1,0 +1,71 @@
+{
+  "generated_by": "recompute_baselines_a0a2.py",
+  "scope": "离线复算（仅已提交结果文件），不需要模型服务",
+  "tolerance": 0.001,
+  "baselines": {
+    "A0_aircraft": {
+      "rows": 10,
+      "iou": 0.158471,
+      "dice": 0.228068,
+      "precision": 0.165053,
+      "recall": 0.762053,
+      "mean_service_inference_ms": 364.66,
+      "mean_client_wall_ms": 1536.57,
+      "_recorded_iou": 0.1585,
+      "recorded_delta_abs": 2.9e-05
+    },
+    "A1_aircraft": {
+      "rows": 10,
+      "iou": 0.246003,
+      "dice": 0.329222,
+      "precision": 0.292165,
+      "recall": 0.668861,
+      "mean_service_inference_ms": 440.81,
+      "mean_client_wall_ms": 3618.79,
+      "_recorded_iou": 0.246,
+      "recorded_delta_abs": 3e-06
+    },
+    "A2_aircraft": {
+      "rows": 10,
+      "iou": 0.305566,
+      "dice": 0.413289,
+      "precision": 0.373809,
+      "recall": 0.719622,
+      "mean_service_inference_ms": 5658.79,
+      "mean_client_wall_ms": 12388.66,
+      "_recorded_iou": 0.3056,
+      "recorded_delta_abs": 3.4e-05
+    },
+    "building": {
+      "rows": 10,
+      "iou": 0.352234,
+      "dice": 0.511496,
+      "precision": 0.498189,
+      "recall": 0.586005,
+      "mean_service_inference_ms": 262.11,
+      "mean_client_wall_ms": 322.79,
+      "_recorded_iou": 0.3522,
+      "recorded_delta_abs": 3.4e-05,
+      "note": "建筑基线（整图 all buildings），用于 A0 对照背景"
+    }
+  },
+  "sources": {
+    "remotesam_full_results.csv": {
+      "path": "C:\\Users\\26310\\Desktop\\人工智能算法精英比赛2026ver\\geoscope-v07-integration\\evaluation\\results\\remotesam_full_results.csv",
+      "sha256": "ff7085139f0de7cf26c0eaea8e44705c211b030ba4d8173a7b1e7e99d5895929",
+      "rows": 20
+    },
+    "aircraft_v2/prompt_sweep_results.csv": {
+      "path": "C:\\Users\\26310\\Desktop\\人工智能算法精英比赛2026ver\\geoscope-v07-integration\\evaluation\\results\\aircraft_v2\\prompt_sweep_results.csv",
+      "sha256": "14b0a327a1544e918ee3b8f29dfb155045ab39e3e9cf45e024f24dde4827a952",
+      "rows": 50
+    },
+    "aircraft_v2/tile_1024_high_threshold_results.csv": {
+      "path": "C:\\Users\\26310\\Desktop\\人工智能算法精英比赛2026ver\\geoscope-v07-integration\\evaluation\\results\\aircraft_v2\\tile_1024_high_threshold_results.csv",
+      "sha256": "34da91646595db9ea9c6145bb1f0fe658e2eb40955b0fbae01557ce4db209c76",
+      "rows": 60
+    }
+  },
+  "errors": [],
+  "status": "verified_offline"
+}

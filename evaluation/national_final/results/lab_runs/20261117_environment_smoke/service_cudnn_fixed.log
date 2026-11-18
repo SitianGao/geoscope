@@ -1,0 +1,28 @@
+/home/gst/geoscope-national/geoscope-v07-integration/services/remotesam/upstream/remotesam.py:151: DeprecationWarning:
+        on_event is deprecated, use lifespan event handlers instead.
+
+        Read more about it in the
+        [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+
+  @app.on_event("startup")
+2026-11-17 21:52:36,036 - INFO - RemoteSAM service: http://127.0.0.1:6657
+2026-11-17 21:52:36,036 - INFO - API documentation: http://127.0.0.1:6657/docs
+INFO:     Started server process [2438096]
+INFO:     Waiting for application startup.
+2026-11-17 21:52:36,784 - INFO - Loading RemoteSAM checkpoint /home/gst/rf-tools-validation/models/RemoteSAM/RemoteSAMv1.pth on cuda:0
+Window size 12!
+/home/gst/geoscope-national/.venv/lib/python3.10/site-packages/torch/functional.py:513: UserWarning: torch.meshgrid: in an upcoming release, it will be required to pass the indexing argument. (Triggered internally at ../aten/src/ATen/native/TensorShape.cpp:3609.)
+  return _VF.meshgrid(tensors, **kwargs)  # type: ignore[attr-defined]
+Randomly initialize Multi-modal Swin Transformer weights.
+2026-11-17 21:52:40,947 - INFO - RemoteSAM loaded successfully in 4902.92 ms
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:6657 (Press CTRL+C to quit)
+INFO:     127.0.0.1:44494 - "GET /ready HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47890 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47896 - "GET /ready HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47898 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35748 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35756 - "GET /ready HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35762 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46294 - "POST /predict HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46298 - "POST /predict HTTP/1.1" 200 OK

@@ -1,0 +1,169 @@
+{
+  "algorithm_name": "geoscope_afr",
+  "algorithm_version": "v1",
+  "config": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.2,
+    "budget": {
+      "max_regions": null,
+      "fraction": 0.25
+    },
+    "lam": 0.7,
+    "lam_per_region": null,
+    "threshold": 0.5,
+    "tile_size": 1024,
+    "overlap": 256,
+    "upscale": {
+      "enabled": true,
+      "min_size": 512,
+      "scale": 2.0
+    },
+    "review_ratio_threshold": 0.05
+  },
+  "config_sha256": "f98a7aec88b5ca1eac3fc08db82edc93d0f92eb3befe2d25f5c43cf9d66132e4",
+  "image_size": [
+    1593,
+    2734
+  ],
+  "grid_regions": 8,
+  "selected_regions": 2,
+  "budget_used": 2,
+  "request_count": 3,
+  "local_success_count": 2,
+  "fallback_count": 0,
+  "local_service_inference_ms_total": 272.21000000000004,
+  "local_service_ms_total": 372.9,
+  "peak_vram_mb": 1839.94,
+  "threshold_validated": false,
+  "disagreement_available": true,
+  "disagreement_notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。",
+  "p0_service": {
+    "model": {
+      "service_version": "1.2.0",
+      "device": "cuda:0",
+      "fp16": true,
+      "epoc": false,
+      "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+    },
+    "timing_ms": {
+      "preprocess": 68.09,
+      "inference": 157.95,
+      "postprocess": 21.59,
+      "total": 345.88
+    },
+    "quality": {
+      "empty_mask": false,
+      "foreground_pixels": 103470,
+      "foreground_ratio": 0.02375746855183454,
+      "mean_foreground_confidence": 0.924879,
+      "mean_image_confidence": 0.024288
+    },
+    "quality_mode": "fast",
+    "requested_quality_mode": "fast",
+    "mode_parameters": {
+      "requested_mode": "fast",
+      "resolved_mode": "fast",
+      "tile_count": 1,
+      "strategy": "whole_image_argmax",
+      "tile_size": null,
+      "overlap": 0,
+      "probability_threshold": null,
+      "blend": null,
+      "blend_min_weight": null
+    },
+    "original_size": [
+      1593,
+      2734
+    ],
+    "output_size": [
+      1593,
+      2734
+    ],
+    "peak_vram_mb": 1839.94,
+    "full_mask_candidate_stats": {
+      "label": "candidate_regions",
+      "connectivity": 8,
+      "min_area_pixels": 1,
+      "raw_candidate_count": 4,
+      "candidate_count": 4,
+      "filtered_out_count": 0,
+      "total_area_pixels": 103470,
+      "min_area": 24253,
+      "max_area": 27076,
+      "mean_area": 25867.5,
+      "candidates": [
+        {
+          "candidate_id": 1,
+          "area_pixels": 26954,
+          "bbox": {
+            "x": 546,
+            "y": 257,
+            "width": 295,
+            "height": 207
+          },
+          "center": {
+            "x": 691.825,
+            "y": 362.575
+          }
+        },
+        {
+          "candidate_id": 2,
+          "area_pixels": 27076,
+          "bbox": {
+            "x": 406,
+            "y": 1773,
+            "width": 258,
+            "height": 235
+          },
+          "center": {
+            "x": 530.505,
+            "y": 1888.147
+          }
+        },
+        {
+          "candidate_id": 3,
+          "area_pixels": 25187,
+          "bbox": {
+            "x": 996,
+            "y": 2020,
+            "width": 242,
+            "height": 229
+          },
+          "center": {
+            "x": 1110.662,
+            "y": 2127.983
+          }
+        },
+        {
+          "candidate_id": 4,
+          "area_pixels": 24253,
+          "bbox": {
+            "x": 427,
+            "y": 2030,
+            "width": 231,
+            "height": 235
+          },
+          "center": {
+            "x": 529.881,
+            "y": 2144.313
+          }
+        }
+      ],
+      "notice": "Connected regions are candidate targets and require human review."
+    },
+    "quality_confirmation": "afr_orchestrated_fast_base"
+  },
+  "honesty_notes": [
+    "区域难度评分基于预测概率，不是校准置信度；",
+    "disagreement 是整图与局部预测的分歧，不是错误概率；",
+    "候选连通区域数量不等于准确实例数。"
+  ],
+  "review": {
+    "ratio_threshold": 0.05,
+    "review_region_count": 0,
+    "review_regions": [],
+    "notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。"
+  },
+  "fallback_records": []
+}

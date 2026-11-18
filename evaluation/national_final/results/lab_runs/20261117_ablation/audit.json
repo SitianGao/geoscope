@@ -1,0 +1,52 @@
+{
+  "audit_version": "national-ablation-audit-v1",
+  "audited_at": "2026-11-17T22:45:00+08:00",
+  "scope": "historical_diagnostic",
+  "dataset_manifest_sha256": "5b5339814a2c83c4b87ec026fa46fe8ff67cf6b534554c24ac8d21e421456241",
+  "service": {
+    "version": "1.2.0",
+    "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7",
+    "gpu": 0
+  },
+  "formal_runs": {
+    "count": 6,
+    "rows": 60,
+    "success_rows": 60,
+    "fallback_regions": 0
+  },
+  "a5_artifact_recompute": {
+    "rows": 10,
+    "mismatch_count": 0,
+    "mean_iou": 0.319149,
+    "mean_dice": 0.425082,
+    "mean_precision": 0.366613,
+    "mean_recall": 0.762427,
+    "mean_difficult_region_error_discovery": 0.318397,
+    "mean_disagreement_error_precision": 0.261528
+  },
+  "a4_a5_output_comparison": {
+    "mask_and_probability_files_compared": 20,
+    "mismatch_count": 0,
+    "a5_disagreement_files": 10
+  },
+  "service_log_error_pattern_count": 0,
+  "transfer_payload": {
+    "paths": [
+      "results/",
+      "artifacts/",
+      "service_ablation.log"
+    ],
+    "file_count": 225,
+    "bytes": 38861374,
+    "local_remote_canonical_sha256": "bed540642410f79f93343677f4fa488f93b1fce1849e51f5e37731cb0c4ce832"
+  },
+  "shutdown": {
+    "service_pid": 2440301,
+    "process_remaining": false,
+    "gpu0_memory_mib": 37,
+    "gpu1_memory_mib": 5,
+    "compute_processes_remaining": 0
+  },
+  "threshold_validated": false,
+  "independent_test_status": "pending_data_required"
+}

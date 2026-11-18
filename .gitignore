@@ -1,6 +1,7 @@
 __pycache__/
 experiments/
 evaluation/images/
+datasets/
 .env
 test-results/
 .venv/
@@ -24,5 +25,7 @@ weights/
 outputs/
 .cache/
 cupy-cache/
+# Full smoke responses embed duplicate base64 images; commit compact verification.json instead.
+evaluation/national_final/results/lab_runs/**/smoke_test.json
 .DS_Store
 Thumbs.db

@@ -1,0 +1,590 @@
+{
+  "algorithm_name": "geoscope_afr",
+  "algorithm_version": "v1",
+  "config": {
+    "alpha": 0.5,
+    "beta": 0.3,
+    "gamma": 0.2,
+    "budget": {
+      "max_regions": null,
+      "fraction": 0.5
+    },
+    "lam": 1.0,
+    "lam_per_region": null,
+    "threshold": 0.5,
+    "tile_size": 1024,
+    "overlap": 256,
+    "upscale": {
+      "enabled": true,
+      "min_size": 512,
+      "scale": 2.0
+    },
+    "review_ratio_threshold": 0.05
+  },
+  "config_sha256": "ee6a89193b0ae77affd4882837594646232b883f0dd401e3f6ef8fcf104a93ed",
+  "image_size": [
+    5838,
+    5338
+  ],
+  "grid_regions": 56,
+  "selected_regions": 28,
+  "budget_used": 28,
+  "request_count": 29,
+  "local_success_count": 28,
+  "fallback_count": 0,
+  "local_service_inference_ms_total": 3958.5099999999993,
+  "local_service_ms_total": 5467.069999999999,
+  "peak_vram_mb": 1839.94,
+  "threshold_validated": false,
+  "disagreement_available": true,
+  "disagreement_notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。",
+  "p0_service": {
+    "model": {
+      "service_version": "1.2.0",
+      "device": "cuda:0",
+      "fp16": true,
+      "epoc": false,
+      "checkpoint_sha256": "f85dfa044a527f096b9e41eacfe298040d52e77fca642f46dfe1226745e137e7"
+    },
+    "timing_ms": {
+      "preprocess": 365.96,
+      "inference": 263.66,
+      "postprocess": 588.15,
+      "total": 1773.72
+    },
+    "quality": {
+      "empty_mask": false,
+      "foreground_pixels": 11609042,
+      "foreground_ratio": 0.37252354087398604,
+      "mean_foreground_confidence": 0.806889,
+      "mean_image_confidence": 0.340466
+    },
+    "quality_mode": "fast",
+    "requested_quality_mode": "fast",
+    "mode_parameters": {
+      "requested_mode": "fast",
+      "resolved_mode": "fast",
+      "tile_count": 1,
+      "strategy": "whole_image_argmax",
+      "tile_size": null,
+      "overlap": 0,
+      "probability_threshold": null,
+      "blend": null,
+      "blend_min_weight": null
+    },
+    "original_size": [
+      5838,
+      5338
+    ],
+    "output_size": [
+      5838,
+      5338
+    ],
+    "peak_vram_mb": 1839.94,
+    "full_mask_candidate_stats": {
+      "label": "candidate_regions",
+      "connectivity": 8,
+      "min_area_pixels": 1,
+      "raw_candidate_count": 8,
+      "candidate_count": 8,
+      "filtered_out_count": 0,
+      "total_area_pixels": 11609042,
+      "min_area": 840,
+      "max_area": 11445766,
+      "mean_area": 1451130.25,
+      "candidates": [
+        {
+          "candidate_id": 1,
+          "area_pixels": 11445766,
+          "bbox": {
+            "x": 229,
+            "y": 644,
+            "width": 5056,
+            "height": 4659
+          },
+          "center": {
+            "x": 3056.409,
+            "y": 3331.096
+          }
+        },
+        {
+          "candidate_id": 2,
+          "area_pixels": 52383,
+          "bbox": {
+            "x": 5089,
+            "y": 1907,
+            "width": 261,
+            "height": 322
+          },
+          "center": {
+            "x": 5207.377,
+            "y": 2067.235
+          }
+        },
+        {
+          "candidate_id": 3,
+          "area_pixels": 5465,
+          "bbox": {
+            "x": 3838,
+            "y": 2223,
+            "width": 85,
+            "height": 77
+          },
+          "center": {
+            "x": 3880.157,
+            "y": 2258.373
+          }
+        },
+        {
+          "candidate_id": 4,
+          "area_pixels": 21799,
+          "bbox": {
+            "x": 444,
+            "y": 2318,
+            "width": 215,
+            "height": 185
+          },
+          "center": {
+            "x": 541.921,
+            "y": 2422.967
+          }
+        },
+        {
+          "candidate_id": 5,
+          "area_pixels": 1662,
+          "bbox": {
+            "x": 444,
+            "y": 2705,
+            "width": 39,
+            "height": 60
+          },
+          "center": {
+            "x": 459.523,
+            "y": 2740.511
+          }
+        },
+        {
+          "candidate_id": 6,
+          "area_pixels": 7966,
+          "bbox": {
+            "x": 417,
+            "y": 2807,
+            "width": 111,
+            "height": 101
+          },
+          "center": {
+            "x": 466.634,
+            "y": 2859.408
+          }
+        },
+        {
+          "candidate_id": 7,
+          "area_pixels": 73161,
+          "bbox": {
+            "x": 189,
+            "y": 4677,
+            "width": 365,
+            "height": 524
+          },
+          "center": {
+            "x": 341.466,
+            "y": 4937.076
+          }
+        },
+        {
+          "candidate_id": 8,
+          "area_pixels": 840,
+          "bbox": {
+            "x": 27,
+            "y": 4927,
+            "width": 32,
+            "height": 48
+          },
+          "center": {
+            "x": 47.7,
+            "y": 4944.071
+          }
+        }
+      ],
+      "notice": "Connected regions are candidate targets and require human review."
+    },
+    "quality_confirmation": "afr_orchestrated_fast_base"
+  },
+  "honesty_notes": [
+    "区域难度评分基于预测概率，不是校准置信度；",
+    "disagreement 是整图与局部预测的分歧，不是错误概率；",
+    "候选连通区域数量不等于准确实例数。"
+  ],
+  "review": {
+    "ratio_threshold": 0.05,
+    "review_region_count": 26,
+    "review_regions": [
+      {
+        "region_index": 44,
+        "xywh": [
+          3072,
+          3840,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 990338,
+        "disagreement_ratio": 0.9444599151611328,
+        "whole_pixels": 1029873,
+        "local_pixels": 39535,
+        "prediction_agreement_iou": 0.03838822845146926
+      },
+      {
+        "region_index": 45,
+        "xywh": [
+          3840,
+          3840,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 907194,
+        "disagreement_ratio": 0.8651676177978516,
+        "whole_pixels": 929477,
+        "local_pixels": 22283,
+        "prediction_agreement_iou": 0.023973697036075128
+      },
+      {
+        "region_index": 52,
+        "xywh": [
+          3072,
+          4314,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 888071,
+        "disagreement_ratio": 0.8469305038452148,
+        "whole_pixels": 912390,
+        "local_pixels": 24319,
+        "prediction_agreement_iou": 0.02665417200977652
+      },
+      {
+        "region_index": 21,
+        "xywh": [
+          3840,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 785646,
+        "disagreement_ratio": 0.7492504119873047,
+        "whole_pixels": 811348,
+        "local_pixels": 25732,
+        "prediction_agreement_iou": 0.0316960472686085
+      },
+      {
+        "region_index": 13,
+        "xywh": [
+          3840,
+          768,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 726945,
+        "disagreement_ratio": 0.6932687759399414,
+        "whole_pixels": 733726,
+        "local_pixels": 9757,
+        "prediction_agreement_iou": 0.011247065480254729
+      },
+      {
+        "region_index": 17,
+        "xywh": [
+          768,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 464410,
+        "disagreement_ratio": 0.44289588928222656,
+        "whole_pixels": 454027,
+        "local_pixels": 10533,
+        "prediction_agreement_iou": 0.0001614691540092791
+      },
+      {
+        "region_index": 22,
+        "xywh": [
+          4608,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 433908,
+        "disagreement_ratio": 0.4138069152832031,
+        "whole_pixels": 480302,
+        "local_pixels": 46474,
+        "prediction_agreement_iou": 0.09666862360568096
+      },
+      {
+        "region_index": 40,
+        "xywh": [
+          0,
+          3840,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 431466,
+        "disagreement_ratio": 0.41147804260253906,
+        "whole_pixels": 365957,
+        "local_pixels": 93981,
+        "prediction_agreement_iou": 0.03194062400437961
+      },
+      {
+        "region_index": 29,
+        "xywh": [
+          3840,
+          2304,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 322592,
+        "disagreement_ratio": 0.307647705078125,
+        "whole_pixels": 340681,
+        "local_pixels": 19011,
+        "prediction_agreement_iou": 0.054376183524749225
+      },
+      {
+        "region_index": 32,
+        "xywh": [
+          0,
+          3072,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 302085,
+        "disagreement_ratio": 0.28809070587158203,
+        "whole_pixels": 424475,
+        "local_pixels": 639430,
+        "prediction_agreement_iou": 0.5577054004787736
+      },
+      {
+        "region_index": 18,
+        "xywh": [
+          1536,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 295202,
+        "disagreement_ratio": 0.2815265655517578,
+        "whole_pixels": 456822,
+        "local_pixels": 182238,
+        "prediction_agreement_iou": 0.3680530729067435
+      },
+      {
+        "region_index": 23,
+        "xywh": [
+          4814,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 234903,
+        "disagreement_ratio": 0.22402095794677734,
+        "whole_pixels": 281948,
+        "local_pixels": 47125,
+        "prediction_agreement_iou": 0.16697519043363548
+      },
+      {
+        "region_index": 12,
+        "xywh": [
+          3072,
+          768,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 217385,
+        "disagreement_ratio": 0.20731449127197266,
+        "whole_pixels": 223024,
+        "local_pixels": 9033,
+        "prediction_agreement_iou": 0.03264492415039093
+      },
+      {
+        "region_index": 19,
+        "xywh": [
+          2304,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 169304,
+        "disagreement_ratio": 0.16146087646484375,
+        "whole_pixels": 710211,
+        "local_pixels": 625143,
+        "prediction_agreement_iou": 0.7749601570589463
+      },
+      {
+        "region_index": 20,
+        "xywh": [
+          3072,
+          1536,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 164166,
+        "disagreement_ratio": 0.15656089782714844,
+        "whole_pixels": 455583,
+        "local_pixels": 322735,
+        "prediction_agreement_iou": 0.6516312213257732
+      },
+      {
+        "region_index": 24,
+        "xywh": [
+          0,
+          2304,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 163098,
+        "disagreement_ratio": 0.15554237365722656,
+        "whole_pixels": 193173,
+        "local_pixels": 40071,
+        "prediction_agreement_iou": 0.1769835142377038
+      },
+      {
+        "region_index": 27,
+        "xywh": [
+          2304,
+          2304,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 132336,
+        "disagreement_ratio": 0.1262054443359375,
+        "whole_pixels": 1030302,
+        "local_pixels": 901576,
+        "prediction_agreement_iou": 0.8717807359120712
+      },
+      {
+        "region_index": 34,
+        "xywh": [
+          1536,
+          3072,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 114347,
+        "disagreement_ratio": 0.10904979705810547,
+        "whole_pixels": 1027318,
+        "local_pixels": 913177,
+        "prediction_agreement_iou": 0.8887048249938438
+      },
+      {
+        "region_index": 51,
+        "xywh": [
+          2304,
+          4314,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 113172,
+        "disagreement_ratio": 0.10792922973632812,
+        "whole_pixels": 860530,
+        "local_pixels": 908424,
+        "prediction_agreement_iou": 0.8797402511840334
+      },
+      {
+        "region_index": 14,
+        "xywh": [
+          4608,
+          768,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 94291,
+        "disagreement_ratio": 0.08992290496826172,
+        "whole_pixels": 138712,
+        "local_pixels": 44475,
+        "prediction_agreement_iou": 0.32037134475525986
+      },
+      {
+        "region_index": 48,
+        "xywh": [
+          0,
+          4314,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 88494,
+        "disagreement_ratio": 0.08439445495605469,
+        "whole_pixels": 137676,
+        "local_pixels": 53316,
+        "prediction_agreement_iou": 0.36673751100234003
+      },
+      {
+        "region_index": 54,
+        "xywh": [
+          4608,
+          4314,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 86532,
+        "disagreement_ratio": 0.08252334594726562,
+        "whole_pixels": 421569,
+        "local_pixels": 505779,
+        "prediction_agreement_iou": 0.8293052432240502
+      },
+      {
+        "region_index": 43,
+        "xywh": [
+          2304,
+          3840,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 81681,
+        "disagreement_ratio": 0.0778970718383789,
+        "whole_pixels": 1044470,
+        "local_pixels": 968073,
+        "prediction_agreement_iou": 0.9219940178319034
+      },
+      {
+        "region_index": 53,
+        "xywh": [
+          3840,
+          4314,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 80952,
+        "disagreement_ratio": 0.07720184326171875,
+        "whole_pixels": 957501,
+        "local_pixels": 969951,
+        "prediction_agreement_iou": 0.9193867369314142
+      },
+      {
+        "region_index": 42,
+        "xywh": [
+          1536,
+          3840,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 70941,
+        "disagreement_ratio": 0.06765460968017578,
+        "whole_pixels": 658856,
+        "local_pixels": 725751,
+        "prediction_agreement_iou": 0.9025233108080256
+      },
+      {
+        "region_index": 33,
+        "xywh": [
+          768,
+          3072,
+          1024,
+          1024
+        ],
+        "disagreement_pixels": 67677,
+        "disagreement_ratio": 0.06454181671142578,
+        "whole_pixels": 662719,
+        "local_pixels": 699692,
+        "prediction_agreement_iou": 0.9053526775974625
+      }
+    ],
+    "notice": "disagreement 表示整图与局部预测的分歧像素，仅用于定位待复核区域；它不是错误概率，也不代表目标数量。"
+  },
+  "fallback_records": []
+}

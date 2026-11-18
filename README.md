@@ -1,6 +1,6 @@
 # 观域 GeoScope：遥感实验工作台初稿
 
-> **2026-11-18 国赛联调入口：** [队员 A 最终交接](docs/A_captain_handoff.md) · [接口合同](contracts/api_contract_national.md) · [服务器真实验收证据](docs/evidence/server/)。国赛后端使用 `national_server.py`；服务器接管使用 `scripts/manage_server.py`，页面为 `/?workbench=national`。旧 `server.py` 启动流程仍保留。
+> **2026-11-18 国赛联调入口：** [队长最终联调验收](docs/队长最终联调验收_20261118.md) · [队员 A 最终交接](docs/A_captain_handoff.md) · [队员 B 交付报告](docs/B_delivery_report.md) · [接口合同](contracts/api_contract_national.md) · [服务器真实验收证据](docs/evidence/server/)。国赛后端使用 `national_server.py`；服务器接管使用 `scripts/manage_server.py`，页面为 `/?workbench=national`。旧 `server.py` 启动流程仍保留。
 
 ## 团队协作入口
 
@@ -15,6 +15,7 @@
 - [2026-09-22 完整现场联调验收](docs/完整现场联调验收_2026-09-22.md)
 - [v4 国赛申报版技术方案](docs/技术方案_v4_国赛申报版.md)
 - [2026-09-28 队长整合验收报告](docs/队长整合验收报告_2026-09-28.md)
+- [2026-11-18 国赛最终联调验收](docs/队长最终联调验收_20261118.md)
 - [队员 A：RemoteAgent 评测说明](docs/Agent评测说明.md)
 - [队员 B：RemoteSAM 评测说明](docs/RemoteSAM评测说明.md)
 - [v3 技术方案](docs/技术方案_v3.md)

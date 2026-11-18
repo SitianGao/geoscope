@@ -1,22 +1,50 @@
 (() => {
     'use strict';
 
-    if (new URLSearchParams(location.search).get('workbench') !== 'national') return;
+    const nationalMode = new URLSearchParams(location.search).get('workbench') === 'national';
 
     const missing = '未记录';
     const apiRoot = '/api/national';
-    const tools = [
-        ['semantic_segmentation', '语义分割', '模型模式 · Harness 白名单'],
-        ['referring_expression_segmentation', '指代分割', '模型模式 · Harness 白名单'],
-        ['region_statistics', '研究区统计', '当前版本 · 像素'],
-        ['connected_region_analysis', '连通域分析', '当前版本 · 8 邻域候选'],
-        ['mask_compare', '蒙版对照', '当前影像 · 保存的二值蒙版'],
-        ['spatial_relation_analysis', '空间关系分析', '尚未开放'],
-        ['adaptive_refinement', 'GeoScope-AFR 自适应推理', '尚未接入 · 可继续使用现有模式'],
-        ['semantic_image_retrieval', 'RemoteCLIP 语义检索', '打开检索页面检查就绪状态'],
-        ['geo_measurement', '地理面积测算', '尚未开放'],
-        ['report_generation', '实验报告', '当前版本 · 保留原有报告和实验包']
-    ];
+    const TOOL_LABELS = {
+        semantic_segmentation: '语义分割',
+        referring_expression_segmentation: '指代分割',
+        region_statistics: '研究区统计',
+        connected_region_analysis: '连通域分析',
+        mask_compare: '蒙版对照',
+        spatial_relation_analysis: '空间关系分析',
+        adaptive_refinement: 'GeoScope-AFR 自适应推理',
+        semantic_image_retrieval: 'RemoteCLIP 语义检索',
+        geo_measurement: '地理面积测算',
+        report_generation: '实验报告'
+    };
+    const TOOL_ROUTES = {
+        region_statistics: 'tools/region-statistics',
+        connected_region_analysis: 'tools/connected-regions',
+        mask_compare: 'tools/mask-compare',
+        spatial_relation_analysis: 'tools/spatial-relations',
+        report_generation: 'tools/report',
+        adaptive_refinement: 'tools/adaptive-refinement',
+        geo_measurement: 'tools/geo-measurement'
+    };
+    const TOOL_HINTS = {
+        region_statistics: '需要当前影像已保存的结果版本；按所选范围统计目标像素与占比。',
+        connected_region_analysis: '在结果版本上按 8 邻域统计候选区域，可设最小保留面积。',
+        mask_compare: '需要同影像、同目标的另一个结果版本作为基准，比较新增与减少像素。',
+        spatial_relation_analysis: '需要另一个结果版本作为基准；距离为外接框之间的欧氏像素距离。',
+        report_generation: '汇总当前版本的统计与溯源信息，生成 JSON 报告。',
+        adaptive_refinement: '以当前版本为父版本重新运行 GeoScope-AFR，生成新版本；需要真实 Agent 与 RemoteSAM 服务。',
+        geo_measurement: '缺少地理参考与单位校验，后端声明不可用。'
+    };
+    const FIELD_LABELS = {
+        scope: '分析范围', roi: '矩形研究区', base_result_id: '基准版本',
+        min_area_pixels: '最小保留面积 / px', near_distance_pixels: '邻近距离阈值 / px'
+    };
+    const SCOPE_LABELS = {
+        all: '整图', left_half: '左半幅', right_half: '右半幅',
+        top_half: '上半幅', bottom_half: '下半幅', roi: '矩形研究区'
+    };
+    const SCOPES = ['all', 'left_half', 'right_half', 'top_half', 'bottom_half', 'roi'];
+    const AUTO_FIELDS = ['image_id', 'result_id', 'target'];
     const statuses = {
         completed: '完成', answered: '完成', running: '运行中', pending: '待执行',
         skipped: '未执行', not_executed: '未执行', failed: '失败', warning: '告警',
@@ -31,7 +59,7 @@
     const ms = value => finite(value) ? count(value) + ' ms' : missing;
     const measurement = (label, value) => '<div><dt>' + escape(label) + '</dt><dd>' + escape(value) + '</dd></div>';
     const active = element => element.isConnected && $('modal').open;
-    const outputSource = run => run.mode === 'demo' ? '预置演示标注' : '模型运行记录';
+    const outputSource = run => run.mode === 'demo' ? '预置标注' : '模型运行记录';
     const hasResult = run => Boolean(run?.mask_url && run?.metrics);
     const versionLabel = run => 'V' + run.version + ' · ' + targetLabel(run);
 
@@ -92,7 +120,7 @@
                 run.model_info?.name ?? service?.model ?? run.provenance?.perception,
                 run.model_info?.version ?? service?.service_version)],
             ['算法 / 版本', algorithmLabel],
-            ['实际模式', run.mode === 'demo' ? '预置演示' : actualMode],
+            ['实际模式', run.mode === 'demo' ? '预置标注' : actualMode],
             ['执行耗时', ms(run.duration_ms)]
         ];
     }
@@ -207,26 +235,156 @@
                 escape(sameOriginUrl(run.report_url) ?? '#') + '" download>下载此运行的报告</a>' : '');
     }
 
-    function showToolRegistry() {
-        modal('科研工具', '<div class="national-dialog"><p id="nationalToolStatus" role="status">正在检查工具注册表…</p>' +
-            '<dl class="national-tool-list">' + tools.map(([key, label, fallback]) =>
-                '<div><dt>' + label + '<code>' + key + '</code></dt><dd data-national-tool="' + key + '">' +
-                fallback + '</dd></div>').join('') + '</dl></div>', '执行能力');
-        const label = $('nationalToolStatus');
-        requestNational('/tools/registry').then(response => {
-            if (!active(label)) return;
+    function toolField(name, rule, session, selected) {
+        const label = escape(FIELD_LABELS[name] || name);
+        if (name === 'scope') {
+            const options = (rule.enum || SCOPES)
+                .map(value => '<option value="' + value + '">' + escape(SCOPE_LABELS[value] || value) + '</option>').join('');
+            return '<label class="tool-field"><span>' + label + '</span><select data-field="scope">' + options + '</select></label>';
+        }
+        if (name === 'roi') {
+            return '<label class="tool-field"><span>' + label + '（x1,y1,x2,y2）</span>' +
+                '<input data-field="roi" type="text" placeholder="例如 100,80,600,420"></label>';
+        }
+        if (name === 'base_result_id') {
+            const runs = (session?.runs || []).filter(run => run.mask_url && run.id !== selected?.id);
+            const options = runs.map(run => '<option value="' + run.id + '">V' + run.version + ' · ' +
+                escape(targetLabel(run)) + ' · ' + run.id + '</option>').join('');
+            return '<label class="tool-field"><span>' + label + '</span><select data-field="base_result_id">' +
+                '<option value="">请选择基准版本</option>' + options + '</select></label>';
+        }
+        if (rule.type === 'integer' || rule.type === 'number') {
+            const minimum = rule.minimum ?? '';
+            return '<label class="tool-field"><span>' + label + '</span><input data-field="' + name + '" type="number" value="' +
+                (minimum === '' ? 0 : minimum) + '"' + (minimum === '' ? '' : ' min="' + minimum + '"') + '></label>';
+        }
+        return '<label class="tool-field"><span>' + label + '</span><input data-field="' + name + '" type="text"></label>';
+    }
+
+    function toolCard(entry, session, selected) {
+        const name = entry.name;
+        const label = escape(TOOL_LABELS[name] || name);
+        const available = entry.available === true;
+        const schema = entry.input_schema || {};
+        const properties = schema.properties || {};
+        const required = schema.required || [];
+        const extras = Object.keys(properties).filter(key => !AUTO_FIELDS.includes(key));
+        const chips = Object.keys(properties).map(key =>
+            '<span class="tool-param' + (required.includes(key) ? ' req' : '') + '">' + key + '</span>').join('');
+        let body;
+        if (!available) {
+            body = '<p class="tool-reason">' + escape(entry.reason || '后端声明当前不可用') + '</p>';
+        } else if (!TOOL_ROUTES[name]) {
+            body = '<p class="tool-reason">该能力不在工具调用路由内，请通过对应入口使用。</p>';
+        } else if (!session || !selected) {
+            body = '<p class="tool-reason">请先在当前影像上运行一次提取，得到结果版本后再调用。</p>';
+        } else {
+            body = '<details class="tool-form-wrap"><summary>输入参数与调用</summary>' +
+                '<form class="tool-form" data-tool="' + name + '">' +
+                '<p class="tool-context">自动带入：影像 <code>' + escape(session.id) + '</code> · 版本 <code>' +
+                escape(selected.id) + '</code> · 目标 <code>' + escape(selected.task?.target || '—') + '</code></p>' +
+                extras.map(key => toolField(key, properties[key], session, selected)).join('') +
+                '<div class="tool-actions"><button type="submit" class="primary">调用' + label + '</button></div>' +
+                '<div class="tool-result" hidden></div></form></details>';
+        }
+        const hint = TOOL_HINTS[name];
+        return '<article class="tool-card' + (available ? ' ok' : ' off') + '">' +
+            '<header><div><strong>' + label + '</strong><code>' + name + '</code></div>' +
+            '<span class="tool-badge">' + (available ? '后端可用' : '不可用') + '</span></header>' +
+            (hint ? '<p class="tool-hint">' + escape(hint) + '</p>' : '') +
+            '<div class="tool-params">' + (chips || '<span class="tool-param">无参数</span>') + '</div>' +
+            body + '</article>';
+    }
+
+    function collectToolArgs(form) {
+        const args = {};
+        form.querySelectorAll('[data-field]').forEach(element => {
+            const key = element.dataset.field;
+            let value = element.value.trim();
+            if (!value) return;
+            if (element.type === 'number') value = Number(value);
+            if (key === 'roi') value = value.split(/[^0-9.-]+/).filter(Boolean).map(Number).filter(Number.isFinite);
+            args[key] = value;
+        });
+        return args;
+    }
+
+    function renderToolResult(box, data) {
+        const scalars = Object.entries(data).filter(([, value]) =>
+            value === null || ['string', 'number', 'boolean'].includes(typeof value));
+        const metrics = scalars.slice(0, 14).map(([key, value]) =>
+            '<div><dt>' + escape(key) + '</dt><dd>' + escape(String(value)) + '</dd></div>').join('');
+        box.innerHTML = (metrics ? '<dl class="tool-metrics">' + metrics + '</dl>' : '') +
+            '<details><summary>完整响应</summary><pre class="tool-json">' +
+            escape(JSON.stringify(data, null, 2)) + '</pre></details>';
+    }
+
+    function bindToolForm(form, entry, session, selected) {
+        const required = entry.input_schema?.required || [];
+        const out = form.querySelector('.tool-result');
+        const button = form.querySelector('button[type="submit"]');
+        form.onsubmit = async event => {
+            event.preventDefault();
+            const args = collectToolArgs(form);
+            const payload = {image_id: session.id, result_id: selected.id, target: selected.task?.target, ...args};
+            const missingFields = required.filter(key => !AUTO_FIELDS.includes(key) &&
+                (payload[key] === undefined || payload[key] === ''));
+            if (missingFields.length) {
+                out.hidden = false;
+                out.innerHTML = '<p class="tool-error">请填写：' +
+                    missingFields.map(key => escape(FIELD_LABELS[key] || key)).join('、') + '</p>';
+                return;
+            }
+            if (args.scope === 'roi' && (!Array.isArray(args.roi) || args.roi.length !== 4)) {
+                out.hidden = false;
+                out.innerHTML = '<p class="tool-error">矩形研究区需要 4 个整数：x1,y1,x2,y2</p>';
+                return;
+            }
+            button.disabled = true;
+            out.hidden = false;
+            out.textContent = '正在调用…';
+            try {
+                const data = await requestNational('/' + TOOL_ROUTES[entry.name], {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                });
+                renderToolResult(out, data);
+                if (entry.name === 'adaptive_refinement' && data.result_id) {
+                    out.insertAdjacentHTML('afterbegin', '<p class="tool-note">已生成新版本 <code>' +
+                        escape(data.result_id) + '</code>，关闭面板后可在版本栏查看。</p>');
+                }
+            } catch (error) {
+                out.innerHTML = '<p class="tool-error">' + escape(error.message) + '</p>';
+            } finally {
+                button.disabled = false;
+            }
+        };
+    }
+
+    async function showToolRegistry() {
+        modal('科研工具', '<p id="nationalToolStatus" role="status">正在读取后端工具注册表…</p>' +
+            '<div id="nationalToolCards" class="tool-cards"></div>', '执行能力');
+        const status = $('nationalToolStatus');
+        const box = $('nationalToolCards');
+        try {
+            const response = await requestNational('/tools/registry');
+            if (!active(status)) return;
             const registry = response.tools;
             if (!Array.isArray(registry)) throw new Error('工具注册表格式未确认');
-            label.textContent = '后端工具状态';
-            for (const entry of registry) {
-                const row = [...document.querySelectorAll('[data-national-tool]')]
-                    .find(item => item.dataset.nationalTool === entry.name);
-                const text = entry.available === true ? '后端可用' : entry.reason ?? statuses[entry.status] ?? '不可用';
-                if (row) row.textContent = text;
-            }
-        }).catch(() => {
-            if (active(label)) label.textContent = '国赛工具注册表未就绪。下方为当前工作台能力。';
-        });
+            const session = state.session;
+            const selected = state.selected;
+            const available = registry.filter(entry => entry.available === true).length;
+            status.textContent = '后端共 ' + registry.length + ' 项工具，当前可用 ' + available +
+                ' 项。输入参数、必填项来自后端注册表，可直接调用。';
+            box.innerHTML = registry.map(entry => toolCard(entry, session, selected)).join('');
+            box.querySelectorAll('form[data-tool]').forEach(form => {
+                const entry = registry.find(item => item.name === form.dataset.tool);
+                if (entry) bindToolForm(form, entry, session, selected);
+            });
+        } catch (error) {
+            if (!active(status)) return;
+            status.innerHTML = '<span class="tool-error">无法读取后端工具注册表：' + escape(error.message) +
+                '</span>。请确认工作台由 national_server.py 启动。';
+        }
     }
 
     async function requestNational(path, options = {}) {
@@ -237,7 +395,7 @@
             throw new Error('连接失败或请求超时，请检查服务后重试。');
         }
         if (response.status === 404 || response.status === 501) {
-            const error = new Error('国赛接口尚未接入此工作台。');
+            const error = new Error('当前工作台未提供该接口。');
             error.status = response.status;
             throw error;
         }
@@ -491,7 +649,7 @@
                     JSON.stringify(scopeFor(targetRun, session.width, session.height)?.bounds);
                 status.textContent = '按原图坐标复算已保存蒙版。' +
                     (sameScope ? '' : ' 两版范围不同，差异包含裁切影响。') +
-                    (baseRun.mode === 'demo' || targetRun.mode === 'demo' ? ' 含预置演示标注。' : '') +
+                    (baseRun.mode === 'demo' || targetRun.mode === 'demo' ? ' 含预置标注。' : '') +
                     ' IoU 衡量两张蒙版的一致性。' + (diff.union ? '' : ' 两份空蒙版按 1.0000 计。');
                 $('nationalVerifyStatus').textContent = '';
                 $('nationalVerifyDiff').disabled = false;
@@ -855,33 +1013,31 @@
             '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
     }
 
-    document.body.classList.add('national-workbench');
-    document.title = '观域 GeoScope · 遥感科研工作台';
-    document.querySelector('.page-heading h1').textContent = '遥感科研工作台';
-    document.querySelector('.hero-copy > p').textContent = '任务分析、同图版本对照与可复算实验记录';
-    document.querySelector('.hero-copy > .eyebrow').hidden = true;
-    $('workbenchSwitch').textContent = '返回初赛版';
-    $('workbenchSwitch').href = '/';
+    // 常驻入口：这两项在任何页面都能用，不依赖 ?workbench=national
     $('nationalRetrieval').hidden = false;
     $('nationalExperiments').hidden = false;
-    $('nationalCompare').hidden = false;
-    $('nationalTrace').hidden = false;
     $('nationalRetrieval').onclick = showRetrieval;
     $('nationalExperiments').onclick = showExperiments;
-    $('nationalCompare').onclick = showComparison;
-    $('metricsPanel').before($('nationalStats'));
-    document.querySelector('.execution-panel .expand-hint').textContent = '步骤 · 状态 · 运行记录';
     const toolButton = document.createElement('button');
     toolButton.type = 'button';
     toolButton.className = 'text-button';
     toolButton.textContent = '工具能力';
     toolButton.onclick = showToolRegistry;
     $('qualityMode').after(toolButton);
-    document.addEventListener('geoscope:result', event => {
-        renderStatistics($('metricsPanel').hidden ? null : state.selected);
-        renderExecution(event.detail.run, event.detail.error);
-    });
-    document.addEventListener('geoscope:running', () => renderExecution(null, null, true));
-    renderStatistics(state.selected);
-    renderExecution(state.selected ?? state.last);
+
+    if (nationalMode) {
+        document.body.classList.add('national-workbench');
+        document.title = '观域 GeoScope · 遥感科研工作台';
+        $('nationalCompare').hidden = false;
+        $('nationalTrace').hidden = false;
+        $('nationalCompare').onclick = showComparison;
+        $('metricsPanel').before($('nationalStats'));
+        document.addEventListener('geoscope:result', event => {
+            renderStatistics($('metricsPanel').hidden ? null : state.selected);
+            renderExecution(event.detail.run, event.detail.error);
+        });
+        document.addEventListener('geoscope:running', () => renderExecution(null, null, true));
+        renderStatistics(state.selected);
+        renderExecution(state.selected ?? state.last);
+    }
 })();

@@ -19,7 +19,7 @@ function syncTargetUi(target=currentTarget(),preferredQuality=null){
  if(!select)return;
  const previous=preferredQuality||select.value||'auto';
  const options=[['auto',`自动（按${label}选择）`],['fast',`${label}稳定整图`]];
- if(target==='aircraft')options.push(['accurate','飞机细节增强']);
+ if(target==='aircraft')options.push(['accurate','飞机细节增强'],['adaptive','GeoScope-AFR 自适应推理']);
  select.innerHTML=options.map(([value,text])=>`<option value="${value}">${escape(text)}</option>`).join('');
  select.value=options.some(([value])=>value===previous)?previous:'auto';
 }
@@ -53,11 +53,11 @@ $('modal').addEventListener('click',e=>{if(e.target===$('modal')){const r=$('mod
 
 async function newExperiment(sample='urban',image=null,name=null){
  if(state.busy)return toast('请等待当前任务完成');
- state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;
+ state.busy=true;$('sendBtn').disabled=true;
  try{
   const session=await api('/api/session',{sample,image,name});
   await showSession(session);
- }catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;}
+ }catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;}
 }
 
 async function showSession(session){
@@ -71,11 +71,11 @@ async function showSession(session){
   syncTargetUi(state.status?.samples?.[session.sample]?.target||session.context?.target||null,'auto');
   $('imageName').textContent=session.name;$('imageMeta').textContent=`RGB · ${session.width} × ${session.height} px · 像素坐标`;
   $('fileThumb').src=session.image_url;$('coordinateLabel').textContent=`${session.width} × ${session.height} px`;
-  $('stageLabel').textContent=session.sample?'研究样区 / '+(session.sample==='urban'?'01':'02'):'用户上传影像';
-  $('imageWatermark').textContent=session.sample?'SAMPLE IMAGE':'USER IMAGE';
+  $('stageLabel').textContent=session.name;
+  $('imageWatermark').textContent='';
   $('contextChip').hidden=true;$('versions').innerHTML='<span class="small-muted">完成提取后，在这里保留每个结果版本</span>';
   $('qualityMode').value='auto';updateRoiUI();
-  $('trace').innerHTML='<div class="trace-placeholder">'+icon('target')+'<span>每一步操作，都有可追溯的依据。</span><small>任务理解 → 专业感知 → 几何统计 → 结果检查</small></div>';
+  $('trace').innerHTML='<div class="trace-placeholder">'+icon('target')+'<span>执行任务后在此查看步骤。</span></div>';
   $('runLabel').textContent='等待实验开始';$('query').value='';updateMode();resetMetrics();draw();syncView();closeModal();
   localStorage.setItem('geoscope-session',session.id);
   if(session.runs.length){
@@ -90,24 +90,23 @@ async function showSession(session){
 }
 async function openExperiment(id){
  if(state.busy)return toast('请等待当前任务完成');
- state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;
+ state.busy=true;$('sendBtn').disabled=true;
  try{await showSession(await api('/api/session/'+encodeURIComponent(id)));}
- catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;}
+ catch(e){toast(e.message);}finally{state.busy=false;$('sendBtn').disabled=false;}
 }
 
 function updateMode(){
- $('connectionLabel').textContent=state.mode==='demo'?'演示模式':'模型模式';
- $('provenanceLabel').textContent=state.mode==='demo'?(state.session?.sample?'内置样例 · 预置标注演示':'上传影像 · 需连接模型'):'模型模式 · 实际服务调用';
- $('composerNote').textContent=state.mode==='demo'?'当前为流程演示，未调用模型':'上传影像将发送至你配置的模型服务';
+ $('connectionLabel').textContent=state.mode==='demo'?'内置样例':'模型模式';
+ $('composerNote').textContent=state.mode==='demo'?'当前使用内置样例，未调用模型':'上传影像将发送至你配置的模型服务';
 }
 function publishWorkbenchResult(run=null,error=null){
  document.dispatchEvent(new CustomEvent('geoscope:result',{detail:{run,error}}));
 }
 function resetMetrics(){
  $('answerCard').hidden=true;$('reviewCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
- $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
+ $('resultEyebrow').textContent='COVERAGE ANALYSIS';
  $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';$('candidateValue').textContent='—';$('qualityValue').textContent='—';
- $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';
+ $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';$('algoTag').hidden=true;
  $('resultStatus').textContent='准备就绪';$('resultStatus').className='result-badge';$('coverageBar').style.width='0%';$('ringValue').setAttribute('stroke-dasharray','0 164');
  $('checksList').innerHTML=['结果与原始影像对齐','空间条件完成检查','统计与产物已生成'].map(s=>`<p class="pending"><span>○</span>${s}</p>`).join('');$('checkCount').textContent='0 / 3';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
  publishWorkbenchResult();
@@ -116,8 +115,8 @@ function renderAnswer(run){
  $('answerCard').hidden=false;$('reviewCard').hidden=true;$('coverageCard').hidden=true;$('metricsPanel').hidden=true;$('checksPanel').hidden=true;
  $('resultEyebrow').textContent='IMAGE UNDERSTANDING';$('resultTitle').textContent='影像理解已完成';
  $('resultSubtitle').textContent='RemoteAgent 直接看图回答';$('answerText').textContent=run.message;
- $('resultStatus').textContent='已回答';$('resultStatus').className='result-badge success';
- $('artifactText').textContent='原图 · 模型回答 · 决策记录 · 运行日志';$('exportBtn').disabled=true;$('reportBtn').disabled=true;
+ $('resultStatus').textContent='已回答';$('resultStatus').className='result-badge success';$('algoTag').hidden=true;
+ $('exportBtn').disabled=true;$('reportBtn').disabled=true;
 }
 
 function updateRoiUI(){
@@ -186,8 +185,8 @@ function draw(){
   ctx.setLineDash([Math.max(6,w/100),Math.max(4,w/160)]);ctx.fillRect(x,y,rw,rh);ctx.strokeRect(x,y,rw,rh);ctx.restore();
  }
  canvas.style.transform=`scale(${state.zoom})`; $('zoomLabel').textContent=Math.round(state.zoom*100)+'%';
- $('legendScope').textContent=state.selected?.metrics?(state.selected.task.roi?'矩形研究区':sideNames[state.selected.task.side]):'暂无提取结果';
- $('imageWatermark').textContent=state.selected?.mode==='demo'&&state.view!=='original'?'DEMO ANNOTATION · NOT MODEL OUTPUT':state.session?.sample?'SAMPLE IMAGE':'USER IMAGE';
+ $('legendScope').textContent=state.selected?.metrics?(state.selected.task.reference?'单目标指代':state.selected.task.roi?'矩形研究区':sideNames[state.selected.task.side]):'暂无提取结果';
+ $('imageWatermark').textContent=state.selected?.mode==='demo'&&state.view!=='original'?'PRESET ANNOTATION · NOT MODEL OUTPUT':'';
 }
 function syncView(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('selected',b.dataset.view===state.view));$('compareControl').hidden=state.view!=='compare';}
 function view(mode){if(mode!=='original'&&!state.mask)return toast('请先运行提取任务，再查看蒙版或对比');state.view=mode;draw();syncView();}
@@ -214,7 +213,7 @@ async function saveReview(decision){
 }
 function renderReview(run){
  const card=$('reviewCard');
- if(run.mode==='demo'){card.hidden=true;$('resultStatus').textContent='演示结果';$('resultStatus').className='result-badge';return;}
+ if(run.mode==='demo'){card.hidden=true;$('resultStatus').textContent='样例结果';$('resultStatus').className='result-badge';return;}
  card.hidden=false;card.className='review-card';$('reviewAdjustments').hidden=true;
  if(run.reference_contract_warning){
   $('reviewTitle').textContent='旧版结果需要重新提取';$('reviewText').textContent=run.reference_contract_warning;
@@ -242,6 +241,10 @@ function renderReview(run){
 }
 function showReviewAdjustments(run){
  const box=$('reviewAdjustments'),target=targetLabel(run);
+ if(run.task.reference){
+  box.innerHTML=`<button data-quality="fast" data-prompt="重新提取${escape(target)}">重跑同一目标</button><button data-review-action="compare">对照原图检查</button><button data-review-action="rewrite">重新描述目标</button><button data-prompt="提取全图${escape(targetNames[run.task.target])}">提取全图同类</button>`;
+  box.hidden=false;return;
+ }
  const scope=run.task.roi?'框选区域内的':run.task.side==='all'?'全图':sideNames[run.task.side];
  const modeAction=run.task.target==='aircraft'
   ?`<button data-quality="accurate" data-prompt="用飞机细节增强重新提取${escape(scope)}${escape(target)}">飞机细节增强</button>`
@@ -254,7 +257,7 @@ function addMessage(role,text,kind='',run=null,interactive=true){
  d.innerHTML=`<div class="message-label"><span>${role==='user'?'YOU':'GEOSCOPE'}</span><span>${new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="bubble"></div>`;
  if(run?.mask_url&&role==='assistant'){
   const ratio=(run.metrics.area_ratio*100).toFixed(2),scope=run.task.reference?'':run.task.roi?'框选区域':sideNames[run.task.side];
-  d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'演示结果':'请在右侧查看叠加图并确认'}</p></div>`;
+  d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>${escape(scope)}${escape(targetLabel(run))}已生成</strong><p>${number(run.metrics.pixel_area)} px · 占整图 ${ratio}% · ${run.mode==='demo'?'样例结果':'请在右侧查看叠加图并确认'}</p></div>`;
   if(run.reference_contract_warning)d.querySelector('.bubble').innerHTML=`<div class="message-result"><strong>旧版结果需重跑</strong><p>${escape(run.reference_contract_warning)}</p></div>`;
   if(!interactive)d.classList.add('message-compact');
  }else d.querySelector('.bubble').textContent=text;
@@ -267,7 +270,7 @@ function addMessage(role,text,kind='',run=null,interactive=true){
    for(const [label,q] of actions){const btn=document.createElement('button');btn.textContent=label;btn.dataset.prompt=q;if(label==='飞机细节增强')btn.dataset.quality='accurate';if(label==='稳定模式重跑')btn.dataset.quality='fast';chips.append(btn);}
    const explain=document.createElement('button');explain.textContent='解释这个结果';explain.dataset.reviewAction='explain';chips.append(explain);d.append(chips);
   }
-  const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`V${run.version} · ${run.mode==='demo'?'预置标注演示':'真实服务返回'} · ${run.duration_ms} ms`;d.append(meta);
+  const meta=document.createElement('div');meta.className='message-meta';meta.textContent=`V${run.version} · ${run.mode==='demo'?'预置标注':'真实服务返回'} · ${run.duration_ms} ms`;d.append(meta);
  }
  if(run?.status==='needs_clarification'){
   const chips=document.createElement('div');chips.className='followup-chips';const target=state.selected?.task?.target||state.status.samples[state.session.sample]?.target||'building';
@@ -291,16 +294,22 @@ async function selectRun(run){
  try{const mask=await loadImage(run.mask_url);if(token!==state.loadToken)return;
   if(mask.naturalWidth!==state.session.width||mask.naturalHeight!==state.session.height)throw new Error('蒙版尺寸与原图不一致');
   $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
-  $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('artifactText').textContent='原图 · 蒙版 · 叠加图 · 统计 · 日志';
+  $('resultEyebrow').textContent='COVERAGE ANALYSIS';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
   state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
   syncTargetUi(run.task?.target,run.task?.quality_mode||'auto');updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.reference?'单目标指代':run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
-  $('qualityValue').textContent=run.mode==='demo'?'预置演示':run.afr?.status==='fallback'?'稳定整图（AFR 回退）':
+  $('qualityValue').textContent=run.mode==='demo'?'预置标注':run.afr?.status==='fallback'?'稳定整图（AFR 回退）':
     run.task?.quality_adaptation?'稳定整图（已防退化）':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
-  $('resultTitle').textContent=(run.task.reference?'':run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
+  $('resultTitle').textContent=(run.task.reference?'':run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置标注，非模型输出':'模型已生成结果'}`;
+  const afr=run.afr;
+  if(afr){
+   $('algoTag').hidden=false;
+   $('algoTag').textContent=afr.status==='completed'?`GeoScope-AFR ${afr.algorithm_version||'v1'}`:'自适应未完成 · 已回退整图';
+   $('algoTag').className='algo-tag '+(afr.status==='completed'?'ok':'warn');
+  }else{$('algoTag').hidden=true;}
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);
   $('checksList').innerHTML=['蒙版尺寸与原始影像一致',run.task.reference?'位置限定已传入模型，目标与边界待复核':`像素范围符合${run.task.roi?'矩形研究区':sideNames[run.task.side]}条件`,'统计及结果文件已生成'].map(s=>`<p><span>✓</span>${escape(s)}</p>`).join('');$('checkCount').textContent='3 / 3';
@@ -308,10 +317,10 @@ async function selectRun(run){
   $('exportBtn').disabled=false;$('reportBtn').disabled=!run.report_url;renderVersions();renderTrace(run);draw();syncView();
  }catch(e){if(token===state.loadToken){toast(e.message);publishWorkbenchResult(null,e.message);}}
 }
-async function run(query,simulateFailure=false){
+async function run(query){
  if(state.busy||!state.session)return;
  query=query.trim();if(!query)return;
- state.busy=true;$('sendBtn').disabled=true;$('newBtn').disabled=true;$('busyOverlay').hidden=false;$('query').value='';
+ state.busy=true;$('sendBtn').disabled=true;$('busyOverlay').hidden=false;$('query').value='';
  document.dispatchEvent(new Event('geoscope:running'));
  if($('starterList'))$('starterList').remove();
  const welcome=$('chat').querySelector('.assistant-intro');if(welcome)welcome.remove();
@@ -319,7 +328,7 @@ async function run(query,simulateFailure=false){
  $('chat').querySelectorAll('.message.assistant').forEach(message=>message.classList.add('message-compact'));
  addMessage('user',query);const parent=state.selected?.id||null;
  try{
-  const payload={session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,simulate_failure:simulateFailure,
+  const payload={session_id:state.session.id,query,mode:state.mode,parent_run_id:parent,
                  quality_mode:$('qualityMode').value};
   if(state.roi)payload.roi=state.roi;
   else if(state.roiClear)payload.roi={};
@@ -331,7 +340,7 @@ async function run(query,simulateFailure=false){
   if(result.status==='export_ready')download(result.export_url);
   if(result.status==='failed'&&state.selected)toast('本次未完成，画布保留上一次有效结果');
  }catch(e){addMessage('assistant',e.message,'warning');toast('请求未完成，未生成结果');publishWorkbenchResult(null,e.message);}
- finally{state.busy=false;$('sendBtn').disabled=false;$('newBtn').disabled=false;$('busyOverlay').hidden=true;}
+ finally{state.busy=false;$('sendBtn').disabled=false;$('busyOverlay').hidden=true;}
 }
 $('taskForm').onsubmit=e=>{e.preventDefault();run($('query').value);};
 $('query').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();run($('query').value);}};
@@ -355,19 +364,27 @@ $('reviewAdjust').onclick=()=>{
 };
 $('reviewHelp').onclick=reviewExplanation;
 function download(url){const a=document.createElement('a');a.href=url;a.download='';document.body.append(a);a.click();a.remove();}
-$('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('实验包已开始下载，包含影像、蒙版、统计、日志和报告');}};
-$('reportBtn').onclick=()=>{if(state.selected?.report_url)download(state.selected.report_url);};
+$('exportBtn').onclick=()=>{if(state.selected){download(state.selected.export_url);toast('正在下载实验包：原图、蒙版、叠加图、结果、统计、运行日志与报告');}};
+$('reportBtn').onclick=async()=>{
+ const run=state.selected;if(!run?.report_url)return;
+ try{
+  const response=await fetch(run.report_url);
+  if(!response.ok)throw new Error('报告读取失败，可改用导出报告');
+  const text=await response.text();
+  modal('实验报告',`<pre class="report-text">${escape(text)}</pre>`,'EXPERIMENT REPORT');
+ }catch(e){toast(e.message);}
+};
 function gallery(){
  if(state.busy)return toast('请等待当前任务完成');
- modal('选择一幅研究影像',`<p>从预置样例体验完整实验，或上传自己的影像连接模型分析。</p><div class="sample-grid">${Object.entries(state.status?.samples||{}).map(([key,s])=>`<button class="sample-card" data-sample="${key}"><img src="assets/${escape(s.file)}?v=0.7.4" alt="${escape(s.name)}"><strong>${escape(s.name)}</strong><small>${s.size.join(' × ')} px · 预置${targetNames[s.target]}演示蒙版</small></button>`).join('')}</div><p style="margin-top:16px">样例蒙版是固定演示结果，选择样例时不会调用 RemoteSAM，也不作为精度评测真值。</p><button class="secondary" id="modalUpload">${icon('image')}上传自己的影像</button>`,'IMAGE LIBRARY');
+ modal('选择一幅研究影像',`<p>选择内置样例，或上传自己的影像连接模型分析。</p><div class="sample-grid">${Object.entries(state.status?.samples||{}).map(([key,s])=>`<button class="sample-card" data-sample="${key}"><img src="assets/${escape(s.file)}?v=0.7.4" alt="${escape(s.name)}"><strong>${escape(s.name)}</strong><small>${s.size.join(' × ')} px · 预置${targetNames[s.target]}标注</small></button>`).join('')}</div><p style="margin-top:16px">内置样例的蒙版为预置标注，选择样例时不调用 RemoteSAM，也不作为精度评测真值。</p><button class="secondary" id="modalUpload">${icon('image')}上传自己的影像</button>`,'IMAGE LIBRARY');
  $('modalBody').querySelectorAll('[data-sample]').forEach(b=>b.onclick=()=>newExperiment(b.dataset.sample));$('modalUpload').onclick=()=>{closeModal();$('fileInput').click();};
 }
-$('galleryBtn').onclick=gallery;$('newBtn').onclick=gallery;$('uploadBtn').onclick=gallery;$('workspaceBtn').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+$('uploadBtn').onclick=gallery;
 $('fileInput').onchange=async e=>{const file=e.target.files[0];if(!file)return;if(file.size>12*1024*1024){toast('请上传12MB以内的影像');e.target.value='';return;}const reader=new FileReader();reader.onload=()=>newExperiment(null,reader.result,file.name);reader.onerror=()=>toast('无法读取影像');reader.readAsDataURL(file);e.target.value='';};
 
 function renderBatch(batch){
  state.batch=batch;
- if(!$('modal').open||$('modalTitle').textContent!=='批量实验')return;
+ if(!$('modal').open||$('modalTitle').textContent!=='多影像分析')return;
  const items=batch.items||[],total=batch.total_count||items.length;
  const done=batch.status==='completed',failed=batch.status==='failed';
  $('modalBody').innerHTML=`<div class="batch-progress"><strong>${failed?'批次未启动':done?'批次已完成':'正在逐图运行'} · ${batch.completed_items||items.length} / ${total}</strong><p>${failed?escape(batch.error):'每幅影像独立保留结果；失败项不会覆盖已完成项。'}</p></div>
@@ -387,18 +404,18 @@ async function watchBatch(batchId){
 async function batchDialog(){
  if(state.busy)return toast('请等待当前任务完成');
  if(state.batch?.status==='running'){
-  modal('批量实验','<p>正在恢复批次进度…</p>','BATCH EXPERIMENT');
+  modal('多影像分析','<p>正在恢复批次进度…</p>','BATCH EXPERIMENT');
   renderBatch(state.batch);return;
  }
  try{
   const data=await api('/api/sessions');
-  modal('批量实验',`<p>选择 2—5 幅已保存影像，系统依次运行同一任务。可先在“选择影像”中添加更多影像。</p>
+  modal('多影像分析',`<p>选择 2—5 幅已保存影像，系统依次运行同一任务。下方按钮可补充内置样例。</p>
    <div class="batch-selector">${data.sessions.map(s=>`<label><input type="checkbox" class="batch-check" value="${escape(s.id)}" ${s.id===state.session?.id?'checked':''}><span>${escape(s.name)}<small>${s.width} × ${s.height} px · ${s.run_count} 次实验</small></span></label>`).join('')}</div>
    <div class="batch-add"><button class="secondary" data-add-sample="airport">添加机场样例</button><button class="secondary" data-add-sample="urban">添加街区样例</button></div>
    <label class="batch-label" for="batchQuery">统一任务</label><textarea id="batchQuery" rows="2" maxlength="1800" placeholder="例如：批量提取这些影像中的所有飞机并统计面积占比"></textarea>
    <label class="batch-inline"><input id="batchUseRoi" type="checkbox" ${state.roi?'':'disabled'}> 同尺寸影像沿用当前矩形研究区</label>
    <p>未勾选时各影像按全图处理。批次串行执行，单项失败会单独记录。</p>
-   <button class="primary" id="startBatchBtn">开始批量实验</button>`,'BATCH EXPERIMENT');
+   <button class="primary" id="startBatchBtn">开始分析</button>`,'BATCH EXPERIMENT');
   $('modalBody').querySelectorAll('[data-add-sample]').forEach(b=>b.onclick=async()=>{
    try{await api('/api/session',{sample:b.dataset.addSample});await batchDialog();toast('样例已加入影像列表');}
    catch(e){toast(e.message);}
@@ -425,7 +442,7 @@ async function batchDialog(){
 $('batchBtn').onclick=batchDialog;
 async function history(){
  const runs=state.session?.runs||[];
- modal('实验记录',runs.length?`<p>同一影像的结果分别保存。点击有效结果恢复查看，并以该版本为后续任务上下文。</p>${[...runs].reverse().map(r=>`<button class="history-row" ${r.mask_url?`data-run="${r.id}"`:''} ${!r.mask_url?'disabled':''}><span>V${r.version}</span><div><strong>${escape(r.query)}</strong><small>${statusNames[r.status]} · ${r.mode==='demo'?'演示':'模型'}</small></div><time>${r.duration_ms} ms</time></button>`).join('')}`:'<p>尚未运行实验。从提取右侧建筑开始，你的任务和结果会记录在这里。</p>','EXPERIMENT HISTORY');
+ modal('实验记录',runs.length?`<p>同一影像的结果分别保存。点击有效结果恢复查看，并以该版本为后续任务上下文。</p>${[...runs].reverse().map(r=>`<button class="history-row" ${r.mask_url?`data-run="${r.id}"`:''} ${!r.mask_url?'disabled':''}><span>V${r.version}</span><div><strong>${escape(r.query)}</strong><small>${statusNames[r.status]} · ${r.mode==='demo'?'样例':'模型'}</small></div><time>${r.duration_ms} ms</time></button>`).join('')}`:'<p>尚未运行实验。从提取右侧建筑开始，你的任务和结果会记录在这里。</p>','EXPERIMENT HISTORY');
  try{
   const data=await api('/api/sessions');if(!$('modal').open||$('modalTitle').textContent!=='实验记录')return;
   $('modalBody').insertAdjacentHTML('beforeend','<h3>已保存的影像实验</h3>'+data.sessions.map(s=>`<button class="history-row" data-session="${escape(s.id)}"><span>↗</span><div><strong>${escape(s.name)}</strong><small>${s.width} × ${s.height} px · ${s.run_count} 次运行</small></div></button>`).join(''));
@@ -435,16 +452,15 @@ $('historyBtn').onclick=history;
 function details(log=false){
  const r=log?state.last||state.selected:state.selected||state.last;
  if(!r)return modal('运行详情','<p>尚未执行任务。完成实验后，这里会展示真实的工具事件、数据来源和运行参数。</p>');
- modal(log?'完整执行日志':'结果与运行详情',`<p><strong>RUN ${r.id}</strong> · ${r.mode==='demo'?'预置标注演示':'模型服务模式'} · ${statusNames[r.status]}</p><div class="modal-notice">${escape(r.provenance.perception)}</div>${r.mask_url?`<div class="download-list"><a href="${r.mask_url}" download="mask.png">mask.png ↓</a><a href="${r.overlay_url}" download="overlay.png">overlay.png ↓</a><a href="${r.export_url}" download>完整实验包 ↓</a></div>`:''}<h3>数据来源与方法</h3><p>${escape(r.provenance.source)}</p><p>规划器：${escape(r.provenance.planner)}。面积按实际二值蒙版计算，未推断平方米。</p><pre>${escape(JSON.stringify(log?r.trace:r,null,2))}</pre>`,'RUN PROVENANCE');
+ modal(log?'完整执行日志':'结果与运行详情',`<p><strong>RUN ${r.id}</strong> · ${r.mode==='demo'?'预置标注':'模型服务模式'} · ${statusNames[r.status]}</p><div class="modal-notice">${escape(r.provenance.perception)}</div>${r.mask_url?`<div class="download-list"><a href="${r.mask_url}" download="mask.png">mask.png ↓</a><a href="${r.overlay_url}" download="overlay.png">overlay.png ↓</a><a href="${r.export_url}" download>完整实验包 ↓</a></div>`:''}<h3>数据来源与方法</h3><p>${escape(r.provenance.source)}</p><p>规划器：${escape(r.provenance.planner)}。面积按实际二值蒙版计算，未推断平方米。</p><pre>${escape(JSON.stringify(log?r.trace:r,null,2))}</pre>`,'RUN PROVENANCE');
 }
 $('detailBtn').onclick=()=>details(false);$('logBtn').onclick=()=>details(true);
-$('sourceBtn').onclick=()=>modal('影像与数据来源',`<p>${escape(state.session?.source||'未选择影像')}</p><p>内置建筑和飞机区域为人工绘制的近似演示多边形，只用于检验交互、上下文和几何计算。不能据此报告模型准确率。</p><p>坐标以图像左上角为原点，X向右、Y向下。上下左右均为影像方向。面积占比使用整图像素为分母。</p>`,'DATA NOTES');
+$('sourceBtn').onclick=()=>modal('影像与数据来源',`<p>${escape(state.session?.source||'未选择影像')}</p><p>内置建筑和飞机区域为人工绘制的近似多边形，只用于检验交互、上下文和几何计算。不能据此报告模型准确率。</p><p>坐标以图像左上角为原点，X向右、Y向下。上下左右均为影像方向。面积占比使用整图像素为分母。</p>`,'DATA NOTES');
 async function connections(){
  try{state.status=await api('/api/status');}catch(e){return toast('本地服务不可用');}
  const canLive=state.status.agent_configured&&state.status.sam_configured;
- modal('实验运行方式',`<div class="mode-options"><button id="demoMode" class="${state.mode==='demo'?'selected':''}">样例演示<small>预置标注 · 真实几何计算</small></button><button id="liveMode" class="${state.mode==='live'?'selected':''}" ${!canLive?'disabled':''}>模型服务<small>${canLive?'已配置，执行时验证连通':'等待配置认知与感知服务'}</small></button></div><div class="connection-list"><div><span>认知核心</span><b>${state.status.agent_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>RemoteSAM</span><b>${state.status.sam_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>几何计算与实验存储</span><b style="color:#5d8850">本地服务可用</b></div></div><p>真实模型模式将影像发送至本地服务端配置的模型地址。API密钥不进入网页。</p><h3>连接方法</h3><p>按项目README配置GEO_AGENT_BASE_URL、GEO_AGENT_MODEL和GEO_REMOTESAM_URL，然后重启服务。配置状态不等于已通过模型测试。</p><button class="secondary" id="failureDemo">体验工具失败反馈</button>`,'RUNTIME SETTINGS');
- $('demoMode').onclick=()=>{state.mode='demo';localStorage.setItem('geoscope-mode','demo');updateMode();closeModal();toast('已切换到样例演示');};$('liveMode').onclick=()=>{state.mode='live';localStorage.setItem('geoscope-mode','live');updateMode();closeModal();toast('已切换到模型服务');};
- $('failureDemo').onclick=()=>{closeModal();run('检查工具失败时能否保留已有实验结果',true);};
+ modal('实验运行方式',`<div class="mode-options"><button id="demoMode" class="${state.mode==='demo'?'selected':''}">内置样例<small>预置标注 · 真实几何计算</small></button><button id="liveMode" class="${state.mode==='live'?'selected':''}" ${!canLive?'disabled':''}>模型服务<small>${canLive?'已配置，执行时验证连通':'等待配置认知与感知服务'}</small></button></div><div class="connection-list"><div><span>认知核心</span><b>${state.status.agent_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>RemoteSAM</span><b>${state.status.sam_configured?'已配置（待调用验证）':'未连接'}</b></div><div><span>几何计算与实验存储</span><b style="color:#5d8850">本地服务可用</b></div></div><p>真实模型模式将影像发送至本地服务端配置的模型地址。API密钥不进入网页。</p><h3>连接方法</h3><p>按项目README配置GEO_AGENT_BASE_URL、GEO_AGENT_MODEL和GEO_REMOTESAM_URL，然后重启服务。配置状态不等于已通过模型测试。</p>`,'RUNTIME SETTINGS');
+ $('demoMode').onclick=()=>{state.mode='demo';localStorage.setItem('geoscope-mode','demo');updateMode();closeModal();toast('已切换到内置样例');};$('liveMode').onclick=()=>{state.mode='live';localStorage.setItem('geoscope-mode','live');updateMode();closeModal();toast('已切换到模型服务');};
  $('modalBody').insertAdjacentHTML('beforeend','<h3>服务连接检查</h3><p>工作台已接入 RemoteAgent 的规划与工具结果反馈接口，并由 Harness 校验后调用 RemoteSAM。这里只检查服务与就绪声明，不发送影像，也不证明真实推理质量。</p><button class="secondary" id="checkServices">检查服务连接</button><pre id="serviceReport" hidden></pre><p>可在项目根目录 .env 中填写配置后重启。本机访问实验室服务需具备对应网络通路。</p>');
  $('checkServices').onclick=async()=>{
   const button=$('checkServices'),box=$('serviceReport');button.disabled=true;box.hidden=false;box.textContent='正在检查，最多约十秒…';
@@ -453,7 +469,7 @@ async function connections(){
  };
 }
 $('connectionBtn').onclick=connections;
-$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope v0.7 支持从自然语言任务到遥感分割结果的完整实验流程。</p><h3>建议体验顺序</h3><p>选择影像 → 框选研究区 → 选择自动、稳定整图或飞机细节增强模式 → 提取目标 → 查看候选区域与统计 → 下载实验报告。也可用“批量实验”处理多张影像。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、Harness校验、RemoteSAM分割、确定性几何统计、结果复核、上下文继承、版本恢复、批量运行和产物导出。</p><h3>当前边界</h3><p>飞机细节增强模式只在固定飞机诊断集上完成验证；其他目标会自动采用稳定整图模式。演示模式使用预置标注，不代表真实模型精度；模型模式需要实际服务连通。候选区域按最终范围内的蒙版计算。像素面积不是地理面积，验证检查也不等于语义或边界正确。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
+$('aboutBtn').onclick=()=>modal('让一个问题，成为可复查的实验',`<p>观域 GeoScope v0.7 支持从自然语言任务到遥感分割结果的完整实验流程。</p><h3>建议体验顺序</h3><p>选择影像 → 框选研究区 → 选择自动、稳定整图或飞机细节增强模式 → 提取目标 → 查看候选区域与统计 → 查看报告。也可用“多影像分析”处理多张影像。</p><h3>目前已经能做什么</h3><p>真实影像上传、RemoteAgent任务规划、Harness校验、RemoteSAM分割、确定性几何统计、结果复核、上下文继承、版本恢复、批量运行和产物导出。</p><h3>当前边界</h3><p>飞机细节增强模式只在固定飞机诊断集上完成验证；其他目标会自动采用稳定整图模式。内置样例使用预置标注，不代表真实模型精度；模型模式需要实际服务连通。候选区域按最终范围内的蒙版计算。像素面积不是地理面积，验证检查也不等于语义或边界正确。</p><p>实验文件保存在本机experiments目录。刷新页面或重启服务后可恢复实验，也可从历史记录重新打开。</p>`,'ABOUT THE PROTOTYPE');
 
 async function init(){
  try{

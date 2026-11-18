@@ -23,3 +23,7 @@
 实际热重启遇到端口释放/ TIME_WAIT 窗口，服务管理检查增加 SO_REUSEADDR 与有限等待；仍拒绝接管他人监听端口。新增已完成 TCP 连接后的重启用例，生命周期测试只清理自己创建的子进程。服务继续在服务器 GPU0 运行。
 
 证据：docs/evidence/server/ship_reference_result.json、ship_bottommost_overlay.png、ship_reference_workbench.png、retrieval_redesign_checks.json、retrieval_redesign_desktop.png、retrieval_redesign_mobile.png。最新完整测试日志为 tests_server_all.txt；早期日志保留用于审计。
+
+## 与最新工作台集成
+
+已同步 main 56ed5a8，保留 AFR 入口、算法标签和动态工具面板。普通页与科研页的桌面/手机检索均通过真实 Chrome 验收；同时修复普通页手机导航隐藏检索入口的问题。普通页工具面板真实调用研究区统计成功，版本对照、分歧图和含 AFR 诊断附件的导出均通过。最新完整回归为 168 项全部通过（25.160 秒，无跳过）。

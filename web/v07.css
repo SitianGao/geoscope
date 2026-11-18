@@ -36,9 +36,12 @@
 .roi-toolbar button.selected{background:#e6f2e7;border-color:#8db598}
 .roi-toolbar span{margin-left:auto;color:#899989;font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #imageCanvas.roi-drawing{cursor:crosshair;outline:2px solid #edbb58}
-.artifact-actions{grid-template-columns:minmax(0,1fr) auto auto;gap:7px}
-.artifact-actions .secondary{margin:0;padding:7px 9px;font-size:9px}
-.artifact-actions .text-button{margin:0;width:auto;white-space:nowrap}
+.artifact-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.algo-tag{display:inline-flex;align-items:center;margin-top:6px;padding:3px 8px;border-radius:5px;font:600 9px/1.2 var(--mono);letter-spacing:.5px;background:#e8f2ea;color:#2b6350}
+.algo-tag.warn{background:#fbf3e2;color:#8a672c}
+.artifact-actions .primary,.artifact-actions .secondary{margin:0;padding:0 18px;height:40px;min-height:40px;font-size:11px;line-height:1;border-radius:8px;border:1px solid #a9c4b5;background:#fff;color:#2f6350;justify-content:center;width:auto;flex:0 0 auto;box-shadow:none}
+.artifact-actions .primary:hover,.artifact-actions .secondary:hover{background:#eff5f0;border-color:#7ba593}
+.artifact-actions .text-button{margin:0 0 0 auto;width:auto;white-space:nowrap;padding:6px 0}
 .batch-selector{max-height:220px;overflow:auto;border:1px solid #e5ebe2;border-radius:8px;margin:10px 0}
 .batch-selector label{display:flex;gap:10px;align-items:center;padding:9px 11px;border-bottom:1px solid #edf1eb;cursor:pointer}
 .batch-selector label:last-child{border-bottom:0}

@@ -17,5 +17,43 @@
     "probability_map.png",
     "disagreement.png"
   ],
-  "page_errors": []
+  "page_errors": [],
+  "afr_entry_available": true,
+  "normal_page_registry_call": {
+    "success": true,
+    "request_id": "db5aab2cfdb7405c9175cd9a890a8ba0",
+    "image_id": "2b2acb90b45d",
+    "result_id": "37cfda0a9fc3",
+    "status": "completed",
+    "data": {
+      "target_pixels_in_scope": 3757682,
+      "image_pixels": 16000000,
+      "scope_pixels": 16000000,
+      "ratio_of_full_image": 0.234855125,
+      "ratio_within_scope": 0.234855125,
+      "scope": "all",
+      "roi": null,
+      "width": 4000,
+      "height": 4000,
+      "unit": "pixel",
+      "mask_hash": "b3b8841fffe510107c6ab998f789345a695d9026b547e41f1180c22120d85c92",
+      "coordinate_rule": "original pixels, xyxy half-open; odd remainder belongs to right/bottom",
+      "image_id": "2b2acb90b45d",
+      "result_id": "37cfda0a9fc3",
+      "target": "aircraft",
+      "full_mask_sha256": "3e7149db7d10479cdb24f411b4c7e6e77a00e4c067d29be6110508efd2940a66",
+      "image_sha256": "17b8f6365e352b523ea77dfaf7dba849ea401d430e4d6ebac14bd3b15539dec2",
+      "model_execution": true,
+      "source_mode": "live",
+      "mask_basis": "saved_final_mask",
+      "saved_scope": "all",
+      "saved_roi": null
+    },
+    "error": null,
+    "meta": {
+      "source": "geoscope_tool",
+      "tool_version": "national-v1",
+      "real_execution": true
+    }
+  }
 }

@@ -1,6 +1,3 @@
-#workbenchSwitch { text-decoration: none; }
-#workbenchSwitch:hover { color: #285843; }
-
 .national-workbench {
     --research-ink: #183c32;
     --research-muted: #4d665c;
@@ -8,8 +5,6 @@
     --research-surface: #f3f8f4;
     color: var(--research-ink);
 }
-.national-workbench .hero-copy { border-color: #2d8067; }
-.national-workbench .page-heading h1 { margin-top: 0; }
 .national-workbench .top-nav button { color: var(--research-muted); }
 .national-workbench .top-nav button.active { color: #175742; }
 .national-workbench .image-heading, .national-workbench .roi-toolbar { flex-wrap: wrap; }
@@ -66,9 +61,9 @@
 .national-state.failed, .national-state.rejected { color: #923c2c; background: #f9e5df; }
 .national-state.waiting, .national-state.needs_clarification, .national-state.warning { color: #765b28; background: #fcf0d8; }
 
-.national-workbench dialog:has(.national-dialog) { width: min(780px, calc(100vw - 26px)); max-width: none; max-height: 94dvh; }
-.national-workbench dialog:has(.national-wide) { width: min(1160px, calc(100vw - 26px)); }
-.national-workbench dialog:has(.national-wide) #modalBody { max-height: 78vh; }
+dialog:has(.national-dialog) { --research-ink: #183c32; --research-muted: #4d665c; --research-line: #dce7e0; --research-surface: #f3f8f4; width: min(780px, calc(100vw - 26px)); max-width: none; max-height: 94dvh; }
+dialog:has(.national-wide) { width: min(1160px, calc(100vw - 26px)); }
+dialog:has(.national-wide) #modalBody { max-height: 78vh; }
 .national-dialog { color: var(--research-ink); font-size: 13px; }
 .national-dialog p { color: var(--research-muted); overflow-wrap: anywhere; }
 .national-dialog .national-context { margin-bottom: 13px; }
@@ -166,8 +161,8 @@
 .retrieval-score strong { color: #2f6550; font: 500 19px/1.4 var(--mono); font-variant-numeric: tabular-nums; }
 .national-search-hits article button { width: 100%; display: flex; align-items: center; justify-content: space-between; min-height: 39px; margin-top: 5px; border-color: #d5e3da; border-radius: 7px; background: #f5f9f5; color: #2e604a; font-size: 12px; }
 .national-search-hits article button:hover { background: #e9f2eb; border-color: #97b59f; }
-.national-workbench dialog:has(.national-retrieval) { width: min(980px, calc(100vw - 32px)); }
-.national-workbench dialog:has(.national-retrieval) #modalBody { max-height: calc(100dvh - 185px); }
+dialog:has(.national-retrieval) { width: min(980px, calc(100vw - 32px)); }
+dialog:has(.national-retrieval) #modalBody { max-height: calc(100dvh - 185px); }
 .national-retrieval .retrieval-intro { margin: 0 0 18px !important; line-height: 1.6; color: #718077; }
 .national-retrieval #nationalSearchForm { grid-template-columns: minmax(0, 1fr) 112px 108px; gap: 12px; }
 .national-retrieval #nationalSearchForm label { font-size: 11px; color: #718077; gap: 7px; }
@@ -229,9 +224,47 @@
     .national-search-hits { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .national-retrieval #nationalSearchForm { grid-template-columns: minmax(0, 1fr) 90px; }
     .national-retrieval #nationalSearchSubmit { grid-column: 1 / -1; }
-    .national-workbench dialog:has(.national-retrieval) { padding: 19px; }
+    dialog:has(.national-retrieval) { padding: 19px; }
 }
 @media (max-width: 440px) {
     .national-search-hits { grid-template-columns: minmax(0, 1fr); }
     .retrieval-preview { aspect-ratio: 16 / 9; }
+}
+/* 工具能力面板：卡片、参数标签与调用表单（基础页与科研页共用） */
+.tool-cards { display: grid; gap: 10px; margin-top: 12px; }
+.tool-card { border: 1px solid #e2ebe0; border-radius: 10px; padding: 12px; background: #fff; }
+.tool-card.off { background: #fafbf9; }
+.tool-card header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.tool-card header strong { font-size: 12px; color: #1f3d33; }
+.tool-card header code { font: 9px var(--mono); color: #8b9c88; margin-left: 8px; }
+.tool-badge { font-size: 9px; padding: 2px 7px; border-radius: 999px; background: #e8f2ea; color: #2b6350; white-space: nowrap; }
+.tool-card.off .tool-badge { background: #f1f1ee; color: #8a8f8a; }
+.tool-hint { font-size: 10px; color: #61786c; margin-top: 6px; line-height: 1.6; }
+.tool-reason { font-size: 10px; color: #8a672c; margin-top: 6px; line-height: 1.6; }
+.tool-params { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+.tool-param { font: 9px var(--mono); color: #6b7a6f; background: #f3f7f2; border: 1px solid #e2ebe0; border-radius: 4px; padding: 2px 5px; }
+.tool-param.req { color: #2b6350; border-color: #bcd4c4; }
+.tool-form-wrap { margin-top: 10px; border-top: 1px solid #e2ebe0; padding-top: 8px; }
+.tool-form-wrap > summary { cursor: pointer; font-size: 10px; color: #2f6350; }
+.tool-form { display: grid; gap: 8px; margin-top: 8px; }
+.tool-context { font-size: 9px; color: #7b8d80; line-height: 1.6; }
+.tool-context code { font-family: var(--mono); }
+.tool-field { display: flex; flex-direction: column; gap: 3px; font-size: 10px; color: #4f715b; }
+.tool-field select, .tool-field input { border: 1px solid #dce8de; border-radius: 6px; padding: 5px 7px; font-size: 10px; background: #fff; color: #33513f; }
+.tool-actions { display: flex; }
+.tool-actions .primary { padding: 7px 14px; font-size: 10px; height: auto; }
+.tool-result { margin-top: 8px; border-top: 1px dashed #e2ebe0; padding-top: 8px; }
+.tool-metrics { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; margin: 0; }
+.tool-metrics dt { font-size: 9px; color: #8b9c88; }
+.tool-metrics dd { margin: 0; font: 600 11px var(--mono); color: #2b6350; }
+.tool-json { max-height: 220px; overflow: auto; font: 9px/1.5 var(--mono); background: #f7f9f5; border: 1px solid #e2ebe0; border-radius: 6px; padding: 8px; margin-top: 6px; }
+.tool-error { font-size: 10px; color: #a4543f; }
+.tool-note { font-size: 10px; color: #2b6350; margin-bottom: 6px; }
+.tool-note code { font-family: var(--mono); }
+
+/* Keep the common semantic search entry reachable on small screens. */
+@media (max-width: 760px) {
+    .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding-block: 8px; }
+    .top-nav { display: flex; order: 3; width: 100%; margin: 0; overflow: auto; white-space: nowrap; }
+    .top-nav button { flex-shrink: 0; }
 }

@@ -93,28 +93,28 @@ test_missing_and_non_finite_values_are_ignored (test_national_ablation.MeanMetri
 test_missing_input_becomes_failure_row (test_national_ablation.RowIsolationTests) ... ok
 test_empty_rule_and_dimensions (test_national_compare.CompareTests) ... ok
 test_recomputable_diff (test_national_compare.CompareTests) ... ok
-test_afr_artifacts_and_missing_live_services (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:19:34] "GET /experiments/19b6990c992a/fd1ad5e1acb5/disagreement.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:34] "GET /experiments/19b6990c992a/fd1ad5e1acb5/probability_map.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:34] "GET /api/export/19b6990c992a/fd1ad5e1acb5 HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:34] "POST /api/national/tools/adaptive-refinement HTTP/1.1" 503 -
+test_afr_artifacts_and_missing_live_services (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:57:13] "GET /experiments/565bd14499a1/42539a12495c/disagreement.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "GET /experiments/565bd14499a1/42539a12495c/probability_map.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "GET /api/export/565bd14499a1/42539a12495c HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/tools/adaptive-refinement HTTP/1.1" 503 -
 ok
-test_errors_are_structured_and_clip_is_not_faked (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:19:35] "GET /api/national/retrieval/status HTTP/1.1" 503 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/retrieval/search HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/tools/shell HTTP/1.1" 400 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "GET /api/national/tools/registry HTTP/1.1" 200 -
+test_errors_are_structured_and_clip_is_not_faked (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:57:13] "GET /api/national/retrieval/status HTTP/1.1" 503 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/retrieval/search HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "POST /api/national/tools/shell HTTP/1.1" 400 -
+127.0.0.1 - - [18/Nov/2026 14:57:13] "GET /api/national/tools/registry HTTP/1.1" 200 -
 ok
-test_legacy_upload_run_export_and_new_plan (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/session HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/run HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/tools/region-statistics HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "GET /api/national/artifacts/0e78e1e00e1b64efefcadff280b26c47573f6b85aa1a36b6d7773abfbc2088f9.png HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "POST /api/national/plans/execute HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "GET /api/session/8bfd7d66ded6 HTTP/1.1" 200 -
-127.0.0.1 - - [18/Nov/2026 14:19:35] "GET /api/export/8bfd7d66ded6/5cfcbbb28de9 HTTP/1.1" 200 -
+test_legacy_upload_run_export_and_new_plan (test_national_http.NationalHTTPTests) ... 127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/session HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/run HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/national/tools/region-statistics HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "GET /api/national/artifacts/0e78e1e00e1b64efefcadff280b26c47573f6b85aa1a36b6d7773abfbc2088f9.png HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/national/tools/mask-compare HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "POST /api/national/plans/execute HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "GET /api/session/9103345b59f1 HTTP/1.1" 200 -
+127.0.0.1 - - [18/Nov/2026 14:57:14] "GET /api/export/9103345b59f1/853908e56edf HTTP/1.1" 200 -
 ok
 test_actual_saved_artifacts_and_repeat (test_national_planner.PlannerTests) ... ok
 test_different_image_comparison_rejected (test_national_planner.PlannerTests) ... ok
@@ -202,6 +202,6 @@ test_service_probe_does_not_infer_and_requires_true_readiness (test_workbench_in
 test_unknown_revision_and_force_do_not_reuse (test_workbench_integration.IntegrationTests) ... ok
 
 ----------------------------------------------------------------------
-Ran 168 tests in 25.168s
+Ran 168 tests in 25.160s
 
 OK

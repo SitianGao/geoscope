@@ -9,10 +9,12 @@ def main():
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path='/usr/bin/google-chrome', headless=True, args=['--no-sandbox'])
         try:
-            for width, height, name in [(1733, 897, 'desktop'), (390, 844, 'mobile')]:
+            for width, height, name, suffix in [(1733, 897, 'desktop', '?workbench=national'),
+                    (390, 844, 'mobile', '?workbench=national'),
+                    (1733, 897, 'base_desktop', ''), (390, 844, 'base_mobile', '')]:
                 page = browser.new_page(viewport={'width': width, 'height': height})
                 errors = []; page.on('pageerror', lambda error: errors.append(str(error)))
-                page.goto('http://127.0.0.1:4180/?workbench=national')
+                page.goto('http://127.0.0.1:4180/' + suffix)
                 page.wait_for_function("typeof state !== 'undefined' && state.session && state.original && !document.querySelector('#modal').open")
                 page.locator('#nationalRetrieval').click()
                 page.wait_for_function("document.querySelector('#nationalSearchStatus').textContent.includes('检索就绪')")
@@ -35,7 +37,7 @@ def main():
                     contentOverflow:document.querySelector('#modalBody').scrollHeight-document.querySelector('#modalBody').clientHeight,
                     buttons:[...document.querySelectorAll('#nationalSearchHits article button')].map(el=>el.getBoundingClientRect().bottom)})""")
                 assert layout['pageOverflow'] <= 1 and layout['dialogOverflow'] <= 1, layout
-                if name == 'desktop':
+                if name.endswith('desktop'):
                     assert max(layout['buttons'])-min(layout['buttons']) <= 1, layout
                     assert layout['contentOverflow'] <= 2, layout
                 page.screenshot(path=str(output/('retrieval_redesign_'+name+'.png')))
@@ -61,6 +63,11 @@ def main():
             page.wait_for_function("document.querySelector('#resultTitle').textContent.includes('最下方的船舶')")
             assert '全图' not in page.locator('#resultTitle').inner_text()
             assert page.locator('#scopeValue').inner_text() == '单目标指代'
+            assert page.locator('#legendScope').inner_text() == '单目标指代'
+            page.evaluate('() => showReviewAdjustments(state.selected)')
+            assert page.locator('#reviewAdjustments [data-quality=fast]').get_attribute('data-prompt') == '重新提取最下方的船舶'
+            assert page.locator('#reviewAdjustments [data-prompt]').last.get_attribute('data-prompt') == '提取全图船舶'
+            page.locator('#reviewAdjustments').evaluate('el => el.hidden=true')
             page.screenshot(path=str(output/'ship_reference_workbench.png'))
         finally: browser.close()
     (output/'retrieval_redesign_checks.json').write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding='utf-8')

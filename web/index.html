@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>观域 GeoScope · 遥感智能分析系统</title><link rel="stylesheet" href="styles.css?v=0.9.1"><link rel="stylesheet" href="competition.css?v=0.9.1"><link rel="stylesheet" href="v07.css?v=0.9.1"><link rel="stylesheet" href="national.css?v=0.9.1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>观域 GeoScope · 遥感智能分析系统</title><link rel="stylesheet" href="styles.css?v=0.9.3"><link rel="stylesheet" href="competition.css?v=0.9.3"><link rel="stylesheet" href="v07.css?v=0.9.3"><link rel="stylesheet" href="national.css?v=0.9.3"></head>
 <body>
 <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg"><defs>
 <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
@@ -36,7 +36,7 @@
         <div class="composer-wrap"><div class="context-chip" id="contextChip" hidden><span class="status-dot"></span><span></span></div><div class="quality-control"><label for="qualityMode">执行模式</label><select id="qualityMode"><option value="auto">自动（按当前目标选择）</option><option value="fast">目标稳定整图</option></select></div><form id="taskForm"><label for="query" class="sr-only">实验任务</label><textarea id="query" placeholder="描述你的实验目标…" rows="3" maxlength="1800"></textarea><div class="composer-footer"><span><kbd>Enter</kbd> 发送 · Shift 换行</span><button id="sendBtn" type="submit" aria-label="执行任务"><svg><use href="#i-arrow"/></svg></button></div></form><p class="composer-note" id="composerNote">当前使用内置样例，未调用模型</p></div>
       </section>
       <section class="panel image-panel" aria-label="影像分析">
-        <div class="panel-heading image-heading"><div><span class="step-number">2</span><h2>查看像素级结果</h2></div><div class="view-tabs" role="group" aria-label="显示模式"><button data-view="original" class="selected">原图</button><button data-view="overlay">叠加</button><button data-view="mask">蒙版</button><button data-view="compare">对比</button></div></div>
+        <div class="panel-heading image-heading"><div><span class="step-number">2</span><h2>查看像素级结果</h2></div><div class="view-tabs" role="group" aria-label="显示模式"><button data-view="original" class="selected">原图</button><button data-view="overlay">叠加</button><button data-view="mask">蒙版</button><button data-view="probability" id="viewProbability" hidden>概率图</button><button data-view="compare">对比</button></div></div>
         <div class="roi-toolbar"><button id="drawRoiBtn" type="button">框选研究区</button><button id="clearRoiBtn" type="button" disabled>清除框选</button><button id="nationalCompare" type="button" hidden>版本对照</button><span id="roiLabel">未设置矩形研究区</span></div>
         <div class="image-stage" id="imageStage"><div class="stage-grid"></div><div class="canvas-shell" id="canvasShell"><canvas id="imageCanvas" width="800" height="600" aria-label="当前影像与目标区域可视化"></canvas></div><div class="image-corner"><span class="live-bracket"></span><span id="stageLabel"></span></div><div class="north-arrow" title="影像坐标上方，非地理北向">Y−<span>↑</span></div><div class="image-watermark" id="imageWatermark"></div><div class="busy-overlay" id="busyOverlay" hidden><span class="spinner"></span><strong>正在执行实验</strong><span>等待实际工具返回结果…</span></div><div class="zoom-controls"><button id="zoomOut" aria-label="缩小">−</button><span id="zoomLabel">100%</span><button id="zoomIn" aria-label="放大">＋</button><i></i><button id="fitBtn" aria-label="适应画布"><svg><use href="#i-fit"/></svg></button></div><div class="legend" id="legend"><span></span><b>目标区域</b><i id="legendScope">暂无提取结果</i></div></div>
         <div class="image-footer"><span id="coordinateLabel">800 × 600 px</span><div class="opacity-control"><label for="opacity">叠加透明度</label><input id="opacity" type="range" min="10" max="90" value="48"><span id="opacityValue">48%</span></div></div>
@@ -60,6 +60,6 @@
 </div>
 <dialog id="modal"><div class="modal-header"><div><span class="eyebrow" id="modalEyebrow">GEOSCOPE LAB</span><h2 id="modalTitle"></h2></div><button id="closeModal" class="icon-button" aria-label="关闭"><svg><use href="#i-x"/></svg></button></div><div id="modalBody"></div></dialog>
 <div id="toast" role="status" hidden></div>
-<script src="app.js?v=0.9.1"></script>
-<script src="national.js?v=0.9.1"></script>
+<script src="app.js?v=0.9.3"></script>
+<script src="national.js?v=0.9.3"></script>
 </body></html>

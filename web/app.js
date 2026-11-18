@@ -1,5 +1,5 @@
 const $ = id => document.getElementById(id);
-const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0,
+const state = { session:null, selected:null, last:null, original:null, mask:null, probability:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0,
  roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false,batch:null };
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
 const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强',adaptive:'GeoScope-AFR 自适应推理'};
@@ -44,7 +44,7 @@ const icon = name => `<svg><use href="#i-${name}"/></svg>`;
 const intro = $('chat').innerHTML;
 let toastTimer;
 function toast(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,3800);}
-async function api(path,payload){const response=await fetch(path,payload?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{});const data=await response.json();if(!response.ok)throw new Error(data.error||'请求失败');return data;}
+async function api(path,payload){const response=await fetch(path,payload?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}:{});const data=await response.json().catch(()=>null);if(!response.ok){const message=typeof data?.error==='string'?data.error:(data?.error?.message||data?.message||('请求失败（HTTP '+response.status+'）'));throw new Error(message);}return data??{};}
 function loadImage(url){return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=()=>reject(new Error('影像加载失败'));image.src=url;});}
 function modal(title,html,eyebrow='GEOSCOPE LAB'){$('modalTitle').textContent=title;$('modalEyebrow').textContent=eyebrow;$('modalBody').innerHTML=html;if(!$('modal').open)$('modal').showModal();}
 function closeModal(){$('modal').close();}
@@ -62,7 +62,7 @@ async function newExperiment(sample='urban',image=null,name=null){
 
 async function showSession(session){
   const original=await loadImage(session.image_url);
-  state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,view:'original',zoom:1,roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false});
+  state.loadToken++;Object.assign(state,{session,original,selected:null,last:null,mask:null,probability:null,view:'original',zoom:1,roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false});$('viewProbability').hidden=true;
   // Keep the header and the next action consistent with the experiment that
   // the user just opened. The mode can still be changed explicitly afterward.
   if(session.runs.length){state.mode=session.runs.at(-1).mode;localStorage.setItem('geoscope-mode',state.mode);}
@@ -104,7 +104,7 @@ function publishWorkbenchResult(run=null,error=null){
 }
 function resetMetrics(){
  $('answerCard').hidden=true;$('reviewCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
- $('resultEyebrow').textContent='COVERAGE ANALYSIS';
+ $('resultEyebrow').textContent='COVERAGE ANALYSIS';$('viewProbability').hidden=true;state.probability=null;
  $('ratioValue').textContent='—';$('areaValue').innerHTML='— <small>px</small>';$('scopeValue').textContent='—';$('timeValue').textContent='—';$('candidateValue').textContent='—';$('qualityValue').textContent='—';
  $('totalValue').textContent=number(state.session?.width*state.session?.height||0);$('resultTitle').textContent='等待目标提取';$('resultSubtitle').textContent='运行一条任务，结果将在这里呈现';$('algoTag').hidden=true;
  $('resultStatus').textContent='准备就绪';$('resultStatus').className='result-badge';$('coverageBar').style.width='0%';$('ringValue').setAttribute('stroke-dasharray','0 164');
@@ -161,6 +161,7 @@ function draw(){
  const canvas=$('imageCanvas'),ctx=canvas.getContext('2d'),w=state.original.naturalWidth,h=state.original.naturalHeight;
  canvas.width=w;canvas.height=h;
  ctx.drawImage(state.original,0,0);
+ if(state.view==='probability'&&state.probability){ctx.drawImage(state.probability,0,0,w,h);}
  if(state.mask){
   const maskCanvas=document.createElement('canvas');maskCanvas.width=w;maskCanvas.height=h;const m=maskCanvas.getContext('2d',{willReadFrequently:true});m.drawImage(state.mask,0,0,w,h);
   if(state.view==='mask'){ctx.drawImage(state.mask,0,0,w,h);}
@@ -173,7 +174,7 @@ function draw(){
    ctx.drawImage(maskCanvas,0,0);ctx.restore();
    if(state.view==='compare'){ctx.strokeStyle='#f4faef';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(split,0);ctx.lineTo(split,h);ctx.stroke();}
   }
-  if(state.view!=='original'&&state.view!=='mask'){
+  if(state.view!=='original'&&state.view!=='mask'&&state.view!=='probability'){
    const side=state.selected?.task?.side;
    if(side&&side!=='all'){ctx.save();ctx.setLineDash([7,7]);ctx.strokeStyle='#effbd8bb';ctx.lineWidth=1.5;ctx.beginPath();if(side==='left'||side==='right'){ctx.moveTo(w/2,0);ctx.lineTo(w/2,h);}else{ctx.moveTo(0,h/2);ctx.lineTo(w,h/2);}ctx.stroke();ctx.restore();}
   }
@@ -189,7 +190,10 @@ function draw(){
  $('imageWatermark').textContent=state.selected?.mode==='demo'&&state.view!=='original'?'PRESET ANNOTATION · NOT MODEL OUTPUT':'';
 }
 function syncView(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('selected',b.dataset.view===state.view));$('compareControl').hidden=state.view!=='compare';}
-function view(mode){if(mode!=='original'&&!state.mask)return toast('请先运行提取任务，再查看蒙版或对比');state.view=mode;draw();syncView();}
+function view(mode){
+ if(mode==='probability'){if(!state.probability)return toast('当前结果没有概率图');state.view=mode;draw();syncView();return;}
+ if(mode!=='original'&&!state.mask)return toast('请先运行提取任务，再查看蒙版或对比');state.view=mode;draw();syncView();
+}
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view(b.dataset.view));
 $('opacity').oninput=()=>{$('opacityValue').textContent=$('opacity').value+'%';draw();};$('compareSlider').oninput=draw;
 $('zoomIn').onclick=()=>{state.zoom=Math.min(3,state.zoom+.25);draw();};$('zoomOut').onclick=()=>{state.zoom=Math.max(.5,state.zoom-.25);draw();};$('fitBtn').onclick=()=>{state.zoom=1;draw();};
@@ -296,6 +300,9 @@ async function selectRun(run){
   $('answerCard').hidden=true;$('coverageCard').hidden=false;$('metricsPanel').hidden=false;$('checksPanel').hidden=false;
   $('resultEyebrow').textContent='COVERAGE ANALYSIS';
   state.selected=run;state.mask=mask;state.view='overlay';const m=run.metrics,ratio=m.area_ratio*100;
+  const probabilityUrl=run.afr?.probability_map_ref||null;
+  state.probability=null;$('viewProbability').hidden=!probabilityUrl;
+  if(probabilityUrl){try{state.probability=await loadImage(probabilityUrl);}catch(e){state.probability=null;$('viewProbability').hidden=true;}}
   state.roi=run.task?.roi||null;state.roiClear=false;state.roiDrawing=false;state.roiDraft=null;
   syncTargetUi(run.task?.target,run.task?.quality_mode||'auto');updateRoiUI();
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);

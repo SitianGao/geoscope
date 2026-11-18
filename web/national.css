@@ -261,6 +261,16 @@ dialog:has(.national-retrieval) #modalBody { max-height: calc(100dvh - 185px); }
 .tool-error { font-size: 10px; color: #a4543f; }
 .tool-note { font-size: 10px; color: #2b6350; margin-bottom: 6px; }
 .tool-note code { font-family: var(--mono); }
+.tool-steps { display: grid; gap: 4px; }
+.tool-check { display: flex; align-items: center; gap: 6px; font: 9px var(--mono); color: #4f715b; }
+.tool-check input { accent-color: #39785e; }
+.tool-steps-list { margin: 0; padding-left: 18px; font-size: 10px; color: #4f715b; }
+.tool-steps-list li { margin: 3px 0; }
+.tool-steps-list b { font: 9px var(--mono); color: #2b6350; margin-right: 4px; }
+.plan-card { border-color: #cfdcd4; }
+.national-diff { margin: 10px 0 0; }
+.national-diff img { max-width: 100%; border: 1px solid #e2ebe0; border-radius: 8px; image-rendering: pixelated; }
+.national-diff figcaption { font-size: 9px; color: #8b9c88; margin-top: 5px; }
 
 /* Keep the common semantic search entry reachable on small screens. */
 @media (max-width: 760px) {

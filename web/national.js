@@ -303,15 +303,15 @@
             let value = element.value.trim();
             if (!value) return;
             if (element.type === 'number') value = Number(value);
-            if (key === 'roi') value = value.split(/[^0-9.-]+/).filter(Boolean).map(Number).filter(Number.isFinite);
-            args[key] = value;
+            if (key === 'roi') value = value.split(/[^0-9.-]+/).filter(Boolean).map(Number).filter(Number.isFinite);            args[key] = value;
         });
         return args;
     }
 
     function renderToolResult(box, data) {
         const scalars = Object.entries(data).filter(([, value]) =>
-            value === null || ['string', 'number', 'boolean'].includes(typeof value));
+            value === null || typeof value === 'number' || typeof value === 'boolean' ||
+            (typeof value === 'string' && value.length <= 80));
         const metrics = scalars.slice(0, 14).map(([key, value]) =>
             '<div><dt>' + escape(key) + '</dt><dd>' + escape(String(value)) + '</dd></div>').join('');
         box.innerHTML = (metrics ? '<dl class="tool-metrics">' + metrics + '</dl>' : '') +
@@ -335,7 +335,7 @@
                     missingFields.map(key => escape(FIELD_LABELS[key] || key)).join('、') + '</p>';
                 return;
             }
-            if (args.scope === 'roi' && (!Array.isArray(args.roi) || args.roi.length !== 4)) {
+            if (args.scope === 'roi' && (!Array.isArray(args.roi) || args.roi.length !== 4 || !args.roi.every(Number.isInteger))) {
                 out.hidden = false;
                 out.innerHTML = '<p class="tool-error">矩形研究区需要 4 个整数：x1,y1,x2,y2</p>';
                 return;
@@ -360,6 +360,87 @@
         };
     }
 
+    const PLAN_STEPS = ['get_segmentation', 'apply_scope', 'region_statistics',
+        'connected_region_analysis', 'compare_versions', 'report_generation'];
+    const PLAN_DEFAULT = ['get_segmentation', 'apply_scope', 'region_statistics', 'report_generation'];
+
+    function planSection(session, selected) {
+        const ready = Boolean(session && selected);
+        const runs = (session?.runs || []).filter(run => run.mask_url && run.id !== selected?.id);
+        const referenceOptions = runs.map(run => '<option value="' + run.id + '">V' + run.version + ' · ' +
+            escape(targetLabel(run)) + ' · ' + run.id + '</option>').join('');
+        const scopeOptions = SCOPES.map(value =>
+            '<option value="' + value + '">' + escape(SCOPE_LABELS[value]) + '</option>').join('');
+        return '<article class="tool-card plan-card"><header><div><strong>VerifiedPlan 执行器</strong>' +
+            '<code>plans/execute</code></div><span class="tool-badge">后端可用</span></header>' +
+            '<p class="tool-hint">按顺序执行一组已注册工具。get_segmentation 只加载当前选中的已有版本，不会重新分割影像。</p>' +
+            (ready
+                ? '<details class="tool-form-wrap"><summary>编辑并执行计划</summary>' +
+                  '<form class="tool-form" data-plan="1">' +
+                  '<p class="tool-context">自动带入：影像 <code>' + escape(session.id) + '</code> · 版本 <code>' +
+                  escape(selected.id) + '</code> · 目标 <code>' + escape(selected.task?.target || '—') + '</code></p>' +
+                  '<label class="tool-field"><span>计划类型</span><select data-plan-field="task">' +
+                  '<option value="region_analysis">region_analysis（单版本分析）</option>' +
+                  '<option value="region_comparison">region_comparison（两版本比较）</option></select></label>' +
+                  '<label class="tool-field"><span>分析范围</span><select data-plan-field="scope">' +
+                  scopeOptions + '</select></label>' +
+                  '<label class="tool-field"><span>基准版本（比较时必填）</span><select data-plan-field="reference_version">' +
+                  '<option value="">不指定</option>' + referenceOptions + '</select></label>' +
+                  '<div class="tool-field"><span>步骤</span><div class="tool-steps">' +
+                  PLAN_STEPS.map(step => '<label class="tool-check"><input type="checkbox" data-plan-step="' + step + '"' +
+                      (PLAN_DEFAULT.includes(step) ? ' checked' : '') + '> ' + step + '</label>').join('') +
+                  '</div></div>' +
+                  '<div class="tool-actions"><button type="submit" class="primary">执行计划</button></div>' +
+                  '<div class="tool-result" hidden></div></form></details>'
+                : '<p class="tool-reason">请先在当前影像上运行一次提取，得到结果版本后再编排计划。</p>') +
+            '</article>';
+    }
+
+    function bindPlanForm(form, session, selected) {
+        const out = form.querySelector('.tool-result');
+        const button = form.querySelector('button[type="submit"]');
+        const field = name => form.querySelector('[data-plan-field="' + name + '"]').value;
+        form.onsubmit = async event => {
+            event.preventDefault();
+            const task = field('task');
+            const scope = field('scope');
+            const reference = field('reference_version');
+            const steps = [...form.querySelectorAll('[data-plan-step]:checked')].map(item => item.dataset.planStep);
+            const fail = message => {
+                out.hidden = false;
+                out.innerHTML = '<p class="tool-error">' + escape(message) + '</p>';
+            };
+            if (!steps.length) return fail('至少选择一个步骤');
+            if (task === 'region_comparison' && !reference) return fail('两版本比较需要选择基准版本');
+            if (steps.includes('compare_versions') && !reference) return fail('compare_versions 需要基准版本');
+            const payload = {task, image_id: session.id, result_id: selected.id, target: selected.task?.target, steps, scope};
+            if (reference) payload.reference_version = reference;
+            button.disabled = true;
+            out.hidden = false;
+            out.textContent = '正在执行计划…';
+            try {
+                const data = await requestNational('/plans/execute', {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+                });
+                const events = Array.isArray(data.events) ? data.events : [];
+                out.innerHTML = '<ol class="tool-steps-list">' + events.map(event => {
+                    const state = event.status === 'completed' ? '完成' : '失败';
+                    const detail = event.status === 'completed'
+                        ? (finite(event.duration_ms) ? ' · ' + Math.round(event.duration_ms) + ' ms' : '')
+                        : ' · ' + escape(event.error?.message ?? '执行失败');
+                    return '<li><b>' + event.step + '</b> ' + escape(event.tool) + ' · ' + state + detail + '</li>';
+                }).join('') + '</ol>' +
+                    (data.failed_step ? '<p class="tool-error">第 ' + data.failed_step + ' 步失败，后续步骤已停止。</p>' : '') +
+                    '<details><summary>完整响应</summary><pre class="tool-json">' +
+                    escape(JSON.stringify(data, null, 2)) + '</pre></details>';
+            } catch (error) {
+                out.innerHTML = '<p class="tool-error">' + escape(error.message) + '</p>';
+            } finally {
+                button.disabled = false;
+            }
+        };
+    }
+
     async function showToolRegistry() {
         modal('科研工具', '<p id="nationalToolStatus" role="status">正在读取后端工具注册表…</p>' +
             '<div id="nationalToolCards" class="tool-cards"></div>', '执行能力');
@@ -375,11 +456,14 @@
             const available = registry.filter(entry => entry.available === true).length;
             status.textContent = '后端共 ' + registry.length + ' 项工具，当前可用 ' + available +
                 ' 项。输入参数、必填项来自后端注册表，可直接调用。';
-            box.innerHTML = registry.map(entry => toolCard(entry, session, selected)).join('');
+            box.innerHTML = registry.map(entry => toolCard(entry, session, selected)).join('') +
+                planSection(session, selected);
             box.querySelectorAll('form[data-tool]').forEach(form => {
                 const entry = registry.find(item => item.name === form.dataset.tool);
                 if (entry) bindToolForm(form, entry, session, selected);
             });
+            const planForm = box.querySelector('form[data-plan]');
+            if (planForm) bindPlanForm(planForm, session, selected);
         } catch (error) {
             if (!active(status)) return;
             status.innerHTML = '<span class="tool-error">无法读取后端工具注册表：' + escape(error.message) +
@@ -679,6 +763,14 @@
                 const match = [...Object.entries(payload), ...fields].every(([key, value]) => reply[key] === value) &&
                     finite(reply.prediction_agreement_iou) && Math.abs(reply.prediction_agreement_iou - diff.agreement) < 1e-6;
                 output.textContent = match ? '后端统计与浏览器逐像素结果一致。' : '后端版本绑定或差异统计与当前结果不一致。';
+                const diffUrl = sameOriginUrl(reply.diff_mask_ref);
+                if (diffUrl) {
+                    if ($('nationalDiffImage')) $('nationalDiffImage').src = diffUrl;
+                    else output.insertAdjacentHTML('afterend',
+                        '<figure class="national-diff"><img id="nationalDiffImage" src="' + diffUrl +
+                        '" alt="后端差异图：红色为对照减少，绿色为对照新增">' +
+                        '<figcaption>后端差异图 · 红 = 对照减少，绿 = 对照新增</figcaption></figure>');
+                }
             } catch (error) {
                 if (active(output) && requested === comparison) output.textContent = error.message;
             } finally {
@@ -730,6 +822,7 @@
             '<div class="national-legend"><span><i class="removed"></i>琥珀色 · 整图与局部预测分歧</span></div></div><div>' +
             '<p id="diagnosticEmptyRegions" hidden>当前没有达到阈值的待复核区域。</p>' +
             '<ol id="diagnosticRegions" class="national-diagnostic-list"></ol><div class="national-controls">' +
+            '<button type="button" id="diagnosticRefine" disabled>重新精化该区域</button>' +
             '<button type="button" id="diagnosticAccept">确认该版本</button>' +
             '<button type="button" id="diagnosticAdjust">标记需要调整</button></div></div></div></section></div>', revision);
         const status = $('diagnosticStatus');
@@ -780,7 +873,24 @@
                 const button = event.target.closest('[data-region-index]');
                 if (!button) return;
                 selected = bounds[Number(button.dataset.regionIndex)].box;
+                $('diagnosticRefine').disabled = false;
                 display.locate(selected);
+            };
+            $('diagnosticRefine').onclick = async () => {
+                if (!selected || state.selected?.id !== run.id || state.busy) return;
+                $('diagnosticRefine').disabled = true;
+                status.textContent = '正在对该区域重新运行 AFR…';
+                try {
+                    const reply = await requestNational('/tools/adaptive-refinement', jsonPost({
+                        image_id: session.id, result_id: run.id,
+                        target: run.task?.target, scope: 'roi', roi: selected.map(Math.round)
+                    }));
+                    status.textContent = '已生成新的 AFR 版本 ' + reply.result_id + '，关闭本窗口后在版本栏查看。';
+                } catch (error) {
+                    status.textContent = '区域重新精化未完成 · ' + error.message;
+                } finally {
+                    $('diagnosticRefine').disabled = false;
+                }
             };
             $('diagnosticToggle').onchange = drawDiagnostic;
             $('diagnosticOpacity').oninput = drawDiagnostic;
@@ -1011,6 +1121,21 @@
         $('nationalExperimentTable').innerHTML = '<table class="national-table national-experiment-table"><thead><tr>' +
             columns.map(label => '<th scope="col">' + label + '</th>').join('') +
             '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+        const format = value => finite(value) ? Number(value).toFixed(4) : '—';
+        requestNational('/experiments').then(live => {
+            if (!active(status)) return;
+            const runs = Array.isArray(live.runs) ? live.runs : [];
+            if (!runs.length) return;
+            const body = runs.map(run => '<tr><td>' + escape(run.run) + '</td><td>' + escape(run.file) + '</td>' +
+                '<td>' + run.rows + ' / ' + run.successes + '</td>' +
+                '<td>' + format(run.metrics?.iou) + '</td><td>' + format(run.metrics?.dice) + '</td>' +
+                '<td>' + format(run.metrics?.precision) + '</td><td>' + format(run.metrics?.recall) + '</td>' +
+                '<td>' + (finite(run.metrics?.inference_ms) ? Math.round(run.metrics.inference_ms) + ' ms' : '—') + '</td></tr>').join('');
+            $('nationalExperimentTable').insertAdjacentHTML('beforeend',
+                '<p class="national-context" style="margin-top:16px">服务器逐图 CSV 实时复算 · ' + escape(live.root || '') + '</p>' +
+                '<table class="national-table"><thead><tr><th>批次</th><th>CSV</th><th>行 / 成功</th><th>IoU</th><th>Dice</th>' +
+                '<th>Precision</th><th>Recall</th><th>服务推理 / 图</th></tr></thead><tbody>' + body + '</tbody></table>');
+        }).catch(() => {});
     }
 
     // 常驻入口：这两项在任何页面都能用，不依赖 ?workbench=national

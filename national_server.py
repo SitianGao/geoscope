@@ -1,4 +1,5 @@
 """Opt-in national API; leaves server.py and the old launch command untouched."""
+import csv
 import json
 import io
 import zipfile
@@ -21,6 +22,45 @@ ROUTES = {'tools/region-statistics': 'region_statistics', 'tools/connected-regio
           'tools/mask-compare': 'mask_compare', 'tools/spatial-relations': 'spatial_relation_analysis',
           'tools/report': 'report_generation', 'tools/adaptive-refinement': 'adaptive_refinement',
           'tools/geo-measurement': 'geo_measurement'}
+EXPERIMENT_ROOT = 'evaluation/national_final/results/lab_runs'
+
+
+def _mean(rows, key):
+    values = []
+    for row in rows:
+        raw = row.get(key)
+        if raw in (None, ''):
+            continue
+        try:
+            values.append(float(raw))
+        except (TypeError, ValueError):
+            continue
+    return round(sum(values)/len(values), 6) if values else None
+
+
+def experiment_runs():
+    """Recompute per-image CSV means so the page is not limited to static archives."""
+    root = server.ROOT/EXPERIMENT_ROOT
+    runs = []
+    if not root.is_dir():
+        return runs
+    for folder in sorted(root.iterdir()):
+        results = folder/'results'
+        if not results.is_dir():
+            continue
+        for csv_file in sorted(results.glob('*.csv')):
+            try:
+                with csv_file.open(encoding='utf-8', newline='') as handle:
+                    rows = list(csv.DictReader(handle))
+            except (OSError, ValueError, csv.Error):
+                continue
+            ok = [row for row in rows if row.get('status') == 'success']
+            runs.append({'run': folder.name, 'file': csv_file.name,
+                         'rows': len(rows), 'successes': len(ok),
+                         'metrics': {'iou': _mean(ok, 'iou'), 'dice': _mean(ok, 'dice'),
+                                     'precision': _mean(ok, 'precision'), 'recall': _mean(ok, 'recall'),
+                                     'inference_ms': _mean(ok, 'service_inference_ms')}})
+    return runs
 
 
 def clip_request(path, payload=None):
@@ -120,6 +160,11 @@ class Handler(server.Handler):
                     return self.envelope(data, {'code': 'service_unavailable', 'message': data.get('error') or data.get('index_error') or 'Index not ready'}, 'not_ready')
                 return self.envelope({**data, 'model': (data.get('model_info') or {}).get('model', 'RemoteCLIP'),
                                       'index_size': data.get('image_count'), 'max_top_k': 100})
+            if route == 'experiments':
+                runs = experiment_runs()
+                return self.envelope({'runs': runs, 'root': EXPERIMENT_ROOT,
+                                      'source': 'server_csv_recompute',
+                                      'note': 'Means recomputed from the per-image CSVs on this deployment; not a live re-run.'})
             if re.fullmatch(r'artifacts/[a-f0-9]{64}\.png', route):
                 file = Backend(server).safe_path('national_artifacts', route.split('/')[-1])
                 if not file.is_file():

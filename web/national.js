@@ -77,17 +77,22 @@
 
     function metadata(run) {
         const algorithm = run.algorithm_info;
+        const afr = run.afr;
         const service = run.service_metadata;
         const describe = (name, version) => [name, version].filter(Boolean).join(' · ') || missing;
+        const algorithmLabel = afr?.status === 'completed' ? describe('GeoScope-AFR', afr.algorithm_version) :
+            describe(algorithm?.name ?? algorithm?.algorithm_id, algorithm?.version);
+        const actualMode = afr?.status === 'fallback' ? '整图模式（AFR 回退）' :
+            afr?.status === 'completed' ? 'GeoScope-AFR 自适应推理' :
+            qualityNames[run.task?.effective_quality_mode] ?? service?.quality_mode ?? missing;
         return [
             ['结果 ID', run.id],
             ['来源', outputSource(run)],
             ['模型', run.mode === 'demo' ? '未调用' : describe(
                 run.model_info?.name ?? service?.model ?? run.provenance?.perception,
                 run.model_info?.version ?? service?.service_version)],
-            ['算法 / 版本', describe(algorithm?.name ?? algorithm?.algorithm_id, algorithm?.version)],
-            ['实际模式', run.mode === 'demo' ? '预置演示' :
-                qualityNames[run.task?.effective_quality_mode] ?? service?.quality_mode ?? missing],
+            ['算法 / 版本', algorithmLabel],
+            ['实际模式', run.mode === 'demo' ? '预置演示' : actualMode],
             ['执行耗时', ms(run.duration_ms)]
         ];
     }
@@ -265,8 +270,8 @@
         return image;
     }
 
-    async function readMask(run, session) {
-        const image = await loadAligned(run.mask_url, session);
+    async function readMask(url, session) {
+        const image = await loadAligned(url, session);
         const canvas = document.createElement('canvas');
         const ctx = contextFor(canvas, session);
         const {width, height} = canvas;
@@ -278,13 +283,28 @@
             for (let i = 0, offset = y * width; i < data.length; i += 4, offset++) {
                 const value = data[i];
                 if ((value !== 0 && value !== 255) || data[i + 1] !== value || data[i + 2] !== value || data[i + 3] !== 255) {
-                    throw new Error('比较要求 0/255 不透明二值蒙版，当前有效像素编码不符。');
+                    throw new Error('要求 0/255 不透明二值蒙版，当前像素编码不符。');
                 }
                 mask[offset] = value / 255;
             }
         }
         canvas.width = 0;
         return {mask, image};
+    }
+
+    function maskOverlay(mask, color, session) {
+        const layer = document.createElement('canvas');
+        const ctx = contextFor(layer, session);
+        const {width, height} = layer;
+        const stripHeight = Math.max(1, Math.floor(262144 / width));
+        for (let y = 0; y < height; y += stripHeight) {
+            const data = ctx.createImageData(width, Math.min(stripHeight, height - y));
+            for (let i = 0, offset = y * width; i < data.data.length; i += 4, offset++) {
+                if (mask[offset]) data.data.set(color, i);
+            }
+            ctx.putImageData(data, 0, y);
+        }
+        return layer;
     }
 
     function compareMasks(base, target, session) {
@@ -431,18 +451,6 @@
             }[mode] ?? '';
         }
 
-        function overlayFor(mask, color) {
-            const layer = document.createElement('canvas');
-            const layerContext = contextFor(layer, session);
-            const data = layerContext.createImageData(layer.width, layer.height);
-            for (let i = 0; i < mask.length; i++) {
-                if (!mask[i]) continue;
-                data.data.set(color, i * 4);
-            }
-            layerContext.putImageData(data, 0, 0);
-            return layer;
-        }
-
         async function loadComparison() {
             const current = ++revision;
             body.hidden = true;
@@ -463,10 +471,12 @@
             }
             status.textContent = '正在读取两版二值蒙版…';
             try {
-                const [baseMask, targetMask] = await Promise.all([readMask(baseRun, session), readMask(targetRun, session)]);
+                const [baseMask, targetMask] = await Promise.all([
+                    readMask(baseRun.mask_url, session), readMask(targetRun.mask_url, session)
+                ]);
                 if (!active(status) || current !== revision || state.session !== session) return;
-                baseMask.overlay = overlayFor(baseMask.mask, [133, 176, 255, 255]);
-                targetMask.overlay = overlayFor(targetMask.mask, [42, 224, 164, 255]);
+                baseMask.overlay = maskOverlay(baseMask.mask, [133, 176, 255, 255], session);
+                targetMask.overlay = maskOverlay(targetMask.mask, [42, 224, 164, 255], session);
                 const diff = compareMasks(baseMask, targetMask, session);
                 comparison = {baseMask, targetMask, diff, baseRun, targetRun};
                 $('nationalCompareMeta').innerHTML = [baseRun, targetRun].map((run, i) =>
@@ -527,30 +537,55 @@
     }
 
     async function showDiagnostics(run) {
-        const diagnostic = run.diagnostics;
         const session = state.session;
-        const aligned = diagnostic?.image_id === session.id && diagnostic?.result_id === run.id;
-        if (!aligned || diagnostic.status !== 'completed' || !diagnostic.overlay_url) {
-            modal('预测分歧与人工复核', '<p role="status">尚无质量诊断结果。可在版本对照中检查已保存的蒙版。</p>',
-                versionLabel(run));
+        const afr = run.afr;
+        const disagreement = afr?.disagreement;
+        const heading = '预测分歧与人工复核';
+        const revision = versionLabel(run) + ' · ' + run.id;
+        function unavailable(message) {
+            modal(heading, '<p role="status">' + escape(message) + '</p>', revision);
+        }
+        if (afr?.status === 'fallback') {
+            unavailable('自适应推理未完成，已回退整图模式。可继续查看当前版本和它的实验报告。');
             return;
         }
-        modal('预测分歧与人工复核', '<div class="national-dialog national-wide"><p id="diagnosticStatus" role="status">正在读取质量诊断产物…</p>' +
+        if (run.mode !== 'live' || afr?.status !== 'completed' ||
+            disagreement?.available !== true || !afr.disagreement_ref) {
+            unavailable('尚无质量诊断结果。可在版本对照中检查已保存的蒙版。');
+            return;
+        }
+        const resultPath = '/experiments/' + session.id + '/' + run.id + '/disagreement.png';
+        const url = sameOriginUrl(afr.disagreement_ref);
+        if (run.session_id !== session.id || !url || new URL(url).pathname !== resultPath ||
+            !Array.isArray(afr.image_size) || afr.image_size.length !== 2 ||
+            afr.image_size[0] !== session.width || afr.image_size[1] !== session.height) {
+            unavailable('分歧产物的影像尺寸或结果版本与当前影像不匹配。');
+            return;
+        }
+        modal(heading, '<div class="national-dialog national-wide"><p class="national-context">' + escape(session.name) +
+            '</p><p id="diagnosticStatus" role="status">正在读取质量诊断产物…</p>' +
             '<section id="diagnosticBody" hidden><div class="national-controls"><label><input id="diagnosticToggle" type="checkbox" checked> 显示分歧</label>' +
             '<label>分歧透明度 <input id="diagnosticOpacity" type="range" min="0" max="100" value="60"></label>' +
             '<button id="diagnosticFit" type="button">适应画布</button></div>' +
-            '<div id="diagnosticViewport" class="national-viewport" tabindex="0"><canvas id="diagnosticCanvas" aria-label="原图与分歧叠加"></canvas></div>' +
+            '<div class="national-diagnostic-grid"><div><div id="diagnosticViewport" class="national-viewport" tabindex="0">' +
+            '<canvas id="diagnosticCanvas" aria-label="原图与分歧叠加"></canvas></div>' +
+            '<div class="national-legend"><span><i class="removed"></i>琥珀色 · 整图与局部预测分歧</span></div></div><div>' +
+            '<p id="diagnosticEmptyRegions" hidden>当前没有达到阈值的待复核区域。</p>' +
             '<ol id="diagnosticRegions" class="national-diagnostic-list"></ol><div class="national-controls">' +
             '<button type="button" id="diagnosticAccept">确认该版本</button>' +
-            '<button type="button" id="diagnosticAdjust">标记需要调整</button></div></section></div>', versionLabel(run) + ' · ' + run.id);
+            '<button type="button" id="diagnosticAdjust">标记需要调整</button></div></div></div></section></div>', revision);
         const status = $('diagnosticStatus');
         try {
-            const layer = await loadAligned(diagnostic.overlay_url, session);
+            const {mask} = await readMask(url, session);
             if (!active(status) || state.session !== session || state.selected?.id !== run.id) return;
+            const layer = maskOverlay(mask, [255, 163, 91, 255], session);
             const canvas = $('diagnosticCanvas');
             const ctx = contextFor(canvas, session);
-            const bounds = (Array.isArray(diagnostic.regions) ? diagnostic.regions : []).flatMap(region => {
-                const box = rectangle(region.xyxy, session.width, session.height);
+            const regions = disagreement.review_regions;
+            const bounds = (Array.isArray(regions) ? regions : []).flatMap(region => {
+                if (!Array.isArray(region?.xywh) || region.xywh.length !== 4 || !region.xywh.every(Number.isInteger)) return [];
+                const [x, y, width, height] = region.xywh;
+                const box = rectangle([x, y, x + width, y + height], session.width, session.height);
                 return box ? [{...region, box}] : [];
             });
             let selected = null;
@@ -571,15 +606,18 @@
             }
             function showReviewStatus() {
                 status.textContent = (run.human_review?.label ?? '待复核') + ' · ' +
-                    (diagnostic.legend ?? '分歧层来自该版本的质量诊断产物') +
+                    (disagreement.notice ?? '分歧表示整图与局部预测的差异，仅用于定位待复核区域。') +
                     ' · ' + outputSource(run);
                 $('diagnosticAccept').disabled = run.mode === 'demo' || run.human_review?.decision === 'accepted';
                 $('diagnosticAdjust').disabled = run.mode === 'demo' || run.human_review?.decision === 'needs_adjustment';
             }
             const display = viewer($('diagnosticViewport'), canvas, session, drawDiagnostic);
+            $('diagnosticEmptyRegions').hidden = bounds.length > 0;
             $('diagnosticRegions').innerHTML = bounds.map((region, i) =>
                 '<li><button type="button" data-region-index="' + i + '">' +
-                escape(region.label ?? '待复核区域 ' + (i + 1)) + ' · ' + region.box.join(', ') + ' px</button></li>').join('');
+                '待复核区域 ' + (i + 1) + ' · ' + region.box.join(', ') + ' px' +
+                (finite(region.disagreement_ratio) ? ' · 分歧 ' + escape(percentage(region.disagreement_ratio)) : '') +
+                '</button></li>').join('');
             $('diagnosticRegions').onclick = event => {
                 const button = event.target.closest('[data-region-index]');
                 if (!button) return;
@@ -603,7 +641,7 @@
             showReviewStatus();
             display.redraw();
         } catch (error) {
-            if (active(status)) status.textContent = error.message;
+            if (active(status)) status.textContent = '分歧图不可用 · ' + error.message;
         }
     }
 
@@ -742,29 +780,35 @@
         if (!active(status)) return;
         const source = [...(currentReply.value ?? []), ...(historyReply.value ?? [])];
         const labels = ['原始整图', '提示规范化', '固定重叠切片', '自适应区域选择', '跨尺度融合', '一致性复核'];
-        const columns = ['分组 / 方法', '来源 / 样本数', '模型与参数', 'IoU', 'Dice', 'Precision', 'Recall', '模型耗时 / 图', '产物'];
+        const columns = ['分组 / 方法', '来源 / 样本数', '模型与参数', 'IoU', 'Dice', 'Precision', 'Recall', '服务推理 / 图', '产物'];
         function artifact(value) {
             const local = sameOriginUrl(value);
             if (local) return local;
             if (typeof value === 'string' && value.startsWith('https://github.com/SitianGao/geoscope/')) return value;
             return null;
         }
-        const rows = labels.map((label, index) => {
+        const rows = labels.flatMap((label, index) => {
             const group = 'A' + index;
-            const record = source.find(item => item?.group === group && item.status === 'completed' &&
+            const records = source.filter(item => item?.group === group && item.status === 'completed' &&
                 item.real_execution === true && Number.isInteger(item.samples) && item.samples > 0 &&
                 item.dataset_role && item.config && item.metrics && artifact(item.artifact_url));
             const cell = value => '<td>' + escape(value) + '</td>';
-            const metric = key => finite(record?.metrics[key]) ? record.metrics[key].toFixed(4) : missing;
-            const header = '<tr><th scope="row">' + group + ' · ' + label + '</th>';
-            if (!record) return header + '<td colspan="8" class="national-muted">未完成或尚未登记可核查结果</td></tr>';
-            return header + cell(record.dataset_role + ' · ' + record.samples + ' 图') + cell(record.config) +
-                ['iou', 'dice', 'precision', 'recall'].map(key => cell(metric(key))).join('') +
-                cell(ms(record.metrics.inference_ms)) + '<td><a href="' + escape(artifact(record.artifact_url)) +
-                '" target="_blank" rel="noopener">逐图证据</a></td></tr>';
+            const header = '<th scope="row">' + group + ' · ' + label + '</th>';
+            if (!records.length) return '<tr>' + header +
+                '<td colspan="8" class="national-muted">未完成或尚未登记可核查结果</td></tr>';
+            return records.map(record => {
+                const metric = key => finite(record.metrics[key]) ? record.metrics[key].toFixed(4) : missing;
+                const precision = Number.isInteger(record.precision_samples) && record.precision_samples < record.samples
+                    ? metric('precision') + '（' + record.precision_samples + ' 图）' : metric('precision');
+                return '<tr data-experiment="' + escape(record.source_experiment_id) + '">' + header +
+                    cell(record.dataset_role + ' · ' + record.samples + ' 图') + cell(record.config) +
+                    cell(metric('iou')) + cell(metric('dice')) + cell(precision) + cell(metric('recall')) +
+                    cell(ms(record.metrics.inference_ms)) + '<td><a href="' + escape(artifact(record.artifact_url)) +
+                    '" target="_blank" rel="noopener">逐图证据</a></td></tr>';
+            });
         });
-        status.textContent = 'A0–A2 历史记录来自固定飞机诊断集，参数在同一批影像上选择。' +
-            ' 各组显示已有真实模型评测记录；独立测试以登记的数据角色为准。' +
+        status.textContent = '各行来自固定 10 张飞机历史诊断图。A3–A5 的预算、融合系数和阈值仍待开发集与独立测试验证。' +
+            ' A2 与 A3–A5 使用的服务版本和推理配置不同。A3–A5 汇总 Precision 时，跳过空预测的未定义值。' +
             (historyReply.status === 'rejected' || currentReply.status === 'rejected' ? ' 部分记录未能加载。' : '');
         $('nationalExperimentTable').innerHTML = '<table class="national-table national-experiment-table"><thead><tr>' +
             columns.map(label => '<th scope="col">' + label + '</th>').join('') +

@@ -2,7 +2,7 @@ const $ = id => document.getElementById(id);
 const state = { session:null, selected:null, last:null, original:null, mask:null, mode:'demo', view:'original', zoom:1, busy:false, status:null, loadToken:0,
  roi:null,roiDraft:null,roiStart:null,roiDrawing:false,roiClear:false,batch:null };
 const sideNames = {all:'全图',left:'左半幅',right:'右半幅',top:'上半幅',bottom:'下半幅'};
-const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强'};
+const qualityNames = {auto:'自动',fast:'稳定整图',accurate:'飞机细节增强',adaptive:'GeoScope-AFR 自适应推理'};
 const targetNames = {building:'建筑',aircraft:'飞机',road:'道路',water:'水体',tree:'植被',ship:'船舶'};
 const targetLabel = run => (run?.task?.invert?'非':'')+(targetNames[run?.task?.target]||'目标');
 function currentTarget(){
@@ -291,7 +291,8 @@ async function selectRun(run){
   localStorage.setItem('geoscope-selected-'+state.session.id,run.id);
   $('ratioValue').textContent=ratio.toFixed(2);$('areaValue').innerHTML=number(m.pixel_area)+' <small>px</small>';$('scopeValue').textContent=run.task.roi?'矩形研究区':sideNames[run.task.side];$('timeValue').textContent=run.duration_ms+' ms';
   $('candidateValue').textContent=m.candidate_stats?`${number(m.candidate_stats.candidate_count)} 个`:'旧结果未统计';
-  $('qualityValue').textContent=run.mode==='demo'?'预置演示':run.task?.quality_adaptation?'稳定整图（已防退化）':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
+  $('qualityValue').textContent=run.mode==='demo'?'预置演示':run.afr?.status==='fallback'?'稳定整图（AFR 回退）':
+    run.task?.quality_adaptation?'稳定整图（已防退化）':qualityNames[run.task?.effective_quality_mode]||'服务未确认';
   $('resultTitle').textContent=(run.task.roi?'框选区域 · ':sideNames[run.task.side])+targetLabel(run);$('resultSubtitle').textContent=`V${run.version} · ${run.mode==='demo'?'预置演示标注，非模型输出':'模型已生成结果'}`;
   $('resultStatus').textContent=statusNames[run.status];$('resultStatus').className='result-badge '+(run.status==='completed'?'success':'warning');renderReview(run);
   $('coverageBar').style.width=ratio+'%';$('ringValue').setAttribute('stroke-dasharray',`${ratio*1.634} 164`);

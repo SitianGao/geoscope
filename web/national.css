@@ -145,7 +145,8 @@
 .national-tool-list div { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--research-line); }
 .national-tool-list dt, .national-tool-list dd { margin: 0; overflow-wrap: anywhere; }
 .national-tool-list code { display: block; color: var(--research-muted); font-size: 11px; }
-.national-diagnostic-list { padding-left: 24px; }
+.national-diagnostic-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 320px); gap: 14px; }
+.national-diagnostic-list { padding-left: 24px; margin: 0; max-height: min(355px, 38vh); overflow: auto; }
 .national-diagnostic-list li { margin: 5px 0; }
 
 #nationalSearchForm { grid-template-columns: minmax(120px, 1fr) minmax(82px, 115px) auto; align-items: end; }
@@ -156,6 +157,10 @@
 .national-search-hits article div { display: grid; gap: 6px; padding: 10px; }
 .national-search-hits article h3 { margin: 0 !important; overflow-wrap: anywhere; }
 .national-search-hits article button { justify-self: start; }
+
+@media (max-width: 760px) {
+    .national-diagnostic-grid { grid-template-columns: minmax(0, 1fr); }
+}
 
 @media (min-width: 1181px) {
     .national-workbench .workspace { grid-template-columns: minmax(260px, 1fr) minmax(460px, 2.8fr) minmax(280px, 1.05fr); }

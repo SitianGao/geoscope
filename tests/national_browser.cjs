@@ -1,5 +1,6 @@
 const { chromium } = require(process.env.PLAYWRIGHT_PATH || 'playwright');
 const assert = require('node:assert/strict');
+const { createHash } = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
@@ -153,8 +154,12 @@ async function verifyWorkflow(browser) {
         await fs.writeFile(path.join(evidence, 'roi-report.md'), reportText);
         await page.locator('#nationalExperiments').click();
         await matches(page, '#nationalExperimentTable', '0.3056');
-        assert.equal(await page.locator('#nationalExperimentTable tbody tr').count(), 6);
-        assert.equal(await page.locator('#nationalExperimentTable tbody a').count(), 3);
+        assert.equal(await page.locator('#nationalExperimentTable tbody tr').count(), 9);
+        assert.equal(await page.locator('#nationalExperimentTable tbody a').count(), 9);
+        const a4 = page.locator('[data-experiment="a4_b025_l07"]');
+        assert.match(await a4.textContent(), /历史诊断集.*10 图.*25%.*λ 0\.7.*0\.3191.*0\.4251/);
+        assert.match(await a4.locator('a').getAttribute('href'), /c1ef225.*\/a4_b025_l07\.csv$/);
+        assert.match(await page.locator('[data-experiment="a4_b025_l03"]').textContent(), /0\.3100（9 图）/);
         await screenshot(page, '05-experiments.png');
         await pace();
         await page.locator('#closeModal').click();
@@ -247,12 +252,150 @@ async function verifyContracts(browser) {
     }
 }
 
+async function verifyArchivedAfr(browser, archive, dataRoot) {
+    const imageId = 'ISAID_VAL_P1529';
+    const resultDir = path.join(archive, 'artifacts', 'a5_b025_l07', imageId);
+    const input = path.join(dataRoot, 'iSAID', 'selected_20260927', 'images', imageId + '.png');
+    const [metadata, csv, original] = await Promise.all([
+        fs.readFile(path.join(resultDir, 'afr.json'), 'utf8').then(JSON.parse),
+        fs.readFile(path.join(archive, 'results', 'a5_b025_l07.csv'), 'utf8'),
+        fs.readFile(input)
+    ]);
+    const [header, ...lines] = csv.trim().split(/\r?\n/).map(line => line.split(','));
+    const fields = lines.find(line => line[header.indexOf('image_id')] === imageId);
+    assert.equal(fields?.length, header.length);
+    const record = Object.fromEntries(header.map((key, i) => [key, fields[i]]));
+    assert.equal(createHash('sha256').update(original).digest('hex'), record.image_sha256);
+    assert.equal(metadata.config_sha256, record.config_sha256);
+    const [width, height] = metadata.image_size;
+    const pixels = Number(record.prediction_foreground_pixels);
+    const imageIdInApp = 'af1529000000';
+    const runId = 'af1529000001';
+    const imageDir = '/experiments/' + imageIdInApp;
+    const runDir = imageDir + '/' + runId;
+    const run = {
+        id: runId, session_id: imageIdInApp, version: 1, mode: 'live', status: 'completed',
+        query: '回放队长归档的 A5 飞机结果', message: '历史归档回放 · ' + imageId,
+        task: {target: 'aircraft', side: 'all', effective_quality_mode: 'adaptive'},
+        trace: [], duration_ms: Number(record.client_wall_ms),
+        mask_url: runDir + '/mask.png', service_metadata: {...metadata.p0_service, service_version: record.service_version},
+        metrics: {pixel_area: pixels, area_ratio: pixels / (width * height), total_pixels: width * height, width, height},
+        afr: {
+            status: 'completed', algorithm: metadata.algorithm_name, algorithm_version: metadata.algorithm_version,
+            image_size: metadata.image_size, disagreement_ref: runDir + '/disagreement.png',
+            disagreement: {
+                available: metadata.disagreement_available,
+                review_regions: metadata.review.review_regions, notice: metadata.disagreement_notice
+            }
+        }
+    };
+    const session = {
+        id: imageIdInApp, width, height, name: 'A5 历史归档回放 · ' + imageId,
+        image_url: imageDir + '/original.png', runs: [run], context: {}
+    };
+
+    // Supply the frozen files to the browser using the production AFR response shape.
+    // This path exercises rendering and version binding without calling the model.
+    const page = await browser.newPage({viewport: {width: 1512, height: 1040}});
+    const errors = [];
+    page.on('pageerror', error => errors.push(error.message));
+    try {
+        let unavailable = false;
+        await page.addInitScript(id => localStorage.setItem('geoscope-session', id), imageIdInApp);
+        await page.route('**/api/session/' + imageIdInApp, route => bodyJson(route, session));
+        await page.route('**' + session.image_url, route => route.fulfill({body: original, contentType: 'image/png'}));
+        await page.route('**' + run.mask_url, route => route.fulfill({path: path.join(resultDir, 'mask.png')}));
+        await page.route('**' + run.afr.disagreement_ref, route =>
+            unavailable ? route.fulfill({status: 404}) : route.fulfill({
+                path: path.join(resultDir, 'disagreement.png'), headers: {'Cache-Control': 'no-store'}
+            })
+        );
+        await page.route('**/api/review', route => {
+            assert.deepEqual(route.request().postDataJSON(), {
+                session_id: imageIdInApp, run_id: runId, decision: 'accepted'
+            });
+            return bodyJson(route, {
+                session_id: imageIdInApp, run_id: runId,
+                human_review: {decision: 'accepted', label: '符合预期'}
+            });
+        });
+        await page.goto(base + '/?workbench=national');
+        await matches(page, '#imageName', '历史归档回放');
+        await matches(page, '#qualityValue', 'GeoScope-AFR 自适应推理');
+        await page.locator('#nationalDiagnosis').click();
+        await page.locator('#diagnosticBody').waitFor();
+        await matches(page, '#diagnosticStatus', '待复核');
+        assert.equal(await page.locator('#diagnosticRegions button').count(), Number(record.review_region_count));
+        const target = page.locator('#diagnosticCanvas');
+        assert.equal(await target.getAttribute('width'), String(width));
+        const samplePixels = await page.evaluate(async url => {
+            const mask = await createImageBitmap(await (await fetch(url)).blob());
+            const canvas = document.createElement('canvas');
+            canvas.width = mask.width;
+            canvas.height = mask.height;
+            const ctx = canvas.getContext('2d', {willReadFrequently: true});
+            ctx.drawImage(mask, 0, 0);
+            mask.close();
+            let foreground;
+            let background;
+            for (let y = 0; y < canvas.height && (!foreground || !background); y += 64) {
+                const data = ctx.getImageData(0, y, canvas.width, Math.min(64, canvas.height - y)).data;
+                for (let i = 0; i < data.length && (!foreground || !background); i += 4) {
+                    const offset = i / 4;
+                    const point = [offset % canvas.width, y + Math.floor(offset / canvas.width)];
+                    if (data[i] === 255 && !foreground) foreground = point;
+                    if (data[i] === 0 && !background) background = point;
+                }
+            }
+            return [foreground, background];
+        }, run.afr.disagreement_ref);
+        async function renderPixels() {
+            return target.evaluate((canvas, points) => {
+                const ctx = canvas.getContext('2d');
+                return points.map(([x, y]) => [...ctx.getImageData(x, y, 1, 1).data]);
+            }, samplePixels);
+        }
+        const tinted = await renderPixels();
+        await page.locator('#diagnosticToggle').uncheck();
+        const plain = await renderPixels();
+        assert.notDeepEqual(tinted[0], plain[0]);
+        assert.deepEqual(tinted[1], plain[1]);
+        await page.locator('#diagnosticToggle').check();
+        const initialSize = await target.evaluate(canvas => canvas.clientWidth);
+        await page.locator('#diagnosticRegions button').first().click();
+        assert.ok(await target.evaluate(canvas => canvas.clientWidth) > initialSize);
+        await page.locator('#diagnosticFit').click();
+        await screenshot(page, '07-afr-archive-review.png');
+        await page.locator('#diagnosticAccept').click();
+        await matches(page, '#diagnosticStatus', '符合预期');
+        await page.locator('#closeModal').click();
+
+        unavailable = true;
+        await page.reload();
+        await page.locator('#nationalDiagnosis').click();
+        await matches(page, '#diagnosticStatus', '分歧图不可用');
+        assert.equal(await page.locator('#diagnosticBody').isHidden(), true);
+        run.afr = {status: 'fallback'};
+        await page.reload();
+        await matches(page, '#qualityValue', 'AFR 回退');
+        await page.locator('#nationalDiagnosis').click();
+        await matches(page, '#modalBody', '已回退整图模式');
+        assert.deepEqual(errors, []);
+        console.log('Archived A5 P1529: verified PNG overlay, review regions, zoom, missing artifact and fallback states.');
+    } finally {
+        await page.context().close();
+    }
+}
+
 (async () => {
     await fs.mkdir(evidence, { recursive: true });
     const browser = await chromium.launch({ headless: true, channel: process.env.GEO_BROWSER_CHANNEL || 'msedge' });
     try {
         await verifyWorkflow(browser);
         await verifyContracts(browser);
+        if (process.env.GEO_AFR_ARCHIVE && process.env.GEO_AFR_DATA_ROOT) {
+            await verifyArchivedAfr(browser, process.env.GEO_AFR_ARCHIVE, process.env.GEO_AFR_DATA_ROOT);
+        }
     } finally {
         await browser.close();
     }

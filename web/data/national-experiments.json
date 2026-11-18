@@ -1,0 +1,110 @@
+[
+  {
+    "group": "A3",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 25% · λ 1.0 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.310539,
+      "dice": 0.414967,
+      "precision": 0.342249,
+      "recall": 0.762101,
+      "inference_ms": 968.25
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a3_b025_l1.csv",
+    "source_experiment_id": "a3_b025_l1"
+  },
+  {
+    "group": "A3",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 50% · λ 1.0 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.288382,
+      "dice": 0.393823,
+      "precision": 0.306636,
+      "recall": 0.845699,
+      "inference_ms": 1845.503
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a3_b050_l1.csv",
+    "source_experiment_id": "a3_b050_l1"
+  },
+  {
+    "group": "A4",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 9,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 25% · λ 0.3 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.259224,
+      "dice": 0.34208,
+      "precision": 0.30996,
+      "recall": 0.672717,
+      "inference_ms": 954.6
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a4_b025_l03.csv",
+    "source_experiment_id": "a4_b025_l03"
+  },
+  {
+    "group": "A4",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 25% · λ 0.5 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.278479,
+      "dice": 0.379269,
+      "precision": 0.450871,
+      "recall": 0.695723,
+      "inference_ms": 929.313
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a4_b025_l05.csv",
+    "source_experiment_id": "a4_b025_l05"
+  },
+  {
+    "group": "A4",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 25% · λ 0.7 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.319149,
+      "dice": 0.425082,
+      "precision": 0.366613,
+      "recall": 0.762427,
+      "inference_ms": 991.03
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a4_b025_l07.csv",
+    "source_experiment_id": "a4_b025_l07"
+  },
+  {
+    "group": "A5",
+    "status": "completed",
+    "real_execution": true,
+    "samples": 10,
+    "precision_samples": 10,
+    "dataset_role": "iSAID/DOTA 飞机历史诊断集",
+    "config": "GeoScope-AFR v1 · RemoteSAM 1.2.0 · 预算 25% · λ 0.7 · 阈值 0.5 · 1024 切片 / 重叠 256 px · 局部放大",
+    "metrics": {
+      "iou": 0.319149,
+      "dice": 0.425082,
+      "precision": 0.366613,
+      "recall": 0.762427,
+      "inference_ms": 998.355
+    },
+    "artifact_url": "https://github.com/SitianGao/geoscope/blob/c1ef2259bb2148be93ace13d55cf1227540cb554/evaluation/national_final/results/lab_runs/20261117_ablation/results/a5_b025_l07.csv",
+    "source_experiment_id": "a5_b025_l07"
+  }
+]

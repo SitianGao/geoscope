@@ -197,6 +197,7 @@ class Handler(server.Handler):
                     item['session_url'] = '/api/session/'+sid
                     item['thumbnail_url'] = session['image_url']
                     item['name'] = session['name']
+                    item['width'], item['height'] = session['width'], session['height']
                 return self.envelope(result, args=args)
             raise ToolError('unsupported_tool', 'Unknown national route')
         except Exception as exc:

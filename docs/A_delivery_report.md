@@ -4,7 +4,7 @@
 
 ## 交付范围与团队集成
 
-已合入队长算法 c1ef225 和 B 工作台 8e022c2，保留原提交归属。A 实现统计/差异/受控计划/CLIP 服务，并适配双方真实接口，没有重写队长 AFR 策略或 B 前端。基线 2cb8da8 保留标签 baseline/national-before-a-20261117。
+已合入队长算法 c1ef225 和 B 工作台 8e022c2，保留原提交归属。A 实现统计/差异/受控计划/CLIP 服务，并适配双方真实接口，没有重写队长 AFR 策略；按用户反馈对指代合同和 B 的检索页面作了有测试覆盖的修改。基线 2cb8da8 保留标签 baseline/national-before-a-20261117。
 
 - region_statistics：目标面积、整图与范围两种分母；严格 ROI、奇数半幅和空集处理。
 - connected_region_analysis：8 邻域候选区域、过滤与分布；不将连通域数称作实例数。
@@ -27,11 +27,13 @@ RemoteCLIP 为 ViT-B-32，权重 SHA256=`60014e395d930a3f2963d1d89c8522bf4ad5677
 
 真实链路已完成：CLIP 检索候选→RemoteAgent→RemoteSAM fast→AFR 新版本→VerifiedPlan→统计/比较→分歧图→导出。P1529 为 4000×4000 真实影像，image_id=`2b2acb90b45d`，base=`1e9614581f1c`，AFR=`37cfda0a9fc3`。实际执行 6 个局部区域，产生 6 个待复核区域；Agent 反馈 completed，无反馈告警。服务器真实 Chrome 显示步骤、对照与分歧图，浏览器逐像素差异与后端一致，导出附件完整。
 
+用户反馈的“最下面的船”已修复，原图新版本 e8e1eb4a6be7 只高亮底部船舶（120,398 px / 2.36%），旧错误版本明确告警。检索弹窗完成桌面/手机改版，保留原始精度和完整追溯。详见 A_user_feedback_fixes.md。
+
 原始请求响应、索引/权重 manifest、真实截图和测试日志位于 docs/evidence/server/。早期依赖/版本失败及 8K 超限记录保留用于审计，均已修复；早期 demo 工程证据有明确标注，不作为真实模型证据。
 
 ## 测试与复现
 
-最终服务器 **159 项测试全部通过，无跳过（23.112 秒）**，包含真实权重测试及 4 项生命周期保护测试；原始输出 docs/evidence/server/tests_server_all.txt。部分单元测试使用显式 test doubles，与真实全链路/浏览器证据分开。受控停止/启动和四服务健康检查均通过。
+最终服务器 **168 项测试全部通过，无跳过（25.160 秒）**，包含真实权重测试及 5 项生命周期保护测试；原始输出 docs/evidence/server/tests_server_all.txt。部分单元测试使用显式 test doubles，与真实全链路/浏览器证据分开。受控停止/启动和四服务健康检查均通过。
 
 完整命令和固定版本操作顺序见 A_captain_handoff.md。重新推理会生成新 ID，应保存新的证据文件名，不覆盖固定验收记录。编译/格式检查、Git 对象完整性检查及权重/凭据排除检查已完成。
 

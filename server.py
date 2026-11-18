@@ -18,7 +18,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageOps
 from runtime_config import load_settings, settings_status
 from service_transport import request_json, inspect_services
-from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan
+from agent_bridge import AgentTurn, Clarification, decision_record, resolve_scope, segmentation_plan, reference_intent
 from v07_contract import adapt_quality_for_target, batch_requested, has_target_intent, resolve_quality, resolve_roi, target_intent, validate_target_intent
 
 load_settings()
@@ -167,7 +167,7 @@ def experiment_report(session, result):
            f'- 服务确认的执行模式：{quality}',
            f'- 受限工具调用：{call.get("name", "演示流程，未调用模型工具")}',
            f'- Harness 校验：目标、影像、ROI、模式、二值蒙版尺寸与范围由程序检查',
-           f'- RemoteSAM 提示词：{DESCRIPTIONS[task["target"]]}',
+           f'- RemoteSAM 提示词：{task.get("service_request",{}).get("text") or DESCRIPTIONS[task["target"]]}',
            f'- 服务版本：{service.get("service_version", "未记录")}',
            f'- 模式参数：{json.dumps(service.get("mode_parameters", {}),ensure_ascii=False,sort_keys=True)}',
            f'- 服务耗时：{json.dumps(service.get("timing_ms", {}),ensure_ascii=False,sort_keys=True)}',
@@ -250,8 +250,20 @@ def resolve_invert(query, context=None):
 def post_json(url,payload,timeout=120,headers=None):
     return request_json(url,payload,timeout,headers)
 
+def reference_contract_warning(run):
+    if run.get('mask_url') and not (run.get('task') or {}).get('reference'):
+        try:
+            if reference_intent(run.get('query', ''), {'target': (run.get('task') or {}).get('target')}):
+                return '该旧版本未保留目标的位置限定，不能作为这次指代请求的完成结果；请重新提取。'
+        except Clarification:
+            pass
+    return None
+
+
 def public_session(s):
-    return {k:v for k,v in s.items() if k not in ('lock',)}
+    result = {k:v for k,v in s.items() if k not in ('lock',)}
+    result['runs'] = [{**run, **({'reference_contract_warning': warning} if (warning := reference_contract_warning(run)) else {})} for run in s['runs']]
+    return result
 
 def get_session(sid):
     if not isinstance(sid,str) or not SID_RE.fullmatch(sid): return None
@@ -281,6 +293,8 @@ def review_run(p):
     try:
         run=next((item for item in s['runs'] if item.get('id')==rid),None)
         if not run or not run.get('mask_url'): raise ValueError('只能确认已生成蒙版的结果')
+        if decision == 'accepted' and reference_contract_warning(run):
+            raise ValueError('该旧版本没有保留位置限定，请重新提取后再确认。')
         review={'decision':decision,'reviewed_at':now(),
                 'label':'符合预期' if decision=='accepted' else '需要调整'}
         run['human_review']=review
@@ -530,22 +544,29 @@ def _run_task(s,p,allow_batch=False):
             raise ValueError('故障演示：工具未返回结果。已有版本保留，本次不生成蒙版或统计。')
         t=time.perf_counter()
         if mode=='demo':
+            if reference_intent(query, context):
+                raise Clarification('演示模式不能生成单目标指代结果；请切换模型模式，或使用已有结果。')
             plan=parse_task(query,context)
         elif re.fullmatch(r'(?:请)?(?:导出|下载)(?:刚才的|当前|这个|所选)?(?:实验包|结果)?[。！! ]*',query):
             plan={'action':'export','planner_protocol':'harness_export_command'}
         else:
             dense_task=requires_dense_result(query,context)
+            reference = reference_intent(query, context) if dense_task else None
+            if dense_task and not reference and re.search(r'上面|下面|中间|中央|第[一二三四五六七八九十\d]+(?:艘|架|栋|个)', query):
+                raise Clarification('请明确是单个目标的位置指代，还是像素半幅范围；例如“最下面的船”或“下半幅全部船舶”。')
+            if reference and roi:
+                raise Clarification('位置指代以整幅影像中的目标为参照，请先清除矩形研究区，或直接框选需要的目标。')
             if dense_task and not has_target_intent(query) and not context.get('target'):
                 raise Clarification('请明确要提取的单一目标类别；当前不能提取所有物体的轮廓。')
             invert=resolve_invert(query,context) if dense_task else False
-            side,scope_source=resolve_scope(query,context,p.get('scope'))
+            side,scope_source=resolve_scope(query,context,p.get('scope'),object_reference=dense_task)
             if roi and side!='all':
                 raise ValueError('矩形 ROI 与半幅范围不能同时选择；请清除矩形或改为全图条件。')
-            if re.search(r'那个|那片|那块|这块',query):
+            if re.search(r'那个|那片|那块|这块',query) and not reference:
                 raise Clarification('请明确目标类别与像素范围，或从已有结果版本继续；本次没有执行分割。')
             agent_turn=AgentTurn(query,image_path,context,side,scope_source,
-                                 task_route='dense' if dense_task else 'internal',invert=invert,
-                                 roi=roi,quality_mode=quality_mode,batch_id=p.get('batch_id'))
+                                 task_route='referring' if reference else 'dense' if dense_task else 'internal',invert=invert,
+                                 roi=roi,quality_mode=quality_mode,batch_id=p.get('batch_id'),reference=reference)
             decision=agent_turn.decision
             result['agent_decision']=decision_record(decision)
             result['provenance']['planner_protocol']='remoteagent'
@@ -557,8 +578,8 @@ def _run_task(s,p,allow_batch=False):
                 if not dense_task:
                     raise ValueError('这是看图问答任务，RemoteAgent 不应调用像素分割工具；系统已阻止错误执行。')
                 plan=segmentation_plan(decision,image_path,side,scope_source,invert=invert,
-                                       expected_target=target_intent(query) or context.get('target'))
-                event('确认执行边界',f'目标由 Agent 工具参数提供；范围 {SIDES[side]}，来源 {scope_source}；先全图分割再裁切')
+                                       expected_target=target_intent(query) or context.get('target'),reference=reference)
+                event('确认执行边界',reference['label']+'；位置描述保留为指代提示，不转成全图类别或半幅' if reference else f'目标由 Agent 工具参数提供；范围 {SIDES[side]}，来源 {scope_source}；先全图分割再裁切')
             else:
                 raise ValueError(f'RemoteAgent 决策未通过校验（{decision.status}），未执行工具。')
         event('理解任务与选择路径',f'{result["provenance"]["planner"]} · {plan["action"]}',elapsed=(time.perf_counter()-t)*1000)
@@ -566,6 +587,11 @@ def _run_task(s,p,allow_batch=False):
             if mode=='live':
                 effective_quality,quality_adaptation=adapt_quality_for_target(
                     plan['target'],quality_mode,effective_quality)
+                if plan.get('reference') and effective_quality != 'fast':
+                    effective_quality = 'fast'
+                    quality_adaptation = {'requested_mode': quality_mode, 'effective_mode': 'fast',
+                        'reason_code': 'object_reference_requires_global_context',
+                        'message': '单目标位置指代使用整图上下文，避免切片重复解释“最下面”等位置。'}
                 result['task_options']['effective_quality_mode']=effective_quality
                 if quality_adaptation:
                     result['task_options']['quality_adaptation']=quality_adaptation
@@ -677,10 +703,11 @@ def _run_task(s,p,allow_batch=False):
             event('结果检查','尺寸对齐、空间范围、统计与文件有效性已检查；语义精度待复核')
             base=f'/experiments/{s["id"]}/{runid}'
             quality_note=(' '+plan['quality_adaptation']['message']) if plan.get('quality_adaptation') else ''
+            subject = plan['reference']['label'] if plan.get('reference') else f'{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}'
             result.update(status=status,metrics=metrics,mask_url=base+'/mask.png',overlay_url=base+'/overlay.png',export_url=f'/api/export/{s["id"]}/{runid}',
-              message=(f'已生成{SIDES[side]}{"非" if plan.get("invert") else ""}{TARGETS[target]}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。')+quality_note) if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。'+quality_note)
+              message=(f'已生成{subject}区域：{metrics["pixel_area"]:,} px，占整幅影像 {metrics["area_ratio"]*100:.2f}%。'+('这是预置标注的流程演示，尚未进行模型推理。' if mode=='demo' else '请结合叠加图复核目标语义与边界。')+quality_note) if metrics['pixel_area'] else '本次未检出有效区域，需要复核，不能据此断言目标不存在。'+quality_note)
             s['context']={'target':target,'side':side,'invert':bool(plan.get('invert')),
-                          'roi':roi,'quality_mode':quality_mode}; save_json(folder/'statistics.json',metrics)
+                          'roi':roi,'quality_mode':quality_mode,'reference':plan.get('reference')}; save_json(folder/'statistics.json',metrics)
             if mode=='live':
                 feedback({'status':'success','tool_name':plan['tool_name'],'metrics':metrics,
                           'scope_rule':plan['scope_rule'],'actual_service_request':plan['service_request'],

@@ -1,5 +1,15 @@
 # GeoScope National API v1（队员 A 实现合同，待集成审查）
 
+## 2026-11-18 用户反馈修复：单目标指代与检索展示
+
+原 `/api/run` 新增受限的单目标位置合同：最上/最下/最左/最右（及对应英文）+ 明确或继承的单一目标类别。`task.reference` 包含 kind、target、direction、prompt、label；非指代任务可为 null。位置指代不是像素半幅：必须调用 referring_expression_segmentation，并保留规范化的单目标提示，如 `the bottommost ship`。模型若返回 semantic_segmentation 或 all ships 等丢失限定的提示，则失败关闭，不调用 SAM、不返回完成蒙版。复杂位置、数量或 ROI/半幅冲突需澄清。
+
+指代请求使用整图 fast 上下文，不使用切片/AFR 在各局部重复解释位置；实际模式及适配理由如实保存。明确的新全图类别任务会清除前一次指代限定，重新提取同一目标会继承指代。普通看图问答保持 internal 路径，原整图/半幅分割行为保留。
+
+旧保存结果若 query 要求位置极值但 task 没有保留 reference，GET session 返回派生的 `reference_contract_warning`；不改旧蒙版、指标或伪造旧状态。前端显示需重跑，review accepted 被拒绝。原始错误产物保留供追溯。
+
+检索新增可选 width/height 字段，来源为绑定 session 的原图尺寸。显示分数仅取三位小数；原始 API 分数、image_id、原图哈希与模型/索引版本都保留，可在折叠的检索记录查看。返回数量选项由实际图库大小与服务上限共同约束。
+
 ## 2026-11-18 联调补充（优先于下方早期说明）
 
 已合入队长 `c1ef225` 和 B `8e022c2`，原始算法及 B 前端原样保留。现在 `national_server.py` 复用队长版 server。推荐使用 `scripts/start_national.py` 一起启动真实 CLIP 与工作台。

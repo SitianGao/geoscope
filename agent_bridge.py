@@ -34,9 +34,44 @@ class Clarification(ValueError):
     """A task outside the explicit workbench contract, not a service failure."""
 
 
-def resolve_scope(query, context, selected=None):
+def reference_intent(query, context=None):
+    """Keep object-relative extrema distinct from deterministic pixel halves."""
+    from v07_contract import target_intent
+    context = context or {}
+    patterns = {
+        'bottom': r'最(?:下(?:面|方|边)?|底(?:下|部)?)|\b(?:bottommost|bottom-most|lowest)\b|at the very bottom',
+        'top': r'最(?:上(?:面|方|边)?|顶(?:部)?)|\b(?:topmost|top-most|uppermost)\b|at the very top',
+        'left': r'最左(?:边|侧|面)?|\b(?:leftmost|left-most)\b',
+        'right': r'最右(?:边|侧|面)?|\b(?:rightmost|right-most)\b',
+    }
+    directions = [key for key, pattern in patterns.items() if re.search(pattern, query, re.I)]
+    if len(directions) > 1:
+        raise Clarification('一次只支持一个最上/最下/最左/最右位置限定；请框选更具体的目标。')
+    if directions and re.search(r'(?:两|二|三|四|五|几|多|\d+)\s*(?:艘|个|架|栋|棵)|\b(?:two|three|both|all)\b', query, re.I):
+        raise Clarification('位置极值指代目前只支持单个目标；多个目标请框选范围或分别提取。')
+    target = target_intent(query)
+    if not directions:
+        return dict(context['reference']) if target is None and context.get('reference') else None
+    target = target or context.get('target')
+    if target not in PROMPTS:
+        raise Clarification('请说明要提取哪一类目标，例如“最下面的船”。')
+    direction = directions[0]
+    nouns = {'building': 'building', 'aircraft': 'airplane', 'road': 'road', 'water': 'water body', 'tree': 'tree', 'ship': 'ship'}
+    labels = {'building': '建筑', 'aircraft': '飞机', 'road': '道路', 'water': '水体', 'tree': '树木', 'ship': '船舶'}
+    words = {'bottom': ('bottommost', '最下方'), 'top': ('topmost', '最上方'), 'left': ('leftmost', '最左侧'), 'right': ('rightmost', '最右侧')}
+    return {'kind': 'positional_extreme', 'target': target, 'direction': direction,
+            'prompt': 'the '+words[direction][0]+' '+nouns[target], 'label': words[direction][1]+'的'+labels[target]}
+
+
+def resolve_scope(query, context, selected=None, object_reference=True):
     """Explicit, logged pixel-scope grammar; not an LLM reasoning capability."""
     q = query.lower()
+    reference = reference_intent(query, context) if object_reference else None
+    if reference:
+        remainder = re.sub(r'最(?:下(?:面|方|边)?|底(?:下|部)?|上(?:面|方|边)?|顶(?:部)?|左(?:边|侧|面)?|右(?:边|侧|面)?)|\b(?:bottommost|bottom-most|lowest|topmost|top-most|uppermost|leftmost|left-most|rightmost|right-most)\b|at the very (?:top|bottom)', '', q)
+        if selected not in (None, 'all') or re.search(r'半幅|左|右|上半|下半|上方|下方|\b(?:half|left|right|top|bottom|upper|lower)\b', remainder):
+            raise Clarification('单目标位置指代不是像素半幅裁切。请清除半幅范围，或框选目标后明确任务。')
+        return 'all', 'object_reference_on_original_image'
     if re.search(r'靠近|附近|之间|东侧|西侧|南侧|北侧|平方米|公顷|米以内|最大|最小|除外|除了|不要.*[左右上下]|不含|左上|左下|右上|右下|\b(near|between|except|largest|smallest|north|south|east|west)\b', q):
         raise Clarification('当前只支持全图或单个像素半幅。复杂关系、排除条件和地理面积需要另行明确，尚未执行。')
     found = {side for side, pattern in {
@@ -65,15 +100,26 @@ class WorkbenchAgent(RemoteAgent):
         model = os.environ.get('GEO_AGENT_MODEL', '')
         if not self.base or not model:
             raise ValueError('RemoteAgent 服务未配置，请填写实际服务地址和模型名称。')
-        if task_route not in ('dense', 'internal'):
+        if task_route not in ('dense', 'internal', 'referring'):
             raise ValueError('未知的 RemoteAgent 任务路由')
         self.task_route = task_route
-        allowed_tools = ALLOWED_TOOLS if task_route == 'dense' else set()
+        allowed_tools = {'referring_expression_segmentation'} if task_route == 'referring' else ALLOWED_TOOLS if task_route == 'dense' else set()
         token_limit = 1024 if task_route == 'internal' else 512
         super().__init__(vllm_url=self.base, model_name=model, allowed_tools=allowed_tools,
                          api_urls={}, max_tokens=token_limit, system_prompt='GeoScope RemoteAgent')
 
     def _runtime_system_prompt(self):
+        if self.task_route == 'referring':
+            return (
+                'You are RemoteAgent. This request refers to ONE object by its relative position in the original image. '
+                'The only available tool is referring_expression_segmentation. Output exactly ONE plain '
+                'T_call(referring_expression_segmentation, "image_path", "prompt") and nothing else. '
+                'Copy image_path from the user message. Copy context.reference.prompt VERBATIM as prompt. '
+                'For example, 最下面的船 means "the bottommost ship", NOT "all ships" and NOT the bottom half. '
+                'Never use semantic_segmentation, class-only prompts, all objects, or pixel-half clipping. '
+                'Do not claim success or invent an object location before execution. '
+                'If the reference is ambiguous, ask for clarification in <answer>...</answer>.'
+            )
         if self.task_route == 'internal':
             return (
                 'You are RemoteAgent in the GeoScope workbench. This turn is INTERNAL VISUAL UNDERSTANDING ONLY; '
@@ -163,14 +209,23 @@ def target_from_label(label, side):
     raise Clarification('本版仅支持六类目标的全图分割及像素半幅筛选；模型给出了其他类别或额外条件，请简化指令。')
 
 
-def segmentation_plan(decision, image_path, side, scope_source, invert=False, expected_target=None):
+def segmentation_plan(decision, image_path, side, scope_source, invert=False, expected_target=None, reference=None):
     call = decision.tool_call
     if decision.status != 'tool_call' or call is None or call.name not in ALLOWED_TOOLS:
         raise ValueError('认知核心没有返回允许执行的分割工具')
     args = call.arguments
     if Path(args.get('image_path', '')).resolve() != Path(image_path).resolve():
         raise ValueError('工具影像与当前实验不一致')
-    if call.name == 'referring_expression_segmentation':
+    if reference:
+        if call.name != 'referring_expression_segmentation' or set(args) != {'image_path', 'prompt'}:
+            raise Clarification('单目标指代必须使用指代分割；本次未执行全图类别分割。')
+        prompt = re.sub(r'\s+', ' ', str(args['prompt']).strip().lower())
+        if prompt.removeprefix('the ') != reference['prompt'].removeprefix('the '):
+            raise Clarification('模型丢失或改变了目标位置限定，已阻止执行；请重试或框选目标。')
+        target = reference['target']
+        request = {'task': 'referring_seg', 'text': reference['prompt']}
+        mask_field = None
+    elif call.name == 'referring_expression_segmentation':
         if set(args) != {'image_path', 'prompt'}:
             raise ValueError('指代分割参数不符合约定')
         target = target_from_label(args['prompt'], side)
@@ -193,7 +248,7 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False, ex
     # referring path only returns a partial set of roofs.  The Harness owns
     # this capability choice so repeated wording cannot silently change the
     # perception algorithm.
-    if target == 'building':
+    if target == 'building' and not reference:
         request = {'task': 'semantic_seg', 'classes': [CLASSES[target]]}
         mask_field = CLASSES[target]
         actual_tool_name = 'semantic_segmentation'
@@ -203,18 +258,20 @@ def segmentation_plan(decision, image_path, side, scope_source, invert=False, ex
     return {'action': 'segment', 'target': target, 'side': side, 'invert': bool(invert), 'scope_source': scope_source,
             'tool_name': actual_tool_name, 'planner_tool_name': planner_tool_name,
             'routing_policy': routing_policy, 'service_request': request, 'mask_field': mask_field,
-            'planner_protocol': 'remoteagent', 'scope_rule': '整图目标分割后按像素半幅裁切；由 Harness 执行'}
+            'planner_protocol': 'remoteagent', 'reference': reference,
+            'scope_rule': '单目标指代；位置限定传给模型，语义与边界需复核' if reference else '整图目标分割后按像素半幅裁切；由 Harness 执行'}
 
 
 class AgentTurn:
     def __init__(self, query, image_path, context, side, scope_source, task_route='dense', invert=False,
-                 roi=None, quality_mode='auto', batch_id=None):
+                 roi=None, quality_mode='auto', batch_id=None, reference=None):
         self.agent = WorkbenchAgent(task_route=task_route)
         self.query, self.image_path = query, image_path
         self.context = {**context, 'side': side, 'scope_source': scope_source,
                         'scope_rule': 'whole-image segmentation then deterministic pixel-half clipping',
                         'task_route': task_route, 'invert': bool(invert), 'roi': roi,
                         'quality_mode': quality_mode, 'batch_id': batch_id}
+        if reference: self.context['reference'] = reference
         self.decision = self.agent.plan(query, image_path, context=self.context)
 
     def feedback(self, result):

@@ -1,0 +1,30 @@
+test_aircraft_referring_prompt_matches_improved_fast_configuration (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_annotation_and_complement_route_to_mask_then_invert (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_bottommost_ship_preserves_reference_in_actual_service_request (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_building_route_reuses_same_verified_service_mask (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_cache_reuse_still_reports_execution_to_model_and_selected_context (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_complex_or_conflicting_pixel_scope_stops_before_model (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_dense_prompt_exposes_only_deployed_tools_and_whole_image_airplanes (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_direct_answer_cannot_pretend_dense_task_completed (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_direct_answer_does_not_segment (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_export_is_local_and_preserves_decision_evidence (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_extreme_directions_are_not_pixel_halves (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_failure_is_fed_back_without_new_metrics_or_overwriting_old_result (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_feedback_cannot_overwrite_statistics_or_start_another_tool (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_feedback_outage_preserves_successful_artifacts (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_official_plan_tool_feedback_contains_real_asset_and_exact_statistics (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_reasoning_text_is_redacted_but_response_hash_is_kept (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_reference_conflicting_scope_and_demo_do_not_call_model (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_reference_inherits_only_for_a_followup_not_explicit_class_task (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_rejected_or_unparsed_decisions_cannot_call_sam (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_semantic_aircraft_keeps_canonical_service_class (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_single_class_semantic_tool_keeps_actual_service_task (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_single_reference_cannot_silently_degrade_to_all_ships (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_specific_building_does_not_use_class_only_building_route (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_unsupported_model_constraints_and_multi_class_require_clarification (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+test_visual_question_cannot_accidentally_run_segmentation (test_agent_integration.OfficialAgentIntegrationTests) ... ok
+
+----------------------------------------------------------------------
+Ran 25 tests in 0.704s
+
+OK

@@ -255,4 +255,75 @@ class OfficialAgentIntegrationTests(unittest.TestCase):
         self.assertNotIn('test-key-not-a-secret',json.dumps(saved))
 
 
+    def test_bottommost_ship_preserves_reference_in_actual_service_request(self):
+        FakeAgentAndSAM.decision = 'T_call(referring_expression_segmentation, "x.png", "the bottommost ship")'
+        result = self.run_task('提取最下面的船')
+        self.assertEqual(result['status'], 'completed')
+        self.assertEqual(result['task']['reference']['direction'], 'bottom')
+        self.assertEqual(result['task']['side'], 'all')
+        self.assertEqual(FakeAgentAndSAM.requests[1][1]['text'], 'the bottommost ship')
+        self.assertNotIn('全图船舶', result['message'])
+        self.assertIn('最下方的船舶', result['message'])
+
+    def test_single_reference_cannot_silently_degrade_to_all_ships(self):
+        for decision in ['T_call(semantic_segmentation, "x.png", ["ship"])',
+                         'T_call(referring_expression_segmentation, "x.png", "all ships")']:
+            FakeAgentAndSAM.decision = decision; FakeAgentAndSAM.requests = []
+            result = self.run_task('提取最下面的船')
+            self.assertIn(result['status'], ('failed', 'needs_clarification'))
+            self.assertNotIn('mask_url', result)
+            self.assertEqual(len(FakeAgentAndSAM.requests), 1)
+
+    def test_extreme_directions_are_not_pixel_halves(self):
+        for query, prompt in [('提取最上方的船', 'the topmost ship'), ('提取最左边的船', 'the leftmost ship'),
+                              ('提取最右侧的船', 'the rightmost ship'), ('Extract the lowest ship', 'the bottommost ship')]:
+            FakeAgentAndSAM.decision = 'T_call(referring_expression_segmentation, "x.png", "'+prompt+'")'
+            result = self.run_task(query)
+            self.assertEqual(result['status'], 'completed')
+            self.assertEqual(result['task']['side'], 'all')
+            self.assertEqual(result['task']['service_request']['text'], prompt)
+
+    def test_reference_inherits_only_for_a_followup_not_explicit_class_task(self):
+        FakeAgentAndSAM.decision = 'T_call(referring_expression_segmentation, "x.png", "the bottommost ship")'
+        first = self.run_task('提取最下面的船')
+        second = self.run_task('重新提取', parent_run_id=first['id'])
+        self.assertEqual(second['task']['reference']['prompt'], 'the bottommost ship')
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "x.png", ["ship"])'
+        third = self.run_task('提取全图船舶', parent_run_id=first['id'])
+        self.assertIsNone(third['task']['reference'])
+        self.assertEqual(third['task']['service_request']['classes'], ['ship'])
+
+    def test_reference_conflicting_scope_and_demo_do_not_call_model(self):
+        self.assertEqual(self.run_task('提取下半幅最下面的船')['status'], 'needs_clarification')
+        self.assertEqual(self.run_task('提取左侧最下面的船')['status'], 'needs_clarification')
+        self.assertEqual(self.run_task('提取最下面的两艘船')['status'], 'needs_clarification')
+        self.assertEqual(self.run_task('提取下面的船')['status'], 'needs_clarification')
+        self.assertEqual(self.run_task('提取中间的船')['status'], 'needs_clarification')
+        self.assertEqual(self.run_task('提取最下面的船', mode='demo')['status'], 'needs_clarification')
+        self.assertEqual(FakeAgentAndSAM.requests, [])
+
+    def test_specific_building_does_not_use_class_only_building_route(self):
+        FakeAgentAndSAM.decision = 'T_call(referring_expression_segmentation, "x.png", "the topmost building")'
+        result = self.run_task('提取最上面的建筑')
+        self.assertEqual(result['task']['service_request']['task'], 'referring_seg')
+        self.assertEqual(result['task']['service_request']['text'], 'the topmost building')
+
+    def test_legacy_lost_reference_is_flagged_without_changing_original_mask(self):
+        FakeAgentAndSAM.decision = 'T_call(semantic_segmentation, "x.png", ["ship"])'
+        old = self.run_task('提取全图船舶')
+        mask = (server.DATA/self.session['id']/old['id']/'mask.png').read_bytes()
+        old['query'] = '提取最下面的船'  # A persisted pre-fix record, never a live model assertion.
+        public = server.public_session(self.session)
+        self.assertIn('reference_contract_warning', public['runs'][-1])
+        self.assertNotIn('reference_contract_warning', old)
+        self.assertEqual((server.DATA/self.session['id']/old['id']/'mask.png').read_bytes(), mask)
+        with self.assertRaisesRegex(ValueError, '没有保留位置限定'):
+            server.review_run({'session_id': self.session['id'], 'run_id': old['id'], 'decision': 'accepted'})
+
+    def test_extreme_location_visual_question_remains_an_internal_answer(self):
+        FakeAgentAndSAM.decision = '<answer>最下面的是一艘船。</answer>'
+        result = self.run_task('影像最下面是什么？')
+        self.assertEqual(result['status'], 'answered')
+        self.assertEqual(len(FakeAgentAndSAM.requests), 1)
+
 if __name__=='__main__': unittest.main()

@@ -6,6 +6,8 @@ datasets/
 test-results/
 .venv/
 .venv-remoteclip/
+.venv-agent/
+models/RemoteAgent/
 venv/
 node_modules/
 .env.*

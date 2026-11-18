@@ -18,6 +18,8 @@
 
 最终服务器回归 **155 项全部通过，无跳过（23.301 秒）**。P1529 实际选中 6 个局部区域、产生 6 个待复核区域，Agent 最终反馈 completed、无 feedback_warning。实际导出包括原图、最终/完整蒙版、叠图、result/statistics/run_log/report，以及 afr.json、概率图、分歧图。它们全部绑定同一原图和明确的 base/target 版本。
 
+本轮实现与服务器验收提交：`af7c294`。Git 完整对象检查通过（已补齐队友中间提交的树对象）；后续只补充文档及忽略服务器私有环境/权重路径。
+
 `docs/evidence/server/real_disagreement.png`、`real_version_compare.png`、`real_afr_steps.png` 为服务器真实 Chrome 对真实模型产物生成的截图；早期 `verifiedplan_workbench.png` 仍为明确 demo 输入的工程验收，不能与真实 P1529 证据混用。
 
 原始失败日志保留：开始的缺依赖、Transformers 版本不匹配，以及 8K 反馈超限均已修复并重验。不得用这些早期日志或早期“待联调”段落代替最终状态；旧记录保留用于追溯。本次只是工程闭环验证，没有新增精度提升结论或独立泛化实验。
